@@ -36,13 +36,7 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
-        return const HomePage();
-      },
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (BuildContext context, GoRouterState state) {
-        return const LoginPage();
+        return const LandingPage();
       },
     ),
     // Route with a parameter
@@ -173,6 +167,35 @@ When adding a new feature to the application, follow these steps to maintain con
 4.  **Create the View(s)**: Create a `view` subdirectory within your feature directory (e.g., `lib/usecase/profile/view/`). Build your UI widgets (Pages, Screens, etc.) inside this `view` directory. These are your "Views".
 
 5.  **Connect View and ViewModel**: In your View, use a state management solution like `Provider` to access the ViewModel. `Provider.of<YourViewModel>(context)` will give you access to the ViewModel's data and methods. Wrap your UI widgets that depend on the ViewModel's state with a `Consumer` or use `context.watch<YourViewModel>()` to have them automatically rebuild when the data changes (i.e., when `notifyListeners()` is called in the ViewModel).
+
+## Generic Feature Folder Structure
+
+Here is a generic file structure for a feature folder within the `lib/usecase` directory. Note that the `data` folder and its subdirectories are optional and should only be created when a feature has its own specific models or repositories that are not shared with other features.
+
+```
+lib/usecase/
+└── [feature_name]/               # Root folder for the feature
+    ├── data/                     # (Optional) Data-related logic
+    │   ├── models/               # (Optional) Feature-specific data models
+    │   │   └── feature_model.dart
+    │   └── repositories/         # (Optional) Data fetching/manipulation logic
+    │       └── feature_repository.dart
+    ├── view/                     # UI components for the feature
+    │   ├── pages/                # (Optional) Full-screen pages
+    │   │   └── feature_page.dart
+    │   └── widgets/              # (Optional) Reusable widgets for the feature
+    │       └── feature_specific_widget.dart
+    └── feature_viewmodel.dart    # ViewModel for the feature
+```
+
+- **[feature_name]/**: The root directory for the feature.
+- **data/**: Contains all data-related classes for the feature.
+- **data/models/**: Holds the data models specific to this feature.
+- **data/repositories/**: Contains the repositories responsible for fetching and managing data for this feature.
+- **view/**: Contains all the UI-related code for the feature.
+- **view/pages/**: Holds the main pages or screens of the feature.
+- **view/widgets/**: Contains reusable UI components that are specific to this feature.
+- **feature_viewmodel.dart**: The ViewModel class that manages the state and business logic for the feature's views.
 
 ## Promoting a Feature-Specific Resource to a Core Resource
 
