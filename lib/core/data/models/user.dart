@@ -21,7 +21,6 @@ class User {
     required this.location,
   }) : uid = uid ?? const Uuid().v4();
 
-
   Map<String, dynamic> toJson() {
     return {
       'uid': uid,
