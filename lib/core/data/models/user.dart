@@ -1,4 +1,3 @@
-
 class User {
   final String uid;
   final String email;
@@ -8,7 +7,6 @@ class User {
   final List<String> interests;
   final String bio;
   final String location;
-
   User({
     required this.uid,
     required this.email,
@@ -19,4 +17,30 @@ class User {
     required this.bio,
     required this.location,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'uid': uid,
+      'email': email,
+      'displayName': displayName,
+      'photoURL': photoURL,
+      'skills': skills,
+      'interests': interests,
+      'bio': bio,
+      'location': location,
+    };
+  }
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      uid: json['uid'],
+      email: json['email'],
+      displayName: json['displayName'],
+      photoURL: json['photoURL'],
+      skills: List<String>.from(json['skills']),
+      interests: List<String>.from(json['interests']),
+      bio: json['bio'],
+      location: json['location'],
+    );
+  }
 }
