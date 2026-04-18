@@ -46,6 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '889008953890',
     projectId: 'aptitude-5c28c',
     authDomain: 'aptitude-5c28c.firebaseapp.com',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
     storageBucket: 'aptitude-5c28c.firebasestorage.app',
     measurementId: 'G-J0PYLTJ7T7',
   );
@@ -55,6 +56,7 @@ class DefaultFirebaseOptions {
     appId: '1:889008953890:android:9c27405c602f30b99a487b',
     messagingSenderId: '889008953890',
     projectId: 'aptitude-5c28c',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
     storageBucket: 'aptitude-5c28c.firebasestorage.app',
   );
 
@@ -63,7 +65,9 @@ class DefaultFirebaseOptions {
     appId: '1:889008953890:ios:26f3038b0d4940299a487b',
     messagingSenderId: '889008953890',
     projectId: 'aptitude-5c28c',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
     storageBucket: 'aptitude-5c28c.firebasestorage.app',
+    iosClientId: '889008953890-lokqvnhc6011arid9pji2kl25bto42lc.apps.googleusercontent.com',
     iosBundleId: 'com.aptitude.app',
   );
 
@@ -72,7 +76,9 @@ class DefaultFirebaseOptions {
     appId: '1:889008953890:ios:26f3038b0d4940299a487b',
     messagingSenderId: '889008953890',
     projectId: 'aptitude-5c28c',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
     storageBucket: 'aptitude-5c28c.firebasestorage.app',
+    iosClientId: '889008953890-lokqvnhc6011arid9pji2kl25bto42lc.apps.googleusercontent.com',
     iosBundleId: 'com.aptitude.app',
   );
 
@@ -82,6 +88,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '889008953890',
     projectId: 'aptitude-5c28c',
     authDomain: 'aptitude-5c28c.firebaseapp.com',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
     storageBucket: 'aptitude-5c28c.firebasestorage.app',
     measurementId: 'G-4KZ0H9FQC8',
   );
