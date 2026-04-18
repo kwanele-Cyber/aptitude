@@ -1,7 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:myapp/core/services/interfaces/database_inteface.dart';
 
-class FirebaseService implements IDatabaseService<DataSnapshot> {
+class FirebaseService implements DatabaseService<DataSnapshot> {
   final _firebaseDatabase = FirebaseDatabase.instance;
 
   DatabaseReference _getReference(String path) {
