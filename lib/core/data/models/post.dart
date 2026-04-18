@@ -1,8 +1,8 @@
 enum PostType { offer, request }
 
 class Post {
-  final String pid;
-  final String uid;
+  final String pid; //post id
+  final String uid; //user id
   final String skillId;
   final PostType type;
   final String title;
