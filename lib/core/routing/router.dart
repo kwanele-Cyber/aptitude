@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/usecase/auth/view/login_page.dart';
+import 'package:myapp/usecase/chatsystem/screens/chat_screen.dart';
 import 'package:myapp/usecase/landing_page/view/landing_page.dart';
 
 final GoRouter router = GoRouter(
@@ -15,6 +16,18 @@ final GoRouter router = GoRouter(
       path: '/login',
       builder: (context, state) {
         return LoginPage();
+      },
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) {
+        return LoginPage();
+      },
+    ),
+    GoRoute(
+      path: '/chat/:chatId',
+      builder: (context, state) {
+        return ChatScreen(chatId: state.pathParameters['chatId']!);
       },
     ),
   ],
