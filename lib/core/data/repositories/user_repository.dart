@@ -1,15 +1,17 @@
-import 'package:myapp/core/data/extension/model_extensions.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:myapp/core/data/extension/model_extensions.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/services/firebase_service.dart';
+import 'package:myapp/core/services/interfaces/database_inteface.dart';
 
 class UserRepository {
   final String _basePath = "users";
   final DatabaseService<DataSnapshot> _databaseService;
 
-  UserRepository({required DatabaseService<DataSnapshot> databaseService}) : _databaseService = databaseService
-  
+  UserRepository({required DatabaseService<DataSnapshot> databaseService})
+    : _databaseService = databaseService;
 
   /// Creates a new user in the database.
   /// if a record with the same id exists, we will create a new user with a new id
@@ -34,7 +36,6 @@ class UserRepository {
 
   Future<void> create(User user) async {
     try {
-
       await _databaseService.create(
         location: '$_basePath/${user.uid}',
         data: user.toJson(),
