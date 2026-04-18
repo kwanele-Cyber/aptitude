@@ -19,6 +19,12 @@ final GoRouter router = GoRouter(
       },
     ),
     GoRoute(
+      path: '/login',
+      builder: (context, state) {
+        return LoginPage();
+      },
+    ),
+    GoRoute(
       path: '/chat/:chatId',
       builder: (context, state) {
         return ChatScreen(chatId: state.pathParameters['chatId']!);
