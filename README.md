@@ -9,8 +9,8 @@ please don't work directly on the main branch. To keep our builds stable and our
 ## 1. Sync Your Local Main
 Before you start any new work, always make sure you have the most recent updates from the rest of the team.
 
-* `git checkout main`
-* `git pull origin main`
+* `git checkout master`
+* `git pull origin master`
 
 ## 2. Create a Dedicated Feature Branch
 Never code on `main`. Always create a fresh branch for your specific task using our naming conventions (e.g., `feature/`, `bugfix/`, or `hotfix/`).
