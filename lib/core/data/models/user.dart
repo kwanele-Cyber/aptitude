@@ -1,5 +1,7 @@
+import 'package:uuid/uuid.dart';
+
 class User {
-  final String uid;
+  String uid;
   final String email;
   final String displayName;
   final String photoURL;
@@ -7,8 +9,9 @@ class User {
   final List<String> interests;
   final String bio;
   final String location;
+
   User({
-    required this.uid,
+    String? uid,
     required this.email,
     required this.displayName,
     required this.photoURL,
@@ -16,7 +19,8 @@ class User {
     required this.interests,
     required this.bio,
     required this.location,
-  });
+  }) : uid = uid ?? const Uuid().v4();
+
 
   Map<String, dynamic> toJson() {
     return {

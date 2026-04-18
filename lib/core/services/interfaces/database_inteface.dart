@@ -1,4 +1,4 @@
-abstract class IDatabaseService<T> {
+abstract class DatabaseService<T> {
   /// Creates a new record at the specified location or table.
   ///
   /// The [location] parameter is interpreted as a table name for SQL databases
