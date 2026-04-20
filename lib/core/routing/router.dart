@@ -1,21 +1,20 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/usecase/auth/view/login_page.dart';
-import 'package:myapp/usecase/landing_page/view/landing_page.dart';
+import '../../usecase/landing_page/view/landing_page.dart';
+import '../../usecase/chatsystem/screens/chat_screen.dart';
 
-final GoRouter router = GoRouter(
-  routes: <GoRoute>[
+final router = GoRouter(
+  routes: [
+    GoRoute(path: '/', builder: (context, state) => const LandingPage()),
     GoRoute(
-      path: '/',
-      builder: (BuildContext context, GoRouterState state) {
-        return const LandingPage();
-      },
-    ),
-    GoRoute(
-      path: '/login',
+      path: '/chat/:chatId',
       builder: (context, state) {
-        return LoginPage();
+        final chatId = state.pathParameters['chatId']! ?? 'general';
+        return ChatScreen(chatId: chatId);
       },
     ),
   ],
 );
+
+
+
+
