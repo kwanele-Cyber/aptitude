@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/usecase/auth/view/login_page.dart';
+import 'package:myapp/usecase/auth/view/register_page.dart';
 import 'package:myapp/usecase/chatsystem/screens/chat_screen.dart';
 import 'package:myapp/usecase/landing_page/view/landing_page.dart';
 
@@ -9,7 +10,7 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
-        return const LoginPage();
+        return const LandingPage();
       },
     ),
     GoRoute(
@@ -19,9 +20,9 @@ final GoRouter router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/login',
+      path: '/register',
       builder: (context, state) {
-        return LoginPage();
+        return RegisterPage();
       },
     ),
     GoRoute(

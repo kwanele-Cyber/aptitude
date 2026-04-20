@@ -17,7 +17,7 @@ class RegisterViewModel extends ChangeNotifier {
   final TextEditingController interestsController = TextEditingController();
   final TextEditingController bioController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
-
+  final confirmPasswordController = TextEditingController();
   User? get currentUser => _auth.currentUser;
 
   bool _isLoading = false;
@@ -33,11 +33,19 @@ class RegisterViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (confirmPasswordController.text != passwordController.text) {
+        _errorMessage = "confirmPassword do not match.";
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
       // Create user with email and password
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
 
       // Register user details in the database
       await _userRegistrationService.registerUser(
@@ -46,11 +54,14 @@ class RegisterViewModel extends ChangeNotifier {
         displayName: displayNameController.text.trim(),
         photoURL: photoURLController.text.trim(),
         skills: skillsController.text.split(',').map((s) => s.trim()).toList(),
-        interests: interestsController.text.split(',').map((i) => i.trim()).toList(),
+        interests: interestsController.text
+            .split(',')
+            .map((i) => i.trim())
+            .toList(),
         bio: bioController.text.trim(),
         location: locationController.text.trim(),
       );
-      
+
       _clearControllers();
       return true;
     } on FirebaseAuthException catch (e) {
