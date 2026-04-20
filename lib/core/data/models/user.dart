@@ -5,6 +5,7 @@ class User {
   final String email;
   final String displayName;
   final String photoURL;
+  //TODO: update the skills model to include the skills model instead of just a list of string.
   final List<String> skills;
   final List<String> interests;
   final String bio;
