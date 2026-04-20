@@ -10,21 +10,19 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            HeroSection(),
-            StatsSection(),
-            FeaturesSection(),
-            HowItWorksSection(),
-            MobileFeaturesSection(),
-            SocialProofSection(),
-            CtaSection(),
-            FooterSection(),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: ListView(
+        children: const [
+          HeroSection(),
+          StatsSection(),
+          FeaturesSection(),
+          HowItWorksSection(),
+          MobileFeaturesSection(),
+          SocialProofSection(),
+          CtaSection(),
+          FooterSection(),
+        ],
       ),
     );
   }
