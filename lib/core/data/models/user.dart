@@ -7,6 +7,7 @@ class User {
   final String photoURL;
   //TODO: update the skills model to include the skills model instead of just a list of string.
   final List<String> skills;
+  //TODO: update the interests model to include the skills model instead of just a list of string.
   final List<String> interests;
   final String bio;
   final String location;
