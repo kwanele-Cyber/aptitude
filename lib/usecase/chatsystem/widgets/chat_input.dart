@@ -1,94 +1,117 @@
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/message_model.dart';
 import '../services/chat_service.dart';
 
-class ChatInput extends StatelessWidget {
+// A stateful widget for the chat input field, handling message sending and typing indicators.
+class ChatInput extends StatefulWidget {
   final String chatId;
-  final ChatService chatService;
-  final controller = TextEditingController();
 
-  ChatInput({required this.chatId, required this.chatService, Key? key}) : super(key: key);
+  const ChatInput({super.key, required this.chatId});
 
-  void sendMessage() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (controller.text.trim().isEmpty || user == null) return;
+  @override
+  State<ChatInput> createState() => _ChatInputState();
+}
 
-    final message = Message(
-      senderId: user.uid,
-      receiverId: 'general', // This should be updated based on your app logic
-      text: controller.text.trim(),
-      timestamp: DateTime.now(),
-    );
-    chatService.sendMessage(chatId, message);
-    controller.clear();
+class _ChatInputState extends State<ChatInput> {
+  final TextEditingController _controller = TextEditingController();
+  final ChatService _chatService = ChatService(); // Service to interact with Firebase
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  Timer? _typingTimer; // Timer to detect when the user stops typing
+
+  // Sends the message and cleans up the input field.
+  void _sendMessage() {
+    if (_controller.text.trim().isNotEmpty) {
+      _chatService.sendMessage(widget.chatId, _controller.text.trim());
+      _controller.clear();
+      // Immediately mark the user as not typing after sending.
+      _updateTypingStatus(false);
+      _typingTimer?.cancel(); // Cancel any existing timer
+    }
   }
 
-  void sendImage() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    chatService.sendImage(chatId, user.uid, 'general');
+  // This function is called every time the text in the input field changes.
+  void _onTextChanged(String text) {
+    if (_auth.currentUser == null) return;
+
+    // If a timer is already running, it means the user is still actively typing.
+    // We cancel it and start a new one.
+    if (_typingTimer?.isActive ?? false) _typingTimer!.cancel();
+    
+    // Immediately notify that the user is typing.
+    _updateTypingStatus(true);
+
+    // Start a new timer. If this timer completes without being cancelled,
+    // it means the user has stopped typing for the specified duration.
+    _typingTimer = Timer(const Duration(seconds: 2), () {
+      _updateTypingStatus(false);
+    });
   }
 
-  void sendFile() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    chatService.sendFile(chatId, user.uid, 'general');
+  // Calls the service to update the typing status in Firestore.
+  void _updateTypingStatus(bool isTyping) {
+    final String? currentUserId = _auth.currentUser?.uid;
+    if (currentUserId != null) {
+      _chatService.updateTypingStatus(widget.chatId, currentUserId, isTyping);
+    }
+  }
+
+  @override
+  void dispose() {
+    // Clean up resources to prevent memory leaks.
+    _typingTimer?.cancel();
+    _controller.dispose();
+    // Ensure the user is marked as not typing when they leave the screen.
+    _updateTypingStatus(false);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.image, color: Colors.blueAccent),
-            onPressed: sendImage,
-            tooltip: "Send an Image",
-          ),
-          IconButton(
-            icon: const Icon(Icons.attach_file, color: Colors.blueAccent),
-            onPressed: sendFile,
-            tooltip: "Send a File",
-          ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(24.0),
-              ),
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Expanded(
               child: TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  hintText: "Type a message...",
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                controller: _controller,
+                onChanged: _onTextChanged,
+                decoration: InputDecoration(
+                  hintText: 'Type a message...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceVariant,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+                textCapitalization: TextCapitalization.sentences,
+              ),
+            ),
+            const SizedBox(width: 8),
+            // A compatible, custom-built send button that works with all themes.
+            Material(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(25.0),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(25.0),
+                onTap: _sendMessage,
+                child: const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Icon(
+                    Icons.send,
+                    color: Colors.white, // Explicitly white for better contrast
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8.0),
-          FloatingActionButton(
-            mini: true,
-            onPressed: sendMessage,
-            child: const Icon(Icons.send, size: 18),
-            backgroundColor: Colors.blueAccent,
-            elevation: 2.0,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
