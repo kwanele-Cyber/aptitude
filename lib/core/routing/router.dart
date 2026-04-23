@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/usecase/user_dashboard/view/user_dashboard_page.dart';
 import 'package:provider/provider.dart';
 
 import 'package:myapp/core/data/repositories/user_repository.dart';
@@ -44,7 +45,15 @@ final GoRouter router = GoRouter(
         return ChatScreen(chatId: state.pathParameters['chatId']!);
       },
     ),
-  ],
+    GoRoute(
+      path:'/dashboard/user',
+      builder: (context, state) {
+        return const UserDashboardPage();
+      },
+
+    ),
+
+    ],
 );
 
 

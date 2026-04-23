@@ -36,10 +36,7 @@ class LoginPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 const Text(
                   'Login to continue',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white70),
                 ),
                 const SizedBox(height: 48),
                 TextField(
@@ -79,13 +76,14 @@ class LoginPage extends StatelessWidget {
                     bool success = await authViewModel.login();
                     if (success) {
                       // Navigate to home page
-                      context.go('/');
+                      context.go('dashboard/user');
                     } else {
                       // Show error message
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            authViewModel.errorMessage ?? 'An unknown error occurred.',
+                            authViewModel.errorMessage ??
+                                'An unknown error occurred.',
                           ),
                         ),
                       );
