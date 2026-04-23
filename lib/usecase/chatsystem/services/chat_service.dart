@@ -26,5 +26,7 @@ class ChatService {
         );
   }
 
+  //TODO: fix chat ID logig
+
   // Task 6: Realtime Database/WebSocket methods can be added here later
 }
