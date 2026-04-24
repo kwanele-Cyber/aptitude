@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:myapp/usecase/auth/auth_viewmodel.dart';
-import 'package:myapp/core/models/user_model.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
