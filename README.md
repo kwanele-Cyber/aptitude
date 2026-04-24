@@ -29,3 +29,9 @@ Once you're ready, push your branch to the repository. Do not merge it yourself;
 * `git push origin feature/your-usecase-name`
 
 **Final Step:** Head over to GitHub/GitLab and open a **Pull Request** to merge your branch into `main`.
+
+## 🛠 Workspace Discovery
+For rapid exploration of this workspace, use the custom `tree` command available in the PowerShell profile. 
+
+- **Usage:** `tree -d <depth> <path>`
+- **Example:** `tree -d 3 ./lib`
