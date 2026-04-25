@@ -8,10 +8,13 @@ import 'package:myapp/core/services/interfaces/database_inteface.dart';
 
 class UserRepository {
   final String _basePath = "users";
-  final DatabaseService<DataSnapshot> _databaseService;
+  DatabaseService<DataSnapshot> _databaseService = FirebaseService();
 
-  UserRepository({required DatabaseService<DataSnapshot> databaseService})
-    : _databaseService = databaseService;
+  UserRepository({DatabaseService<DataSnapshot>? databaseService}) {
+    if (databaseService != null) {
+      _databaseService = databaseService;
+    }
+  }
 
   /// Creates a new user in the database.
   /// if a record with the same id exists, we will create a new user with a new id

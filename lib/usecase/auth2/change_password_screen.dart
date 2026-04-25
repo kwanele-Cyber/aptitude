@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   @override
@@ -37,7 +38,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       await user.updatePassword(newPasswordController.text.trim());
 
       showMessage("Password updated successfully");
-      Navigator.pop(context);
+      if (mounted) context.pop();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
         showMessage("Old password is incorrect");

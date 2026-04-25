@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   @override
@@ -25,7 +26,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
 
       showMessage("Password reset email sent!");
-      Navigator.pop(context);
+      if (mounted) context.pop();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         showMessage("No user found with this email");

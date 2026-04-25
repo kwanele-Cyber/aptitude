@@ -23,16 +23,55 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadUser() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final doc = await FirebaseFirestore.instance
-      .collection('users').doc(uid).get();
-    setState(() {
-      _userData = doc.data() ?? {
-        'firstName': 'User', 'lastName': '',
-        'skills': [], 'bio': '', 'location': '', 'title': 'Developer'
-      };
-      _loading = false;
-    });
+    try {
+      //Data is store using Firebase Database not firestore
+      //use UserRepository class from core/lib/data/user_repository
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        setState(() => _loading = false);
+        return;
+      }
+
+      //Data is store using Firebase Database not firestore
+      //TODO: use UserRepository class from core/lib/data/user_repository
+      //e.g const userRepo = UserRepository();
+      //_userData = userRepo.read(uid);
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      setState(() {
+        _userData =
+            doc.data() ??
+            {
+              'firstName': 'User',
+              'lastName': '',
+              'skills': [],
+              'bio': '',
+              'location': '',
+              'title': 'Developer',
+            };
+        _loading = false;
+      });
+    } on FirebaseException catch (e) {
+      debugPrint("Firestore error: ${e.code} - ${e.message}");
+      // Fallback to defaults if offline or error occurs
+      setState(() {
+        _userData = {
+          'firstName': 'User',
+          'lastName': '',
+          'skills': [],
+          'bio': '',
+          'location': '',
+          'title': 'Developer',
+        };
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint("Unknown error loading user: $e");
+      setState(() => _loading = false);
+    }
   }
 
   @override
@@ -40,8 +79,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_loading) {
       return const Scaffold(
         backgroundColor: Color(0xFF0F0F1A),
-        body: Center(child: CircularProgressIndicator(
-          color: Color(0xFF7C3AED))));
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+        ),
+      );
     }
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F1A),
@@ -70,21 +111,26 @@ class _HomeScreenState extends State<HomeScreen> {
             unselectedItemColor: Colors.grey[600],
             type: BottomNavigationBarType.fixed,
             selectedLabelStyle: const TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w600),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
             unselectedLabelStyle: const TextStyle(fontSize: 11),
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.explore_outlined),
                 activeIcon: Icon(Icons.explore),
-                label: 'Discover'),
+                label: 'Discover',
+              ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.people_outline),
                 activeIcon: Icon(Icons.people),
-                label: 'Connections'),
+                label: 'Connections',
+              ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline),
                 activeIcon: Icon(Icons.person),
-                label: 'Profile'),
+                label: 'Profile',
+              ),
             ],
           ),
         ),
