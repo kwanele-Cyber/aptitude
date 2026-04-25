@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -193,7 +194,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     if (user != null) {
                       showMessage("Account created successfully");
-                      Navigator.pop(context);
+                      if (mounted) context.pop();
                     }
                   } catch (e) {
                     showMessage(getErrorMessage(e.toString()));

@@ -45,6 +45,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     setState(() { _isLoading = true; _error = null; });
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
+
+      // use UserRepository class from core/lib/data/user_repository to get the class record
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'bio': _bio.text.trim(),
         'location': _location.text.trim(),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'auth_service.dart';
-import 'register_screen.dart';
-import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -81,6 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? null
                     : () async {
                   setState(() => isLoading = true);
+                  bool success=false;
 
                   try {
                     final auth = AuthService();
@@ -91,13 +91,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
 
                     if (user != null) {
+                      success = true;
                       showMessage("Login successful");
                     }
                   } catch (e) {
                     showMessage(getErrorMessage(e.toString()));
                   }
 
-                  setState(() => isLoading = false);
+                  setState(() => isLoading = false);    
+                  if(success){
+                      if (mounted) {
+                        // ignore: use_build_context_synchronously
+                        context.go('/home');
+                      } else {
+                        throw GoException("faild to navigate to home becase context is not mounted");
+                      }
+                  }              
                 },
                 child: isLoading
                     ? CircularProgressIndicator(color: Colors.white)
@@ -107,26 +116,12 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 10),
 
               TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ForgotPasswordScreen(),
-                    ),
-                  );
-                },
+                onPressed: () => context.push('/auth/forgot'),
                 child: Text("Forgot Password?"),
               ),
 
               TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => RegisterScreen(),
-                    ),
-                  );
-                },
+                onPressed: () => context.push('/auth/register'),
                 child: Text("Create Account"),
               ),
             ],

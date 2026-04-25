@@ -106,9 +106,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildView() {
-    final initials =
-      '${widget.userData['firstName'] != null ? widget.userData['firstName'][0] : '?'}'
-      '${widget.userData['lastName'] != null ? widget.userData['lastName'][0] : ''}';
+    final firstName = widget.userData['firstName']?.toString() ?? '';
+    final lastName = widget.userData['lastName']?.toString() ?? '';
+    
+    final initials = 
+      '${firstName.isNotEmpty ? firstName[0] : '?'}'
+      '${lastName.isNotEmpty ? lastName[0] : ''}';
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(children: [

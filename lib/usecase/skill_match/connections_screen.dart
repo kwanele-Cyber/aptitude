@@ -8,6 +8,7 @@ class ConnectionsScreen extends StatefulWidget {
   State<ConnectionsScreen> createState() => _ConnectionsScreenState();
 }
 
+//TODO: UseFirebase Database not Firestore.
 class _ConnectionsScreenState extends State<ConnectionsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -26,9 +27,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final r = await FirebaseFirestore.instance
+    final r = await FirebaseFirestore.instance  //UseFirebase Database not Firestore
       .collection('invites').where('to', isEqualTo: _myUid).get();
-    final s = await FirebaseFirestore.instance
+    final s = await FirebaseFirestore.instance //UseFirebase Database not Firestore
       .collection('invites').where('from', isEqualTo: _myUid).get();
     setState(() {
       _received = r.docs;
@@ -38,7 +39,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
   }
 
   Future<void> _updateStatus(String id, String status) async {
-    await FirebaseFirestore.instance
+    await FirebaseFirestore.instance //UseFirebase Database not Firestore
       .collection('invites').doc(id).update({'status': status});
     _load();
   }
