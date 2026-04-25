@@ -21,17 +21,19 @@ class AuthService {
       User? user = result.user;
 
       // Save extra data to Firestore
-      await _firestore.collection("users").doc(user!.uid).set({
-        "name": name,
-        "email": email,
-        "phone": phone,
-        "uid": user.uid,
-      });
+      if (user != null) {
+        await _firestore.collection("users").doc(user.uid).set({
+          "name": name,
+          "email": email,
+          "phone": phone,
+          "uid": user.uid,
+        });
+      }
 
       return user;
     } catch (e) {
-      print(e);
-      return null;
+      // Re-throw the exception to be handled by the UI
+      rethrow;
     }
   }
 
@@ -44,8 +46,8 @@ class AuthService {
       );
       return result.user;
     } catch (e) {
-      print(e);
-      return null;
+      // Re-throw the exception to be handled by the UI
+      rethrow;
     }
   }
 
