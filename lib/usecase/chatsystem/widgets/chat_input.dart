@@ -1,95 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../models/message_model.dart';
-import '../services/chat_service.dart';
+import 'dart:async';
 
-class ChatInput extends StatelessWidget {
-  final String chatId;
-  final ChatService chatService;
-  final controller = TextEditingController();
+class ChatInput extends StatefulWidget {
+  final Function(String) onSend;
+  final Function(bool) onTyping;
+  const ChatInput({required this.onSend, required this.onTyping});
 
-  ChatInput({required this.chatId, required this.chatService, Key? key}) : super(key: key);
+  @override
+  _ChatInputState createState() => _ChatInputState();
+}
 
-  void sendMessage() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (controller.text.trim().isEmpty || user == null) return;
+class _ChatInputState extends State<ChatInput> {
+  final _controller = TextEditingController();
+  Timer? _typingTimer;
 
-    final message = Message(
-      senderId: user.uid,
-      receiverId: 'general', // This should be updated based on your app logic
-      text: controller.text.trim(),
-      timestamp: DateTime.now(),
-    );
-    chatService.sendMessage(chatId, message);
-    controller.clear();
+  void _onTextChanged(String text) {
+    widget.onTyping(true);
+
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(milliseconds: 1500), () {
+      widget.onTyping(false);
+    });
   }
 
-  void sendImage() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    chatService.sendImage(chatId, user.uid, 'general');
-  }
-
-  void sendFile() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    chatService.sendFile(chatId, user.uid, 'general');
+  @override
+  void dispose() {
+    _typingTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, -2),
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            onChanged: _onTextChanged,
+            decoration: InputDecoration(hintText: "Type a message..."),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.image, color: Colors.blueAccent),
-            onPressed: sendImage,
-            tooltip: "Send an Image",
-          ),
-          IconButton(
-            icon: const Icon(Icons.attach_file, color: Colors.blueAccent),
-            onPressed: sendFile,
-            tooltip: "Send a File",
-          ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(24.0),
-              ),
-              child: TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  hintText: "Type a message...",
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8.0),
-          FloatingActionButton(
-            mini: true,
-            onPressed: sendMessage,
-            child: const Icon(Icons.send, size: 18),
-            backgroundColor: Colors.blueAccent,
-            elevation: 2.0,
-          ),
-        ],
-      ),
+        ),
+        IconButton(
+          icon: Icon(Icons.send),
+          onPressed: () {
+            if (_controller.text.trim().isNotEmpty) {
+              _typingTimer?.cancel();
+              widget.onTyping(false);
+              widget.onSend(_controller.text.trim());
+              _controller.clear();
+            }
+          },
+        ),
+      ],
     );
   }
 }

@@ -23,20 +23,11 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -50,20 +41,56 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBDgK8REI2K0yzmFxvalD06fybJbZim-sU',
-    appId: '1:866790978841:web:875ed5a79eec5df101c188',
-    messagingSenderId: '866790978841',
-    projectId: 'aptitude-1f113',
-    authDomain: 'aptitude-1f113.firebaseapp.com',
-    storageBucket: 'aptitude-1f113.firebasestorage.app',
-    measurementId: 'G-G7QESD7WYQ',
+    apiKey: 'AIzaSyB-B5Gr3oNiTdM7Ir8M8iV8EPbHcLpvCpQ',
+    appId: '1:889008953890:web:48e2d64c5b48fde69a487b',
+    messagingSenderId: '889008953890',
+    projectId: 'aptitude-5c28c',
+    authDomain: 'aptitude-5c28c.firebaseapp.com',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
+    storageBucket: 'aptitude-5c28c.firebasestorage.app',
+    measurementId: 'G-J0PYLTJ7T7',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAH_1I7LZqguU6fQvlC9oJiFCUEIkqFT7U',
-    appId: '1:866790978841:android:11ffcf2ca90e493c01c188',
-    messagingSenderId: '866790978841',
-    projectId: 'aptitude-1f113',
-    storageBucket: 'aptitude-1f113.firebasestorage.app',
+    apiKey: 'AIzaSyAq1DtsyclRHNR9-L6KdVEqaFvjOK_tlRc',
+    appId: '1:889008953890:android:9c27405c602f30b99a487b',
+    messagingSenderId: '889008953890',
+    projectId: 'aptitude-5c28c',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
+    storageBucket: 'aptitude-5c28c.firebasestorage.app',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAriDVT6Qia2dMOY8nX5pvludlJ6m9Zw9M',
+    appId: '1:889008953890:ios:26f3038b0d4940299a487b',
+    messagingSenderId: '889008953890',
+    projectId: 'aptitude-5c28c',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
+    storageBucket: 'aptitude-5c28c.firebasestorage.app',
+    iosClientId: '889008953890-lokqvnhc6011arid9pji2kl25bto42lc.apps.googleusercontent.com',
+    iosBundleId: 'com.aptitude.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAriDVT6Qia2dMOY8nX5pvludlJ6m9Zw9M',
+    appId: '1:889008953890:ios:26f3038b0d4940299a487b',
+    messagingSenderId: '889008953890',
+    projectId: 'aptitude-5c28c',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
+    storageBucket: 'aptitude-5c28c.firebasestorage.app',
+    iosClientId: '889008953890-lokqvnhc6011arid9pji2kl25bto42lc.apps.googleusercontent.com',
+    iosBundleId: 'com.aptitude.app',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyB-B5Gr3oNiTdM7Ir8M8iV8EPbHcLpvCpQ',
+    appId: '1:889008953890:web:4c787d39f54177719a487b',
+    messagingSenderId: '889008953890',
+    projectId: 'aptitude-5c28c',
+    authDomain: 'aptitude-5c28c.firebaseapp.com',
+    databaseURL: 'https://aptitude-5c28c-default-rtdb.firebaseio.com',
+    storageBucket: 'aptitude-5c28c.firebasestorage.app',
+    measurementId: 'G-4KZ0H9FQC8',
+  );
+
 }

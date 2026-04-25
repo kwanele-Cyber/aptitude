@@ -1,121 +1,71 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import '../models/message_model.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
-  const MessageBubble({required this.message, Key? key}) : super(key: key);
+  final Function(String, String, String, String) onReaction;
+  final Function(String, String, String) onRemoveReaction;
+
+  const MessageBubble({
+    required this.message,
+    required this.onReaction,
+    required this.onRemoveReaction,
+  });
+
+  void _showEmojiPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return EmojiPicker(
+          onEmojiSelected: (category, emoji) {
+            final userId = FirebaseAuth.instance.currentUser!.uid;
+            if (message.reactions.containsKey(userId)) {
+              onRemoveReaction(message.id!, userId, message.reactions[userId]!);
+            }
+            onReaction(message.id!, userId, emoji.emoji, message.id!);
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isMe = FirebaseAuth.instance.currentUser?.uid == message.senderId;
-    final senderInitial = message.senderId.isNotEmpty ? message.senderId[0].toUpperCase() : '?';
+    final isMe = message.senderId == FirebaseAuth.instance.currentUser?.uid;
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        padding: const EdgeInsets.all(12),
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isMe ? Colors.blue[100] : Colors.grey[200],
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(0),
-            bottomRight: isMe ? const Radius.circular(0) : const Radius.circular(16),
+    return GestureDetector(
+      onLongPress: () => _showEmojiPicker(context),
+      child: Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          padding: EdgeInsets.all(10),
+          margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isMe ? Colors.blue[200] : Colors.grey[300],
+            borderRadius: BorderRadius.circular(8),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!isMe)
-                  CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    child: Text(senderInitial, style: const TextStyle(color: Colors.white)),
-                  ),
-                if (!isMe) const SizedBox(width: 8),
-                Text(
-                  isMe ? "You" : "User ${message.senderId.substring(0, 5)}",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isMe ? Colors.blue[800] : Colors.black87,
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(message.text),
+              if (message.reactions.isNotEmpty) ...[
+                SizedBox(height: 5),
+                Wrap(
+                  spacing: 4.0,
+                  children: message.reactions.entries
+                      .map((e) => Text(e.value))
+                      .toList(),
                 ),
               ],
-            ),
-            const SizedBox(height: 4),
-            if (message.text.isNotEmpty)
-              Text(
-                message.text,
-                style: const TextStyle(fontSize: 16, color: Colors.black87),
-              ),
-            if (message.imageUrl != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    message.imageUrl!,
-                    height: 200,
-                    width: 200,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(child: CircularProgressIndicator());
-                    },
-                  ),
-                ),
-              ),
-            if (message.fileUrl != null)
-              InkWell(
-                onTap: () async {
-                  if (await canLaunchUrl(Uri.parse(message.fileUrl!))) {
-                    await launchUrl(Uri.parse(message.fileUrl!));
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isMe ? Colors.blue[50] : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.insert_drive_file, color: Colors.blue[800]),
-                      const SizedBox(width: 8),
-                      const Text(
-                        "File Attached",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('HH:mm').format(message.timestamp),
-              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-            ),
-          ],
+              if (isMe && message.isRead) ...[
+                SizedBox(height: 5),
+                Icon(Icons.done_all, size: 16, color: Colors.blue),
+              ]
+            ],
+          ),
         ),
       ),
     );
