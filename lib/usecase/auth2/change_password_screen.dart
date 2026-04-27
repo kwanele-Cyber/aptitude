@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/usecase/auth2/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   @override
@@ -10,7 +11,7 @@ class ChangePasswordScreen extends StatefulWidget {
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final oldPasswordController = TextEditingController();
   final newPasswordController = TextEditingController();
-
+  final authService = AuthService();
   bool isLoading = false;
 
   void showMessage(String message) {
@@ -20,22 +21,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 
   Future<void> changePassword() async {
+    if (oldPasswordController.text.isEmpty || newPasswordController.text.isEmpty) {
+      showMessage("Please fill in both fields");
+      return;
+    }
+
     setState(() => isLoading = true);
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      final email = user!.email!;
-
-      // Re-authenticate user
-      AuthCredential credential = EmailAuthProvider.credential(
-        email: email,
-        password: oldPasswordController.text.trim(),
+      await authService.changePassword(
+        oldPassword: oldPasswordController.text.trim(),
+        newPassword: newPasswordController.text.trim(),
       );
-
-      await user.reauthenticateWithCredential(credential);
-
-      // Update password
-      await user.updatePassword(newPasswordController.text.trim());
 
       showMessage("Password updated successfully");
       if (mounted) context.pop();
@@ -47,6 +44,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       } else {
         showMessage("Error: ${e.message}");
       }
+    } catch (e) {
+      showMessage("Something went wrong: ${e.toString()}");
     }
 
     setState(() => isLoading = false);
@@ -72,7 +71,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               decoration: InputDecoration(labelText: "New Password"),
             ),
             SizedBox(height: 30),
-
             ElevatedButton(
               onPressed: isLoading ? null : changePassword,
               child: isLoading

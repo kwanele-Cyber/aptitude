@@ -8,9 +8,9 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final nameController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
@@ -38,9 +38,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   bool validateFields() {
-    if (nameController.text.isEmpty ||
+    if (firstNameController.text.isEmpty ||
+        lastNameController.text.isEmpty ||
         emailController.text.isEmpty ||
-        phoneController.text.isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
       showMessage("Please fill in all fields");
@@ -50,12 +50,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!emailController.text.contains("@") ||
         !emailController.text.contains(".")) {
       showMessage("Enter a valid email");
-      return false;
-    }
-
-    if (phoneController.text.length < 10 ||
-        int.tryParse(phoneController.text) == null) {
-      showMessage("Enter a valid phone number");
       return false;
     }
 
@@ -86,24 +80,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: "Full Name"),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: firstNameController,
+                      decoration: InputDecoration(labelText: "First Name"),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: lastNameController,
+                      decoration: InputDecoration(labelText: "Last Name"),
+                    ),
+                  ),
+                ],
               ),
-
               SizedBox(height: 10),
-
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(labelText: "Email"),
-              ),
-
-              SizedBox(height: 10),
-
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(labelText: "Phone"),
               ),
 
               SizedBox(height: 10),
@@ -183,13 +180,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   setState(() => isLoading = true);
 
                   try {
-                    final auth = AuthService();
+                    final authService = AuthService();
 
-                    final user = await auth.register(
-                      nameController.text.trim(),
-                      emailController.text.trim(),
-                      phoneController.text.trim(),
-                      passwordController.text.trim(),
+                    final user = await authService.register(
+                      firstName: firstNameController.text.trim(),
+                      lastName: lastNameController.text.trim(),
+                      email: emailController.text.trim(),
+                      password: passwordController.text.trim(),
                     );
 
                     if (user != null) {

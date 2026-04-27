@@ -13,8 +13,6 @@ class Skill {
     required this.category,
   }) : sid = sid ?? const Uuid().v4();
 
-
-
   Map<String, dynamic> toJson() {
     return {
       'sid': sid,

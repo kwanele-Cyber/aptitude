@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:myapp/usecase/auth2/auth_service.dart';
+import 'package:myapp/core/utils/logger.dart';
+import 'package:myapp/core/data/models/location_model.dart';
 import 'discover_screen.dart';
 import 'connections_screen.dart';
 import 'profile_screen.dart';
@@ -15,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentTab = 0;
   Map<String, dynamic>? _userData;
   bool _loading = true;
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -24,53 +26,37 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadUser() async {
     try {
-      //Data is store using Firebase Database not firestore
-      //use UserRepository class from core/lib/data/user_repository
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) {
-        setState(() => _loading = false);
-        return;
-      }
-
-      //Data is store using Firebase Database not firestore
-      //TODO: use UserRepository class from core/lib/data/user_repository
-      //e.g const userRepo = UserRepository();
-      //_userData = userRepo.read(uid);
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
+      final user = await _authService.getCurrentUser();
+      Log.d("logged user ${user?.uid}");
 
       setState(() {
-        _userData =
-            doc.data() ??
-            {
-              'firstName': 'User',
-              'lastName': '',
-              'skills': [],
-              'bio': '',
-              'location': '',
-              'title': 'Developer',
-            };
+        if (user != null) {
+          _userData = user.toJson();
+        } else {
+          _userData = {
+            'firstName': '',
+            'lastName': '',
+            'skills': [],
+            'bio': '',
+            'location': AddressModel.empty().toJson(),
+            'title': '',
+          };
+        }
         _loading = false;
       });
-    } on FirebaseException catch (e) {
-      debugPrint("Firestore error: ${e.code} - ${e.message}");
-      // Fallback to defaults if offline or error occurs
+    } catch (e, stackTrace) {
+      Log.e("Error loading user from RTDB: $e", e, stackTrace);
       setState(() {
         _userData = {
-          'firstName': 'User',
+          'firstName': '',
           'lastName': '',
           'skills': [],
           'bio': '',
-          'location': '',
-          'title': 'Developer',
+          'location': AddressModel.empty().toJson(),
+          'title': '',
         };
         _loading = false;
       });
-    } catch (e) {
-      debugPrint("Unknown error loading user: $e");
-      setState(() => _loading = false);
     }
   }
 
@@ -109,12 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Colors.transparent,
             selectedItemColor: const Color(0xFF7C3AED),
             unselectedItemColor: Colors.grey[600],
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            elevation: 0,
             type: BottomNavigationBarType.fixed,
-            selectedLabelStyle: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: const TextStyle(fontSize: 11),
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.explore_outlined),

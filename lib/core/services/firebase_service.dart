@@ -35,4 +35,9 @@ class FirebaseService implements DatabaseService<DataSnapshot> {
   }) async {
     await _getReference(location).update(data);
   }
+
+  @override
+  Future<DataSnapshot?> list({required String location}) async {
+    return await _getReference(location).get();
+  }
 }

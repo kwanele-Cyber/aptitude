@@ -5,6 +5,7 @@ import 'package:myapp/core/data/extension/model_extensions.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/services/firebase_service.dart';
 import 'package:myapp/core/services/interfaces/database_inteface.dart';
+import 'package:myapp/core/utils/logger.dart';
 
 class UserRepository {
   final String _basePath = "users";
@@ -16,26 +17,6 @@ class UserRepository {
     }
   }
 
-  /// Creates a new user in the database.
-  /// if a record with the same id exists, we will create a new user with a new id
-  Future<void> createUnique(User user) async {
-    try {
-      // Check if a record with Id already exists
-      final existing = await read(user.uid);
-      if (existing != null) {
-        // if it does we assign a new id to the user object
-        user = user.copyWith(uid: const Uuid().v4());
-      }
-
-      //save the user object
-      await _databaseService.create(
-        location: '$_basePath/${user.uid}',
-        data: user.toJson(),
-      );
-    } catch (e) {
-      throw Exception('Failed to create user: $e');
-    }
-  }
 
   Future<void> create(User user) async {
     try {
@@ -64,8 +45,9 @@ class UserRepository {
         return User.fromJson(data);
       }
       return null;
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Log error or handle accordingly
+      Log.e("Failed to fetch user at $_basePath/$userId", e, stackTrace);
       return null;
     }
   }
@@ -89,6 +71,24 @@ class UserRepository {
       await _databaseService.delete(location: '$_basePath/$userId');
     } catch (e) {
       throw Exception('Failed to delete user: $e');
+    }
+  }
+
+  /// Lists all users in the database.
+  Future<List<User>> listAll() async {
+    try {
+      final snapshot = await _databaseService.list(location: _basePath);
+      if (snapshot != null && snapshot.exists && snapshot.value != null) {
+        final Map<dynamic, dynamic> usersMap = snapshot.value as Map;
+        return usersMap.entries.map((entry) {
+          final Map<String, dynamic> data =
+              Map<String, dynamic>.from(entry.value as Map);
+          return User.fromJson(data);
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 

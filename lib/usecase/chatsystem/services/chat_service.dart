@@ -2,7 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message_model.dart';
 
 class ChatService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final FirebaseFirestore _firestore;
+
+  ChatService({FirebaseFirestore? firestore}) {
+    _firestore = firestore ?? FirebaseFirestore.instance;
+  }
 
   // Task 5: Firestore-based chat
   Future<void> sendMessage(Message message, String chatId) async {

@@ -22,4 +22,7 @@ abstract class DatabaseService<T> {
   });
 
   Future<void> delete({required String location});
+
+  /// Lists all records at the specified location.
+  Future<T?> list({required String location});
 }
