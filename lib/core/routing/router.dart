@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/usecase/auth2/change_password_screen.dart';
 import 'package:myapp/usecase/auth2/login_screen.dart';
 import 'package:myapp/usecase/auth2/register_screen.dart';
@@ -8,8 +9,6 @@ import 'package:myapp/usecase/landing_page/view/landing_page.dart';
 import 'package:myapp/usecase/skill_match/home_screen.dart';
 import 'package:myapp/usecase/skill_match/profile_screen.dart';
 import 'package:provider/provider.dart';
-
-
 
 final GoRouter router = GoRouter(
   routes: <GoRoute>[
@@ -63,7 +62,7 @@ final GoRouter router = GoRouter(
           );
         }
 
-        return ProfileScreen(userData: userData);
+        return ProfileScreen(userData: userData as User);
       },
     ),
 

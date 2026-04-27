@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/data/repositories/skills_repository.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +8,7 @@ import 'package:myapp/usecase/auth2/auth_service.dart';
 import 'package:myapp/usecase/skill_match/widgets/skill_chip.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final Map<String, dynamic> userData;
+  final User userData;
   const ProfileScreen({super.key, required this.userData});
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -48,10 +48,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _skills = List<String>.from(widget.userData['skills'] ?? []);
-    _bioCtrl.text = widget.userData['bio'] ?? '';
-    _locationCtrl.text = widget.userData['location'] ?? '';
-    _title = widget.userData['title'] ?? 'Developer';
+    _skills = List<String>.from(widget.userData.skills ?? []);
+    _bioCtrl.text = widget.userData.bio ?? '';
+    _locationCtrl.text = widget.userData.location.address ?? '';
+    _title = widget.userData.title ?? '';
   }
 
   void _addSkill() {
@@ -173,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildSectionCard(
             'About',
             child: Text(
-              widget.userData['bio'] ?? 'No bio yet',
+              widget.userData.bio ?? 'No bio yet',
               style: TextStyle(color: Colors.grey[300], height: 1.5),
             ),
           ),
@@ -197,8 +197,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileHeader() {
-    final firstName = widget.userData['firstName']?.toString() ?? '';
-    final lastName = widget.userData['lastName']?.toString() ?? '';
+    final firstName = widget.userData.firstName?.toString() ?? '';
+    final lastName = widget.userData.lastName?.toString() ?? '';
     final initials =
         '${firstName.isNotEmpty ? firstName[0] : '?'}'
         '${lastName.isNotEmpty ? lastName[0] : ''}';
@@ -227,7 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          '${widget.userData['firstName']} ${widget.userData['lastName']}',
+          widget.userData.displayName,
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -246,7 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: const TextStyle(color: Color(0xFF9D6FEF), fontSize: 13),
           ),
         ),
-        if (widget.userData['location']?.toString().isNotEmpty ?? false) ...[
+        if (widget.userData.location.address.toString().isNotEmpty) ...[
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -258,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(width: 4),
               Text(
-                widget.userData['location'],
+                widget.userData.location.address,
                 style: TextStyle(color: Colors.grey[500], fontSize: 13),
               ),
             ],
@@ -480,12 +480,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: OutlinedButton(
                   onPressed: () => setState(() {
                     _isEditing = false;
-                    _skills = List<String>.from(
-                      widget.userData['skills'] ?? [],
-                    );
-                    _bioCtrl.text = widget.userData['bio'] ?? '';
-                    _locationCtrl.text = widget.userData['location'] ?? '';
-                    _title = widget.userData['title'] ?? 'Developer';
+                    _skills = List<String>.from(widget.userData.skills ?? []);
+                    _bioCtrl.text = widget.userData.bio ?? '';
+                    _locationCtrl.text = widget.userData.location.address ?? '';
+                    _title = widget.userData.title ?? 'Developer';
                   }),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF7C3AED)),

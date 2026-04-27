@@ -17,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentTab = 0;
-  Map<String, dynamic>? _userData;
+  User? _userData;
   bool _loading = true;
   final _authService = AuthService();
 
@@ -34,31 +34,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         if (user != null) {
-          _userData = user.toJson();
-          
+          _userData = user;
         } else {
-          _userData = {
+          _userData = User.fromJson({
             'firstName': '',
             'lastName': '',
             'skills': [],
             'bio': '',
             'location': AddressModel.empty().toJson(),
             'title': '',
-          };
+          });
         }
         _loading = false;
       });
     } catch (e, stackTrace) {
       Log.e("Error loading user from RTDB: $e", e, stackTrace);
       setState(() {
-        _userData = {
+        _userData = User.fromJson({
           'firstName': '',
           'lastName': '',
           'skills': [],
           'bio': '',
           'location': AddressModel.empty().toJson(),
           'title': '',
-        };
+        });
         _loading = false;
       });
     }
@@ -79,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _currentTab,
         children: [
-          DiscoverScreen(userData: User.fromJson(_userData!)),
+          DiscoverScreen(userData: _userData!),
           const ConnectionsScreen(),
           ProfileScreen(userData: _userData!),
         ],

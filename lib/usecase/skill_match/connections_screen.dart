@@ -22,15 +22,19 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
   final _auth = AuthService();
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _myUid = (await _auth.getCurrentUser())?.uid;
+    _auth.getCurrentUser().then(
+      (v) => {
+        if (v != null) {_myUid = v.uid},
+      },
+    );
     _load();
   }
 
-  //when screen is loading, fetch invites sent by you 
-  //and invites set by other users to you. 
+  //when screen is loading, fetch invites sent by you
+  //and invites set by other users to you.
   Future<void> _load() async {
     setState(() => _loading = true);
     final r = await _inviteRepo.listByRecipient(_myUid!);
@@ -94,10 +98,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
           ),
           const Spacer(),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 4,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.06),
               borderRadius: BorderRadius.circular(20),
@@ -127,10 +128,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
         ),
         labelColor: Colors.white,
         unselectedLabelColor: Colors.grey,
-        labelStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         dividerColor: Colors.transparent,
         tabs: const [
           Tab(text: 'Received'),
