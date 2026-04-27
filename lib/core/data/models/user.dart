@@ -71,10 +71,14 @@ class User {
       location: json['location'] is Map
           ? AddressModel.fromJson(json['location'] as Map)
           : AddressModel.empty(),
-      phone: json['phone'] as String ?? '',
-      profileComplete: json['profileCreated'] as bool,
-      updatedAt: json['updatedAt'] as DateTime,
-      createdAt: json['createdAt'] as DateTime,
+      phone: json['phone'] as String? ?? '',
+      profileComplete: json['profileComplete'] as bool? ?? false,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'] as String)
+          : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 }
