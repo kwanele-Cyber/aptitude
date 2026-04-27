@@ -39,6 +39,8 @@ class AuthService {
         interests: [],
         bio: '',
         location: AddressModel.empty(),
+        createdAt: DateTime.now(),
+        profileComplete: false,
       );
 
       await _userRepo.create(newUser);

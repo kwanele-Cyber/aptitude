@@ -15,13 +15,15 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  User? _user;
   bool _isEditing = false;
   final _bioCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _skillCtrl = TextEditingController();
-  List<String> _skills = [];
+  List<String> _skills = []; // Will store skill NAMES
   String _title = 'Developer';
   bool _saving = false;
+  bool _loading = true;
 
   final List<String> _titles = [
     'Developer',
@@ -48,10 +50,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _skills = List<String>.from(widget.userData.skills ?? []);
-    _bioCtrl.text = widget.userData.bio ?? '';
-    _locationCtrl.text = widget.userData.location.address ?? '';
-    _title = widget.userData.title ?? '';
+    _user = widget.userData;
+    _refreshUser();
+  }
+
+  Future<void> _refreshUser() async {
+    try {
+      final user = await _authService.getCurrentUser();
+      if (user != null) {
+        final skillsRepo = SkillsRepository();
+        final skillObjects = await skillsRepo.resolveSkillsByIds(user.skills) ?? [];
+        final names = skillObjects.map((s) => s.name).toList();
+
+        if (mounted) {
+          setState(() {
+            _user = user;
+            _skills = names;
+            _bioCtrl.text = user.bio ?? '';
+            _locationCtrl.text = user.location.address ?? '';
+            _title = user.title ?? 'Developer';
+            _loading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _loading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   void _addSkill() {
@@ -88,6 +114,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'title': _title,
         'updatedAt': DateTime.now().toIso8601String(),
       });
+      
+      await _refreshUser();
       setState(() => _isEditing = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -98,10 +126,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     } catch (e) {
+      final f = e.toString();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update'),
+          SnackBar(
+            content: Text('Failed to update reason: $f'),
             backgroundColor: Colors.red,
           ),
         );
@@ -113,6 +142,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0F0F1A),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F1A),
       body: SafeArea(
@@ -173,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildSectionCard(
             'About',
             child: Text(
-              widget.userData.bio ?? 'No bio yet',
+              _user?.bio ?? 'No bio yet',
               style: TextStyle(color: Colors.grey[300], height: 1.5),
             ),
           ),
@@ -197,8 +235,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileHeader() {
-    final firstName = widget.userData.firstName?.toString() ?? '';
-    final lastName = widget.userData.lastName?.toString() ?? '';
+    final firstName = _user?.firstName?.toString() ?? '';
+    final lastName = _user?.lastName?.toString() ?? '';
     final initials =
         '${firstName.isNotEmpty ? firstName[0] : '?'}'
         '${lastName.isNotEmpty ? lastName[0] : ''}';
@@ -227,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          widget.userData.displayName,
+          _user?.displayName ?? '',
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -246,7 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: const TextStyle(color: Color(0xFF9D6FEF), fontSize: 13),
           ),
         ),
-        if (widget.userData.location.address.toString().isNotEmpty) ...[
+        if (_user != null && _user!.location.address.toString().isNotEmpty) ...[
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -258,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(width: 4),
               Text(
-                widget.userData.location.address,
+                _user?.location.address ?? '',
                 style: TextStyle(color: Colors.grey[500], fontSize: 13),
               ),
             ],

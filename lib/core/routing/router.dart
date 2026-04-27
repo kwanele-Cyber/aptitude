@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:myapp/core/data/models/user.dart';
+import 'package:myapp/usecase/auth2/auth_service.dart';
 import 'package:myapp/usecase/auth2/change_password_screen.dart';
 import 'package:myapp/usecase/auth2/login_screen.dart';
 import 'package:myapp/usecase/auth2/register_screen.dart';
@@ -10,7 +13,52 @@ import 'package:myapp/usecase/skill_match/home_screen.dart';
 import 'package:myapp/usecase/skill_match/profile_screen.dart';
 import 'package:provider/provider.dart';
 
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 final GoRouter router = GoRouter(
+  initialLocation: '/',
+  refreshListenable: GoRouterRefreshStream(
+    FirebaseAuth.instance.authStateChanges(),
+  ),
+  redirect: (context, state) async {
+    final bool loggedIn = (await AuthService().getCurrentUser()) != null;
+    final String location = state.matchedLocation;
+
+    // Routes that are accessible without being logged in
+    final bool isAuthRoute =
+        location == '/' ||
+        location == '/auth/login' ||
+        location == '/auth/register' ||
+        location == '/auth/forgot';
+
+    if (!loggedIn) {
+      // If not logged in and trying to access a protected route, redirect to login
+      return isAuthRoute ? null : '/';
+    }
+
+    // If logged in and trying to access an auth route, redirect to home
+    if (isAuthRoute) {
+      return '/home';
+    }
+
+    // No redirection needed
+    return null;
+  },
   routes: <GoRoute>[
     GoRoute(
       path: '/',

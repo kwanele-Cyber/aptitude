@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:myapp/core/data/models/user.dart';
+import 'package:myapp/core/data/repositories/user_repository.dart';
+import 'package:myapp/usecase/auth2/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -8,12 +10,27 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final user = FirebaseAuth.instance.currentUser;
-
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
+  final AuthService _authService = AuthService();
+  final _userRepo = UserRepository();
+
+  User? _user = null;
 
   bool isLoading = false;
+
+  User get user {
+    if (_user == null) {
+      _authService.getCurrentUser().then(
+        (user) => {
+          if (user != null) {_user = user},
+        },
+      );
+    }
+
+    return _user!;
+  }
+
 
   @override
   void initState() {
@@ -22,43 +39,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> loadUserData() async {
-    final doc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(user!.uid)
-        .get();
-
-    final data = doc.data();
+    final data = user;
 
     setState(() {
-      nameController.text = data?['name'] ?? '';
-      phoneController.text = data?['phone'] ?? '';
+      nameController.text = data.firstName ?? '';
+      phoneController.text = data.phone ?? '';
     });
   }
 
   Future<void> updateProfile() async {
     setState(() => isLoading = true);
 
-    await FirebaseFirestore.instance
-        .collection("users")
-        .doc(user!.uid)
-        .update({
+    await _userRepo.update(user.uid, {
       "name": nameController.text.trim(),
       "phone": phoneController.text.trim(),
     });
 
     setState(() => isLoading = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Profile updated successfully")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("Profile updated successfully")));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Edit Profile"),
-      ),
+      appBar: AppBar(title: Text("Edit Profile")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

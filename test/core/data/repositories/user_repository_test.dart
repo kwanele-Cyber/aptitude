@@ -33,6 +33,9 @@ void main() {
     interests: ['Coding'],
     bio: 'Hello world',
     location: AddressModel.empty(),
+    createdAt: DateTime.now(),
+    profileComplete: true,
+    updatedAt: DateTime.now(),
   );
 
   group('UserRepository', () {

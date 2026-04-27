@@ -31,7 +31,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     'Photographer',
     'Entrepreneur',
     'Student',
-    'Other'
+    'Other',
   ];
   final List<String> _suggested = [
     'Flutter',
@@ -44,7 +44,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     'TypeScript',
     'Swift',
     'Kotlin',
-    'Machine Learning'
+    'Machine Learning',
   ];
 
   void _addSkill([String? s]) {
@@ -84,7 +84,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       });
       if (mounted) context.go('/home');
     } catch (e) {
-      setState(() => _error = 'Something went wrong. Try again.');
+      setState(() => _error = 'Something went wrong. Try again. reason: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -98,29 +98,39 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.white, size: 18),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 18,
+          ),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Complete Your Profile',
-            style: TextStyle(
-                color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Complete Your Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(children: [
-          _buildRoleSection(),
-          const SizedBox(height: 16),
-          _buildBioSection(),
-          const SizedBox(height: 16),
-          _buildLocationSection(),
-          const SizedBox(height: 16),
-          _buildSkillsSection(),
-          if (_error != null) _buildErrorBanner(),
-          const SizedBox(height: 32),
-          _buildSaveButton(),
-          const SizedBox(height: 40),
-        ]),
+        child: Column(
+          children: [
+            _buildRoleSection(),
+            const SizedBox(height: 16),
+            _buildBioSection(),
+            const SizedBox(height: 16),
+            _buildLocationSection(),
+            const SizedBox(height: 16),
+            _buildSkillsSection(),
+            if (_error != null) _buildErrorBanner(),
+            const SizedBox(height: 32),
+            _buildSaveButton(),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
@@ -164,8 +174,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           filled: true,
           fillColor: Colors.white.withOpacity(0.05),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           contentPadding: const EdgeInsets.all(14),
         ),
       ),
@@ -181,13 +192,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         decoration: InputDecoration(
           hintText: 'e.g. Durban, South Africa',
           hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
-          prefixIcon: Icon(Icons.location_on_outlined,
-              color: Colors.grey[500], size: 18),
+          prefixIcon: Icon(
+            Icons.location_on_outlined,
+            color: Colors.grey[500],
+            size: 18,
+          ),
           filled: true,
           fillColor: Colors.white.withOpacity(0.05),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           contentPadding: const EdgeInsets.all(14),
         ),
       ),
@@ -197,69 +212,86 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Widget _buildSkillsSection() {
     return _card(
       label: 'Skills',
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                controller: _skillCtrl,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                onSubmitted: _addSkill,
-                decoration: InputDecoration(
-                  hintText: 'Type a skill and press add...',
-                  hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: _skillCtrl,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    onSubmitted: _addSkill,
+                    decoration: InputDecoration(
+                      hintText: 'Type a skill and press add...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 13,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(14),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: () => _addSkill(),
-            child: Container(
-              height: 48,
-              width: 48,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFFEC4899)]),
-                borderRadius: BorderRadius.circular(12),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => _addSkill(),
+                child: Container(
+                  height: 48,
+                  width: 48,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 22),
+                ),
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 22),
-            ),
+            ],
           ),
-        ]),
-        const SizedBox(height: 14),
-        Text('Suggested skills:',
-            style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-        const SizedBox(height: 8),
-        Wrap(
+          const SizedBox(height: 14),
+          Text(
+            'Suggested skills:',
+            style: TextStyle(color: Colors.grey[500], fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
             spacing: 8,
             runSpacing: 8,
             children: _suggested
-                .map((s) => SkillChip(
-                      label: s,
-                      isSelected: false,
-                      onTap: () => _addSkill(s),
-                    ))
-                .toList()),
-        if (_skills.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          const Divider(color: Colors.white10),
-          const SizedBox(height: 12),
-          Wrap(
+                .map(
+                  (s) => SkillChip(
+                    label: s,
+                    isSelected: false,
+                    onTap: () => _addSkill(s),
+                  ),
+                )
+                .toList(),
+          ),
+          if (_skills.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white10),
+            const SizedBox(height: 12),
+            Wrap(
               spacing: 8,
               runSpacing: 8,
               children: _skills
-                  .map((s) =>
-                      SkillChip(label: s, onDeleted: () => _removeSkill(s)))
-                  .toList()),
+                  .map(
+                    (s) =>
+                        SkillChip(label: s, onDeleted: () => _removeSkill(s)),
+                  )
+                  .toList(),
+            ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 
@@ -272,13 +304,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.red.withOpacity(0.3)),
       ),
-      child: Row(children: [
-        const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
-        const SizedBox(width: 8),
-        Expanded(
-            child: Text(_error!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 13))),
-      ]),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _error!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -291,7 +328,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF7C3AED),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           elevation: 0,
         ),
         child: _isLoading
@@ -299,12 +338,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 height: 22,
                 width: 22,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white))
-            : const Text('Find My Matches',
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text(
+                'Find My Matches',
                 style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }
@@ -318,16 +363,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.07)),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
             style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[400],
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5)),
-        const SizedBox(height: 12),
-        child,
-      ]),
+              fontSize: 12,
+              color: Colors.grey[400],
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
     );
   }
 }

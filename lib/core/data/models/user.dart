@@ -12,6 +12,10 @@ class User {
   List<String> interests;
   String bio;
   AddressModel location;
+  String? phone;
+  bool profileComplete = false;
+  DateTime? updatedAt;
+  DateTime? createdAt;
 
   String get displayName => "$firstName $lastName";
 
@@ -26,6 +30,10 @@ class User {
     required this.interests,
     required this.bio,
     required this.location,
+    required this.profileComplete,
+    required this.createdAt,
+    this.updatedAt,
+    this.phone = ''
   });
 
   Map<String, dynamic> toJson() {
@@ -40,6 +48,10 @@ class User {
       'interests': interests,
       'bio': bio,
       'location': location.toJson(),
+      'phone': phone,
+      'profileComplete': profileComplete,
+      'updatedAt': updatedAt?.toIso8601String(),
+      'createdAt': createdAt?.toIso8601String(),
     };
   }
 
@@ -51,12 +63,18 @@ class User {
       lastName: json['lastName'] as String? ?? '',
       title: json['title'] as String? ?? 'Developer',
       photoURL: json['photoURL'] as String? ?? '',
-      skills: (json['skills'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      interests: (json['interests'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      skills:
+          (json['skills'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      interests:
+          (json['interests'] as List?)?.map((e) => e.toString()).toList() ?? [],
       bio: json['bio'] as String? ?? '',
-      location: json['location'] is Map 
+      location: json['location'] is Map
           ? AddressModel.fromJson(json['location'] as Map)
           : AddressModel.empty(),
+      phone: json['phone'] as String ?? '',
+      profileComplete: json['profileCreated'] as bool,
+      updatedAt: json['updatedAt'] as DateTime,
+      createdAt: json['createdAt'] as DateTime,
     );
   }
 }

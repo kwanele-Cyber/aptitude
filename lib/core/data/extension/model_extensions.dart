@@ -13,6 +13,9 @@ extension UserExtension on User {
     List<String>? interests,
     String? bio,
     AddressModel? location,
+    bool? profileComplete,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return User(
       uid: uid ?? this.uid,
@@ -25,6 +28,9 @@ extension UserExtension on User {
       interests: interests ?? this.interests,
       bio: bio ?? this.bio,
       location: location ?? this.location,
+      profileComplete: profileComplete ?? this.profileComplete,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
