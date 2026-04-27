@@ -9,18 +9,19 @@ import 'package:myapp/core/utils/logger.dart';
 
 class UserRepository {
   final String _basePath = "users";
-  DatabaseService<DataSnapshot> _databaseService = FirebaseService();
+  DatabaseService<DataSnapshot>? _databaseService;
 
   UserRepository({DatabaseService<DataSnapshot>? databaseService}) {
     if (databaseService != null) {
       _databaseService = databaseService;
+    } else {
+      _databaseService = FirebaseService();
     }
   }
 
-
   Future<void> create(User user) async {
     try {
-      await _databaseService.create(
+      await _databaseService!.create(
         location: '$_basePath/${user.uid}',
         data: user.toJson(),
       );
@@ -32,7 +33,7 @@ class UserRepository {
   /// Reads a user by their UID. Returns null if not found.
   Future<User?> read(String userId) async {
     try {
-      final snapshot = await _databaseService.read(
+      final snapshot = await _databaseService!.read(
         location: '$_basePath/$userId',
       );
 
@@ -56,7 +57,7 @@ class UserRepository {
   /// Useful for things like updating just the 'bio' or 'location'.
   Future<void> update(String userId, Map<String, dynamic> updates) async {
     try {
-      await _databaseService.update(
+      await _databaseService!.update(
         location: '$_basePath/$userId',
         data: updates,
       );
@@ -68,7 +69,7 @@ class UserRepository {
   /// Deletes a user record from the database.
   Future<void> delete(String userId) async {
     try {
-      await _databaseService.delete(location: '$_basePath/$userId');
+      await _databaseService!.delete(location: '$_basePath/$userId');
     } catch (e) {
       throw Exception('Failed to delete user: $e');
     }
@@ -77,12 +78,13 @@ class UserRepository {
   /// Lists all users in the database.
   Future<List<User>> listAll() async {
     try {
-      final snapshot = await _databaseService.list(location: _basePath);
+      final snapshot = await _databaseService!.list(location: _basePath);
       if (snapshot != null && snapshot.exists && snapshot.value != null) {
         final Map<dynamic, dynamic> usersMap = snapshot.value as Map;
         return usersMap.entries.map((entry) {
-          final Map<String, dynamic> data =
-              Map<String, dynamic>.from(entry.value as Map);
+          final Map<String, dynamic> data = Map<String, dynamic>.from(
+            entry.value as Map,
+          );
           return User.fromJson(data);
         }).toList();
       }

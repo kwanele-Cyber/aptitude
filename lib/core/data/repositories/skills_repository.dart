@@ -24,15 +24,21 @@ class SkillsRepository {
     return [];
   }
 
-  /// Resolves a skill name to an ID. 
-  /// If the skill exists, returns the ID. 
+  /// Resolves a skill name to an ID.
+  /// If the skill exists, returns the ID.
   /// If not, creates a new skill and returns the new ID.
-  Future<String> resolveSkillId(String name, [String? description, String? category]) async {
+  Future<String> resolveSkillId(
+    String name, [
+    String? description,
+    String? category,
+  ]) async {
     final sanitizedName = name.trim().toLowerCase();
     final allSkills = await listAll();
-    
+
     // Check if exists (case-insensitive)
-    final existing = allSkills.where((s) => s.name.toLowerCase() == sanitizedName);
+    final existing = allSkills.where(
+      (s) => s.name.toLowerCase() == sanitizedName,
+    );
     if (existing.isNotEmpty) {
       return existing.first.sid;
     }
@@ -40,18 +46,43 @@ class SkillsRepository {
     // Create new skill
     final id = const Uuid().v4();
     final newSkill = Skill(
-      sid: id, 
-      name: name.trim(), 
-      description: description ?? '', 
-      category: category ?? ''
+      sid: id,
+      name: name.trim(),
+      description: description ?? '',
+      category: category ?? '',
     );
-    
+
     await _databaseService.create(
       location: '$_basePath/$id',
       data: newSkill.toJson(),
     );
-    
+
     return id;
+  }
+
+  Future<Skill?> getSkill(String id) async {
+    var data = await _databaseService.read(location: "$_basePath/$id");
+    if (data != null) {
+      return Skill.fromJson(data.value as Map<String, dynamic>);
+    }
+    return null;
+  }
+
+  Future<List<Skill>?> resolveSkillsByIds(List<String> ids) async {
+    List<Skill>? skills = List.empty(growable: true);
+    for (final id in ids) {
+      final skill = await getSkill(id);
+
+      if (skill != null) {
+        skills.add(skill);
+      }
+    }
+
+    if (skills.isNotEmpty) {
+      return skills;
+    }
+
+    return null;
   }
 
   /// Batch resolves a list of names to IDs

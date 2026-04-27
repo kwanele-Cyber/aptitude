@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/core/data/repositories/skills_repository.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/core/data/repositories/invite_repository.dart';
 import 'package:myapp/core/data/models/user.dart' as model;
+import 'package:myapp/usecase/auth2/auth_service.dart';
 import 'package:myapp/usecase/skill_match/widgets/match_card.dart';
 import 'package:myapp/core/data/models/invite.dart';
 import 'package:uuid/uuid.dart';
 
 class DiscoverScreen extends StatefulWidget {
-  final Map<String, dynamic> userData;
+  final model.User userData;
   const DiscoverScreen({super.key, required this.userData});
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
 }
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
+  final _auth = AuthService();
   List<model.User> _matches = [];
   bool _loading = true;
   final _userRepo = UserRepository();
   final _inviteRepo = InviteRepository();
+  final _skillsRepo = SkillsRepository();
 
   @override
   void initState() {
@@ -27,22 +30,33 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Future<void> _loadMatches() async {
-    final mySkills = List<String>.from(widget.userData['skills'] ?? []);
-    final myUid = FirebaseAuth.instance.currentUser!.uid;
+    final me = await _auth.getCurrentUser();
+    if (me == null) {
+      throw new Exception("User Not authenticated");
+    }
+
+    final myUid = me!.uid;
+    final mySkills = _skillsRepo.resolveSkillsByIds(me.skills);
 
     final allUsers = await _userRepo.listAll();
 
     setState(() {
       _matches = allUsers.where((user) {
         if (user.uid == myUid) return false;
-        return user.skills.any((s) => mySkills.contains(s));
+        //check if you have a common skill with the user being referenced.
+        return user.skills.any((s) => me.skills.contains(s));
       }).toList();
       _loading = false;
     });
   }
 
   Future<void> _sendRequest(String toUid, model.User toUser) async {
-    final myUid = FirebaseAuth.instance.currentUser!.uid;
+    final me = await _auth.getCurrentUser();
+    if (me == null) {
+      throw Exception("User Not authenticated");
+    }
+
+    final myUid = me.uid;
 
     final alreadySent = await _inviteRepo.hasExistingInvite(myUid, toUid);
 
@@ -58,7 +72,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       return;
     }
 
-    final mySkills = List<String>.from(widget.userData['skills'] ?? []);
+    final mySkills = widget.userData.skills;
     final theirSkills = toUser.skills;
     final common = mySkills.where((s) => theirSkills.contains(s)).toList();
 
@@ -66,8 +80,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       id: const Uuid().v4(),
       from: myUid,
       to: toUid,
-      fromName:
-          '${widget.userData['firstName']} ${widget.userData['lastName']}',
+      fromName: '${widget.userData.firstName} ${widget.userData.lastName}',
       toName: '${toUser.firstName} ${toUser.lastName}',
       commonSkills: common,
       status: InviteStatus.pending,
@@ -97,28 +110,31 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             Expanded(
               child: _loading
                   ? const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF7C3AED),
+                      ),
                     )
                   : _matches.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                          itemCount: _matches.length,
-                          itemBuilder: (context, i) {
-                            final user = _matches[i];
-                            final mySkills = List<String>.from(
-                                widget.userData['skills'] ?? []);
-                            final common = user.skills
-                                .where((s) => mySkills.contains(s))
-                                .toList();
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      itemCount: _matches.length,
+                      itemBuilder: (context, i) {
+                        final user = _matches[i];
+                        final mySkills = List<String>.from(
+                          widget.userData.skills ?? [],
+                        );
+                        final common = user.skills
+                            .where((s) => mySkills.contains(s))
+                            .toList();
 
-                            return MatchCard(
-                              user: user,
-                              commonSkills: common,
-                              onConnect: () => _sendRequest(user.uid, user),
-                            );
-                          },
-                        ),
+                        return MatchCard(
+                          user: user,
+                          commonSkills: common,
+                          onConnect: () => _sendRequest(user.uid, user),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -136,7 +152,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello, ${widget.userData['firstName']} 👋',
+                  'Hello, ${widget.userData.firstName} 👋',
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -189,7 +205,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               color: Colors.white.withOpacity(0.05),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.people_outline, size: 40, color: Colors.grey[600]),
+            child: Icon(
+              Icons.people_outline,
+              size: 40,
+              color: Colors.grey[600],
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -210,3 +230,5 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 }
+
+

@@ -67,7 +67,7 @@ class AuthService {
   }
 
   Future<User?> getCurrentUser() async {
-    final firebaseUser = _auth.currentUser;
+    var firebaseUser = _auth.currentUser;
     if (firebaseUser == null) return null;
 
     try {
