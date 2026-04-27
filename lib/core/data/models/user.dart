@@ -70,7 +70,13 @@ class User {
       bio: json['bio'] as String? ?? '',
       location: json['location'] is Map
           ? AddressModel.fromJson(json['location'] as Map)
-          : AddressModel.empty(),
+          : (json['location'] is String
+              ? AddressModel(
+                  address: json['location'] as String,
+                  latitude: 0,
+                  longitude: 0,
+                )
+              : AddressModel.empty()),
       phone: json['phone'] as String? ?? '',
       profileComplete: json['profileComplete'] as bool? ?? false,
       updatedAt: json['updatedAt'] != null

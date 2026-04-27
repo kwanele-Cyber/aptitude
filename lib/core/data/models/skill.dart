@@ -24,10 +24,10 @@ class Skill {
 
   factory Skill.fromJson(Map<String, dynamic> json) {
     return Skill(
-      sid: json['sid'],
-      name: json['name'],
-      description: json['description'],
-      category: json['category'],
+      sid: json['sid'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      category: json['category'] as String? ?? '',
     );
   }
 }

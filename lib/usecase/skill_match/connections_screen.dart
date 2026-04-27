@@ -25,11 +25,6 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _auth.getCurrentUser().then(
-      (v) => {
-        if (v != null) {_myUid = v.uid},
-      },
-    );
     _load();
   }
 
@@ -37,13 +32,25 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
   //and invites set by other users to you.
   Future<void> _load() async {
     setState(() => _loading = true);
+
+    final user = await _auth.getCurrentUser();
+    if (user == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+
+    _myUid = user.uid;
+
     final r = await _inviteRepo.listByRecipient(_myUid!);
     final s = await _inviteRepo.listBySender(_myUid!);
-    setState(() {
-      _received = r;
-      _sent = s;
-      _loading = false;
-    });
+
+    if (mounted) {
+      setState(() {
+        _received = r;
+        _sent = s;
+        _loading = false;
+      });
+    }
   }
 
   //util method to update the status of an invite

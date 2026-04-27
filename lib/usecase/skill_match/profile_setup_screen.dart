@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/core/data/models/location_model.dart';
 import 'package:myapp/core/data/repositories/skills_repository.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/usecase/skill_match/widgets/skill_chip.dart';
+import 'package:myapp/core/data/extension/model_extensions.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/usecase/auth2/auth_service.dart';
 
@@ -58,7 +60,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   void _removeSkill(String s) => setState(() => _skills.remove(s));
 
   final _authService = AuthService();
-  final _skillsRepo = SkillsRepository();
 
   Future<void> _save() async {
     if (_skills.isEmpty) {
@@ -74,10 +75,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       if (user == null) throw Exception('No user found');
 
       final userRepo = UserRepository();
+
+      // Sync skills using the extension method
+      user.skills = [];
+      await user.addSkillsNames(_skills);
+
       await userRepo.update(user.uid, {
         'bio': _bio.text.trim(),
-        'location': _location.text.trim(),
-        'skills': await _skillsRepo.resolveSkillIds(_skills),
+        'location': AddressModel(
+          address: _location.text.trim(),
+          latitude: 0,
+          longitude: 0,
+        ).toJson(),
         'title': _title,
         'profileComplete': true,
         'updatedAt': DateTime.now().toIso8601String(),

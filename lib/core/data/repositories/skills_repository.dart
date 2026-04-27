@@ -24,6 +24,18 @@ class SkillsRepository {
     return [];
   }
 
+  //adds a skill to db and returns the created resource
+  Future<Skill?> addSkill(Skill val) async {
+    Skill? skill;
+    await _databaseService
+        .create(location: "$_basePath/${val.sid}", data: val.toJson())
+        .whenComplete(() async {
+          skill = await getSkill(val.sid);
+        });
+
+    return skill;
+  }
+
   /// Resolves a skill name to an ID.
   /// If the skill exists, returns the ID.
   /// If not, creates a new skill and returns the new ID.
@@ -62,8 +74,8 @@ class SkillsRepository {
 
   Future<Skill?> getSkill(String id) async {
     var data = await _databaseService.read(location: "$_basePath/$id");
-    if (data != null) {
-      return Skill.fromJson(data.value as Map<String, dynamic>);
+    if (data != null && data.exists && data.value != null) {
+      return Skill.fromJson(Map<String, dynamic>.from(data.value as Map));
     }
     return null;
   }
@@ -92,6 +104,6 @@ class SkillsRepository {
       final id = await resolveSkillId(name);
       ids.add(id);
     }
-    return ids;
+    return ids.toSet().toList();
   }
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/core/data/models/user.dart';
+import 'package:myapp/core/data/models/location_model.dart';
 import 'package:myapp/core/data/repositories/skills_repository.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/usecase/auth2/auth_service.dart';
 
+import 'package:myapp/core/data/extension/model_extensions.dart';
 import 'package:myapp/usecase/skill_match/widgets/skill_chip.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -102,15 +104,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user == null) throw Exception('No user found');
 
       final userRepo = UserRepository();
-      final skillsRepo = SkillsRepository();
 
-      // Resolve skill names to IDs (creating new ones if necessary)
-      final skillIds = await skillsRepo.resolveSkillIds(_skills);
+      // Clear current skills and re-add from the editor names
+      // This ensures we sync the database IDs with the user-provided names
+      _user!.skills = [];
+      await _user!.addSkillsNames(_skills);
 
       await userRepo.update(user.uid, {
         'bio': _bioCtrl.text.trim(),
-        'location': _locationCtrl.text.trim(),
-        'skills': skillIds,
+        'location': AddressModel(
+          address: _locationCtrl.text.trim(),
+          latitude: 0,
+          longitude: 0,
+        ).toJson(),
         'title': _title,
         'updatedAt': DateTime.now().toIso8601String(),
       });
