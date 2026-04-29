@@ -6,6 +6,9 @@ import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/data/models/location_model.dart';
 import 'package:myapp/core/data/repositories/skills_repository.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
+import 'package:myapp/core/data/repositories/user_skills_repository.dart';
+import 'package:myapp/core/data/models/skill_offer.dart';
+import 'package:myapp/core/data/models/skill_enums.dart';
 
 extension UserExtension on User {
   User copyWith({
@@ -46,28 +49,47 @@ extension UserExtension on User {
     String description = '',
     bool persist = true,
   }) async {
-    final _repo = SkillsRepository();
-    final _userRepo = UserRepository();
+    final repo = SkillsRepository();
+    final userRepo = UserRepository();
 
     // 1. Resolve the skill globally (prevents duplicates in global skills table)
-    final skillId = await _repo.resolveSkillId(name, description, category);
+    final skillId = await repo.resolveSkillId(name, description, category);
 
     // 2. Check if the user already has this skill (prevents duplicates in user.skills)
     if (skills.contains(skillId)) {
-      return await _repo.getSkill(skillId);
+      return await repo.getSkill(skillId);
     }
 
     // 3. Add the unique ID to the user's skills list
     skills.add(skillId);
     if (persist) {
-      await _userRepo.update(uid, {"skills": skills});
+      await userRepo.update(uid, {"skills": skills});
     }
 
-    return await _repo.getSkill(skillId);
+    // 4. Unified Logic: Create a default SkillOffer if it doesn't exist
+    final userSkillsRepo = UserSkillsRepository();
+    final existingOffers = await userSkillsRepo.getUserOffers(uid);
+    final hasOffer = existingOffers.any((o) => o.sid == skillId);
+
+    if (!hasOffer) {
+      final skill = await repo.getSkill(skillId);
+      final offer = SkillOffer(
+        uid: uid,
+        sid: skillId,
+        skillName: skill?.name ?? name,
+        level: SkillLevel.beginner,
+        format: SkillFormat.online,
+        description: 'Added via profile setup',
+      );
+      await userSkillsRepo.addOffer(offer);
+    }
+
+    return await repo.getSkill(skillId);
   }
 
   Future<List<Skill>> addSkillsNames(List<String> SkillNames) async {
-    final _userRepo = UserRepository();
+    final userRepo = UserRepository();
+    final userSkillsRepo = UserSkillsRepository();
     List<Skill> results = [];
 
     for (final skillname in SkillNames) {
@@ -78,8 +100,16 @@ extension UserExtension on User {
       }
     }
 
+    // 5. Prune offers for skills no longer in the core list
+    final offers = await userSkillsRepo.getUserOffers(uid);
+    for (final offer in offers) {
+      if (!skills.contains(offer.sid)) {
+        await userSkillsRepo.deleteOffer(uid, offer.id);
+      }
+    }
+
     // After adding all skills locally to the user object, we persist once.
-    await _userRepo.update(uid, {"skills": skills});
+    await userRepo.update(uid, {"skills": skills});
 
     return results;
   }

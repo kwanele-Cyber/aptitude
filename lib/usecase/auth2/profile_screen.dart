@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
-import 'package:myapp/usecase/auth2/auth_service.dart';
+import 'package:myapp/core/services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
@@ -15,7 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   final _userRepo = UserRepository();
 
-  User? _user = null;
+  User? _user;
 
   bool isLoading = false;
 

@@ -2,7 +2,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:myapp/core/services/firebase_service.dart';
 import 'package:myapp/core/services/interfaces/database_inteface.dart';
 import 'package:myapp/core/data/models/invite.dart';
-import 'package:uuid/uuid.dart';
 
 class InviteRepository {
   final String _basePath = "invites";

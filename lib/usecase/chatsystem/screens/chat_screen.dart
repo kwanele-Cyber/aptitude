@@ -8,7 +8,7 @@ class ChatScreen extends StatelessWidget {
   final String chatId;
   final ChatService _chatService = ChatService();
 
-  ChatScreen({required this.chatId});
+  ChatScreen({super.key, required this.chatId});
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +20,9 @@ class ChatScreen extends StatelessWidget {
             child: StreamBuilder<List<Message>>(
               stream: _chatService.getMessagesStream(chatId),
               builder: (context, snapshot) {
-                if (!snapshot.hasData)
+                if (!snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
+                }
                 final messages = snapshot.data!;
                 return ListView.builder(
                   itemCount: messages.length,

@@ -2,11 +2,12 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:myapp/core/data/models/skill.dart';
 import 'package:myapp/core/services/firebase_service.dart';
 import 'package:myapp/core/services/interfaces/database_inteface.dart';
-import 'package:uuid/uuid.dart';
+import 'package:myapp/core/services/ai_service.dart';
 
 class SkillsRepository {
   final String _basePath = "skills";
   late final DatabaseService<DataSnapshot> _databaseService;
+  final _aiService = AIService();
 
   SkillsRepository({DatabaseService<DataSnapshot>? databaseService}) {
     _databaseService = databaseService ?? FirebaseService();
@@ -36,40 +37,60 @@ class SkillsRepository {
     return skill;
   }
 
-  /// Resolves a skill name to an ID.
-  /// If the skill exists, returns the ID.
-  /// If not, creates a new skill and returns the new ID.
+  /// Resolves a skill name to an ID (slug-based).
   Future<String> resolveSkillId(
     String name, [
     String? description,
     String? category,
   ]) async {
-    final sanitizedName = name.trim().toLowerCase();
-    final allSkills = await listAll();
+    final sanitizedName = _sanitizeDisplayName(name);
+    final slug = _generateSlug(sanitizedName);
+    
+    if (slug.isEmpty) throw Exception('Invalid skill name: $name');
+    if (slug.length > 50) throw Exception('Skill name too long');
 
-    // Check if exists (case-insensitive)
-    final existing = allSkills.where(
-      (s) => s.name.toLowerCase() == sanitizedName,
-    );
-    if (existing.isNotEmpty) {
-      return existing.first.sid;
+    // 1. Instant lookup via slug key (O(1) vs O(N))
+    final existing = await getSkill(slug);
+    if (existing != null) {
+      return existing.sid;
     }
 
-    // Create new skill
-    final id = const Uuid().v4();
+    // 2. Suggest category if not provided
+    final resolvedCategory = category ?? await _aiService.suggestCategory(sanitizedName);
+
+    // 3. Create new skill using slug as ID
     final newSkill = Skill(
-      sid: id,
-      name: name.trim(),
+      sid: slug,
+      name: sanitizedName,
       description: description ?? '',
-      category: category ?? '',
+      category: resolvedCategory,
     );
 
     await _databaseService.create(
-      location: '$_basePath/$id',
+      location: '$_basePath/$slug',
       data: newSkill.toJson(),
     );
 
-    return id;
+    return slug;
+  }
+
+  String _sanitizeDisplayName(String name) {
+    // Limit to 50 characters and remove non-printable/weird chars
+    String sanitized = name.trim();
+    if (sanitized.length > 50) {
+      sanitized = sanitized.substring(0, 50);
+    }
+    // Remove characters that might break UI or DB (keep alphanumeric, space, basic punctuation)
+    return sanitized.replaceAll(RegExp(r'[^\w\s\.\-\(\)]'), '');
+  }
+
+  String _generateSlug(String name) {
+    return name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s-]'), '') // Remove special chars
+        .replaceAll(RegExp(r'\s+'), '-') // Replace spaces with hyphens
+        .replaceAll(RegExp(r'-+'), '-') // Collapse all hyphens to single (VERY IMPORTANT: reserves -- for composite IDs)
+        .replaceAll(RegExp(r'^-+|-+$'), ''); // Remove leading/trailing hyphens
   }
 
   Future<Skill?> getSkill(String id) async {
@@ -81,23 +102,12 @@ class SkillsRepository {
   }
 
   Future<List<Skill>?> resolveSkillsByIds(List<String> ids) async {
-    List<Skill>? skills = List.empty(growable: true);
-    for (final id in ids) {
-      final skill = await getSkill(id);
-
-      if (skill != null) {
-        skills.add(skill);
-      }
-    }
-
-    if (skills.isNotEmpty) {
-      return skills;
-    }
-
-    return null;
+    if (ids.isEmpty) return null;
+    final all = await listAll();
+    final skills = all.where((s) => ids.contains(s.sid)).toList();
+    return skills.isEmpty ? null : skills;
   }
 
-  /// Batch resolves a list of names to IDs
   Future<List<String>> resolveSkillIds(List<String> names) async {
     final List<String> ids = [];
     for (final name in names) {
@@ -105,5 +115,13 @@ class SkillsRepository {
       ids.add(id);
     }
     return ids.toSet().toList();
+  }
+
+  /// Search skills by keyword
+  Future<List<Skill>> searchSkills(String query) async {
+    if (query.isEmpty) return [];
+    final all = await listAll();
+    final q = query.toLowerCase();
+    return all.where((s) => s.name.toLowerCase().contains(q)).toList();
   }
 }

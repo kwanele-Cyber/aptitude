@@ -1,7 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
-import 'package:uuid/uuid.dart';
 
-import 'package:myapp/core/data/extension/model_extensions.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/services/firebase_service.dart';
 import 'package:myapp/core/services/interfaces/database_inteface.dart';

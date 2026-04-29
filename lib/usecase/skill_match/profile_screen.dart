@@ -4,10 +4,15 @@ import 'package:myapp/core/data/models/location_model.dart';
 import 'package:myapp/core/data/repositories/skills_repository.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/usecase/auth2/auth_service.dart';
+import 'package:myapp/core/services/auth_service.dart';
 
 import 'package:myapp/core/data/extension/model_extensions.dart';
 import 'package:myapp/usecase/skill_match/widgets/skill_chip.dart';
+import 'package:myapp/core/data/models/skill_offer.dart';
+import 'package:myapp/core/data/models/skill_request.dart';
+import 'package:myapp/core/data/repositories/user_skills_repository.dart';
+import 'package:myapp/usecase/skill_match/view_model/user_skills_view_model.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   final User userData;
@@ -26,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _title = 'Developer';
   bool _saving = false;
   bool _loading = true;
+  final _userSkillsViewModel = UserSkillsViewModel();
 
   final List<String> _titles = [
     'Developer',
@@ -65,6 +71,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final names = skillObjects.map((s) => s.name).toList();
 
         if (mounted) {
+          await _userSkillsViewModel.fetchUserSkills();
+
           setState(() {
             _user = user;
             _skills = names;
@@ -163,7 +171,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           children: [
             _buildTopBar(),
-            Expanded(child: _isEditing ? _buildEdit() : _buildView()),
+            Expanded(
+              child: ChangeNotifierProvider.value(
+                value: _userSkillsViewModel,
+                child: _isEditing ? _buildEdit() : _buildView(),
+              ),
+            ),
           ],
         ),
       ),
@@ -208,41 +221,172 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
+    return Consumer<UserSkillsViewModel>(
+      builder: (context, skillVm, child) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              _buildProfileHeader(),
+              const SizedBox(height: 24),
+              _buildSectionCard(
+                'About',
+                child: Text(
+                  _user?.bio ?? 'No bio yet',
+                  style: TextStyle(color: Colors.grey[300], height: 1.5),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildSectionCard(
+                'Teaching',
+                child: skillVm.offers.isEmpty
+                    ? Text(
+                        'No skills offered yet',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      )
+                    : Column(
+                        children: skillVm.offers
+                            .map((o) => _buildListingItem(
+                                  o.skillName,
+                                  o.level.name,
+                                  o.format.name,
+                                  () async {
+                                    await context.push('/skill/edit/offer/${o.id}');
+                                    skillVm.fetchUserSkills();
+                                  },
+                                  onClone: () => skillVm.cloneOffer(o),
+                                  onArchive: () => skillVm.archiveOffer(o, true),
+                                ))
+                            .toList(),
+                      ),
+              ),
+              const SizedBox(height: 16),
+              _buildSectionCard(
+                'Learning',
+                child: skillVm.requests.isEmpty
+                    ? Text(
+                        'No learning requests yet',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      )
+                    : Column(
+                        children: skillVm.requests
+                            .map((r) => _buildListingItem(
+                                  r.skillName,
+                                  r.targetLevel.name,
+                                  r.preferredFormat.name,
+                                  () async {
+                                    await context.push('/skill/edit/request/${r.id}');
+                                    skillVm.fetchUserSkills();
+                                  },
+                                  onClone: () => skillVm.cloneRequest(r),
+                                  onArchive: () => skillVm.archiveRequest(r, true),
+                                ))
+                            .toList(),
+                      ),
+              ),
+              const SizedBox(height: 24),
+              _buildActionButtons(skillVm),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildListingItem(
+      String name, String level, String format, VoidCallback onTap,
+      {VoidCallback? onClone, VoidCallback? onArchive}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
         children: [
-          _buildProfileHeader(),
-          const SizedBox(height: 24),
-          _buildSectionCard(
-            'About',
-            child: Text(
-              _user?.bio ?? 'No bio yet',
-              style: TextStyle(color: Colors.grey[300], height: 1.5),
+          Expanded(
+            child: GestureDetector(
+              onTap: onTap,
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${level.toUpperCase()} • ${format.toUpperCase()}',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          _buildSectionCard(
-            'Skills',
-            child: _skills.isEmpty
-                ? Text(
-                    'No skills added yet',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                  )
-                : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _skills.map((s) => SkillChip(label: s)).toList(),
-                  ),
-          ),
+          if (onClone != null)
+            IconButton(
+              icon: Icon(Icons.copy_all, color: Colors.grey[600], size: 18),
+              onPressed: onClone,
+              tooltip: 'Clone Listing',
+            ),
+          if (onArchive != null)
+            IconButton(
+              icon: Icon(Icons.archive_outlined, color: Colors.grey[600], size: 18),
+              onPressed: onArchive,
+              tooltip: 'Archive Listing',
+            ),
+          Icon(Icons.chevron_right, color: Colors.grey[700], size: 18),
         ],
       ),
     );
   }
 
+  Widget _buildActionButtons(UserSkillsViewModel skillVm) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              await context.push('/skill/add');
+              skillVm.fetchUserSkills();
+            },
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('Offer Skill'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7C3AED),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              await context.push('/skill/request');
+              skillVm.fetchUserSkills();
+            },
+            icon: const Icon(Icons.school, size: 16),
+            label: const Text('Request Skill'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF7C3AED),
+              side: const BorderSide(color: Color(0xFF7C3AED)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildProfileHeader() {
-    final firstName = _user?.firstName?.toString() ?? '';
-    final lastName = _user?.lastName?.toString() ?? '';
+    final firstName = _user?.firstName.toString() ?? '';
+    final lastName = _user?.lastName.toString() ?? '';
     final initials =
         '${firstName.isNotEmpty ? firstName[0] : '?'}'
         '${lastName.isNotEmpty ? lastName[0] : ''}';
@@ -472,8 +616,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       .map(
                         (s) => GestureDetector(
                           onTap: () {
-                            if (!_skills.contains(s))
+                            if (!_skills.contains(s)) {
                               setState(() => _skills.add(s));
+                            }
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(

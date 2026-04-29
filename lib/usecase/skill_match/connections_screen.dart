@@ -1,76 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:myapp/core/data/repositories/invite_repository.dart';
 import 'package:myapp/core/data/models/invite.dart';
-import 'package:myapp/usecase/auth2/auth_service.dart';
+import 'package:myapp/usecase/skill_match/view_model/connections_view_model.dart';
 import 'package:myapp/usecase/skill_match/widgets/invite_card.dart';
+import 'package:myapp/usecase/skill_match/chat_screen.dart';
+import 'package:myapp/core/data/repositories/chat_repository.dart';
+import 'package:provider/provider.dart';
 
-class ConnectionsScreen extends StatefulWidget {
+class ConnectionsScreen extends StatelessWidget {
   const ConnectionsScreen({super.key});
+
   @override
-  State<ConnectionsScreen> createState() => _ConnectionsScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ConnectionsViewModel()..load(),
+      child: const _ConnectionsScreenContent(),
+    );
+  }
 }
 
-class _ConnectionsScreenState extends State<ConnectionsScreen>
+class _ConnectionsScreenContent extends StatefulWidget {
+  const _ConnectionsScreenContent();
+  @override
+  State<_ConnectionsScreenContent> createState() => _ConnectionsScreenContentState();
+}
+
+class _ConnectionsScreenContentState extends State<_ConnectionsScreenContent>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<Invite> _received = [];
-  List<Invite> _sent = [];
-  bool _loading = true;
-  String? _myUid;
-  final _inviteRepo = InviteRepository();
-  final _auth = AuthService();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _load();
-  }
-
-  //when screen is loading, fetch invites sent by you
-  //and invites set by other users to you.
-  Future<void> _load() async {
-    setState(() => _loading = true);
-
-    final user = await _auth.getCurrentUser();
-    if (user == null) {
-      if (mounted) setState(() => _loading = false);
-      return;
-    }
-
-    _myUid = user.uid;
-
-    final r = await _inviteRepo.listByRecipient(_myUid!);
-    final s = await _inviteRepo.listBySender(_myUid!);
-
-    if (mounted) {
-      setState(() {
-        _received = r;
-        _sent = s;
-        _loading = false;
-      });
-    }
-  }
-
-  //util method to update the status of an invite
-  Future<void> _updateStatus(String id, InviteStatus status) async {
-    await _inviteRepo.updateStatus(id, status);
-    _load();
   }
 
   //build and render the UI
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<ConnectionsViewModel>();
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F1A),
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(viewModel),
             _buildTabs(),
             Expanded(
-              child: _loading
+              child: viewModel.isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
                         color: Color(0xFF7C3AED),
@@ -79,8 +56,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
                   : TabBarView(
                       controller: _tabController,
                       children: [
-                        _buildList(_received, true),
-                        _buildList(_sent, false),
+                        _buildList(viewModel, viewModel.received, true),
+                        _buildList(viewModel, viewModel.sent, false),
                       ],
                     ),
             ),
@@ -90,7 +67,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(ConnectionsViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
@@ -111,7 +88,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${_received.where((d) => d.status == InviteStatus.pending).length} pending',
+              '${viewModel.received.where((d) => d.status == InviteStatus.pending).length} pending',
               style: TextStyle(color: Colors.grey[400], fontSize: 12),
             ),
           ),
@@ -145,7 +122,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
     );
   }
 
-  Widget _buildList(List<Invite> list, bool isReceived) {
+  Widget _buildList(ConnectionsViewModel viewModel, List<Invite> list, bool isReceived) {
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -173,7 +150,23 @@ class _ConnectionsScreenState extends State<ConnectionsScreen>
         return InviteCard(
           invite: invite,
           isReceived: isReceived,
-          onStatusUpdate: (status) => _updateStatus(invite.id, status),
+          onAccept: () => viewModel.acceptInvite(invite),
+          onReject: () => viewModel.rejectInvite(invite.id),
+          onMessage: () {
+            final chatRepo = ChatRepository();
+            final channelId = chatRepo.getChannelId(invite.from, invite.to);
+            final peerName = isReceived ? invite.fromName : invite.toName;
+            
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  channelId: channelId,
+                  peerName: peerName,
+                ),
+              ),
+            );
+          },
         );
       },
     );

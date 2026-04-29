@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ChatInput extends StatefulWidget {
   final Function(String) onSend;
-  const ChatInput({required this.onSend});
+  const ChatInput({super.key, required this.onSend});
 
   @override
   _ChatInputState createState() => _ChatInputState();

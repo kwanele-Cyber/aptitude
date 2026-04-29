@@ -6,7 +6,7 @@ import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/usecase/skill_match/widgets/skill_chip.dart';
 import 'package:myapp/core/data/extension/model_extensions.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/usecase/auth2/auth_service.dart';
+import 'package:myapp/core/services/auth_service.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -18,7 +18,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _bio = TextEditingController();
   final _location = TextEditingController();
   final _skillCtrl = TextEditingController();
-  List<String> _skills = [];
+  final List<String> _skills = [];
   String _title = 'Developer';
   bool _isLoading = false;
   String? _error;

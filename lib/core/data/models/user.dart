@@ -1,5 +1,4 @@
 import 'package:myapp/core/data/models/location_model.dart';
-import 'package:uuid/uuid.dart';
 
 class User {
   final String uid;

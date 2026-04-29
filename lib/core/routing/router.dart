@@ -3,15 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:myapp/core/data/models/user.dart';
-import 'package:myapp/usecase/auth2/auth_service.dart';
+import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/usecase/auth2/change_password_screen.dart';
 import 'package:myapp/usecase/auth2/login_screen.dart';
 import 'package:myapp/usecase/auth2/register_screen.dart';
 import 'package:myapp/usecase/chatsystem/screens/chat_screen.dart';
-import 'package:myapp/usecase/landing_page/view/landing_page.dart';
 import 'package:myapp/usecase/skill_match/home_screen.dart';
 import 'package:myapp/usecase/skill_match/profile_screen.dart';
-import 'package:provider/provider.dart';
+import 'package:myapp/usecase/skill_match/create_skill_offer_screen.dart';
+import 'package:myapp/usecase/skill_match/create_skill_request_screen.dart';
+import 'package:myapp/usecase/skill_match/edit_skill_screen.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
@@ -118,6 +119,29 @@ final GoRouter router = GoRouter(
       path: '/chat/:chatId',
       builder: (context, state) {
         return ChatScreen(chatId: state.pathParameters['chatId']!);
+      },
+    ),
+    GoRoute(
+      path: '/skill/add',
+      builder: (context, state) {
+        return const CreateSkillOfferScreen();
+      },
+    ),
+    GoRoute(
+      path: '/skill/request',
+      builder: (context, state) {
+        return const CreateSkillRequestScreen();
+      },
+    ),
+    GoRoute(
+      path: '/skill/edit/:type/:id',
+      builder: (context, state) {
+        final type = state.pathParameters['type']!;
+        final id = state.pathParameters['id']!;
+        return EditSkillScreen(
+          id: id,
+          isOffer: type == 'offer',
+        );
       },
     ),
   ],

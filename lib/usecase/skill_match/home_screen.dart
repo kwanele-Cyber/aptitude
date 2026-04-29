@@ -1,8 +1,7 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:myapp/core/data/models/user.dart';
-import 'package:myapp/usecase/auth2/auth_service.dart';
+import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/core/utils/logger.dart';
 import 'package:myapp/core/data/models/location_model.dart';
 import 'discover_screen.dart';

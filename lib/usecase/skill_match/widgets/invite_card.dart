@@ -5,13 +5,17 @@ import 'skill_chip.dart';
 class InviteCard extends StatelessWidget {
   final Invite invite;
   final bool isReceived;
-  final Function(InviteStatus status) onStatusUpdate;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+  final VoidCallback onMessage;
 
   const InviteCard({
     super.key,
     required this.invite,
     required this.isReceived,
-    required this.onStatusUpdate,
+    required this.onAccept,
+    required this.onReject,
+    required this.onMessage,
   });
 
   @override
@@ -95,7 +99,7 @@ class InviteCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => onStatusUpdate(InviteStatus.rejected),
+                    onPressed: onReject,
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.redAccent),
                       shape: RoundedRectangleBorder(
@@ -111,7 +115,7 @@ class InviteCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => onStatusUpdate(InviteStatus.accepted),
+                    onPressed: onAccept,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF7C3AED),
                       foregroundColor: Colors.white,
@@ -127,6 +131,26 @@ class InviteCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ],
+          if (status == InviteStatus.accepted) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onMessage,
+                icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                label: const Text('Message'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E293B),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: const Color(0xFF7C3AED).withOpacity(0.3)),
+                  ),
+                  elevation: 0,
+                ),
+              ),
             ),
           ],
         ],

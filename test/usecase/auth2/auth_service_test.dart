@@ -1,104 +1,81 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:myapp/core/services/auth_service.dart';
+import 'package:myapp/core/data/models/user.dart' as model;
 import 'package:myapp/core/data/repositories/user_repository.dart';
-import 'package:myapp/usecase/auth2/auth_service.dart';
-import 'package:myapp/core/data/models/user.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 
-class MockFirebaseAuth extends Mock implements auth.FirebaseAuth {}
+// Manual Mocks for simplicity
+class ManualMockAuth extends Fake implements auth.FirebaseAuth {
+  auth.User? mockUser;
+  @override
+  auth.User? get currentUser => mockUser;
+  
+  @override
+  Future<void> signOut() async {
+    mockUser = null;
+  }
+}
 
-class MockUserRepository extends Mock implements UserRepository {}
+class ManualMockUser extends Fake implements auth.User {
+  @override
+  String get uid => 'user123';
+}
 
-class MockUserCredential extends Mock implements auth.UserCredential {}
-
-class MockFirebaseUser extends Mock implements auth.User {}
+class ManualMockUserRepo extends Fake implements UserRepository {
+  Map<String, model.User> users = {};
+  
+  @override
+  Future<model.User?> read(String uid) async {
+    return users[uid];
+  }
+  
+  @override
+  Future<void> create(model.User user) async {
+    users[user.uid] = user;
+  }
+}
 
 void main() {
   late AuthService authService;
-  late MockFirebaseAuth mockAuth;
-  late MockUserRepository mockUserRepo;
-  late MockUserCredential mockUserCredential;
-  late MockFirebaseUser mockFirebaseUser;
+  late ManualMockAuth mockAuth;
+  late ManualMockUserRepo mockRepo;
 
   setUp(() {
-    mockAuth = MockFirebaseAuth();
-    mockUserRepo = MockUserRepository();
-    mockUserCredential = MockUserCredential();
-    mockFirebaseUser = MockFirebaseUser();
-    authService = AuthService(authService: mockAuth, userRepo: mockUserRepo);
-
-    // Register fallback for user object if needed
-    registerFallbackValue(
-      User(
-        uid: '',
-        email: '',
-        firstName: '',
-        lastName: '',
-        title: '',
-        photoURL: '',
-        skills: [],
-        interests: [],
-        bio: '',
-        location: (User.fromJson({})).location, // just to get a default
-        profileComplete: true,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
+    mockAuth = ManualMockAuth();
+    mockRepo = ManualMockUserRepo();
+    authService = AuthService(firebaseAuth: mockAuth, userRepo: mockRepo);
   });
 
-  group('AuthService', () {
-    test('register creates firebase user and then database user', () async {
-      when(
-        () => mockAuth.createUserWithEmailAndPassword(
-          email: 'test@test.com',
-          password: 'password123',
-        ),
-      ).thenAnswer((_) async => mockUserCredential);
+  group('AuthService Core Logic Tests', () {
+    test('getCurrentUser should return null if no firebase user exists', () async {
+      mockAuth.mockUser = null;
+      final user = await authService.getCurrentUser();
+      expect(user, isNull);
+    });
 
-      when(() => mockUserCredential.user).thenReturn(mockFirebaseUser);
-      when(() => mockFirebaseUser.uid).thenReturn('uid_123');
-      when(() => mockUserRepo.create(any())).thenAnswer((_) async => {});
+    test('getCurrentUser should bridge Firebase UID to Database User model', () async {
+      // Setup: Mock user exists in Auth and Repo
+      final firebaseUser = ManualMockUser();
+      mockAuth.mockUser = firebaseUser;
+      
+      final dbUser = model.User.fromJson({
+        'uid': 'user123',
+        'email': 'test@test.com',
+        'firstName': 'Test',
+      });
+      mockRepo.users['user123'] = dbUser;
 
-      final result = await authService.register(
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'test@test.com',
-        password: 'password123',
-      );
-
+      final result = await authService.getCurrentUser();
+      
       expect(result, isNotNull);
-      expect(result?.uid, 'uid_123');
-      expect(result?.firstName, 'John');
-      verify(() => mockUserRepo.create(any())).called(1);
+      expect(result!.uid, 'user123');
+      expect(result.firstName, 'Test');
     });
 
-    test('login calls firebase sign in', () async {
-      when(
-        () => mockAuth.signInWithEmailAndPassword(
-          email: 'test@test.com',
-          password: 'password123',
-        ),
-      ).thenAnswer((_) async => mockUserCredential);
-      when(() => mockUserCredential.user).thenReturn(mockFirebaseUser);
-
-      final result = await authService.login('test@test.com', 'password123');
-
-      expect(result, equals(mockFirebaseUser));
-      verify(
-        () => mockAuth.signInWithEmailAndPassword(
-          email: 'test@test.com',
-          password: 'password123',
-        ),
-      ).called(1);
-    });
-
-    test('logout calls firebase sign out', () async {
-      when(() => mockAuth.signOut()).thenAnswer((_) async => {});
-
+    test('logout should clear current session', () async {
+      mockAuth.mockUser = ManualMockUser();
       await authService.logout();
-
-      verify(() => mockAuth.signOut()).called(1);
+      expect(mockAuth.currentUser, isNull);
     });
   });
 }

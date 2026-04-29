@@ -1,20 +1,32 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:myapp/core/data/models/user.dart' as model;
 
 abstract class AuthServiceInterface {
   /// Stream of user authentication state changes.
-  Stream<User?> get authStateChanges;
+  Stream<firebase.User?> get authStateChanges;
 
-  /// Returns the current user, if any.
-  User? get currentUser;
+  /// Returns the current firebase user, if any.
+  firebase.User? get currentUser;
+
+  /// Returns the app-specific User model for the current session.
+  Future<model.User?> getCurrentUserModel();
+
+  /// Alias for getCurrentUserModel.
+  Future<model.User?> getCurrentUser();
 
   /// Signs in with email and password.
-  Future<UserCredential> signInWithEmailAndPassword({
+  Future<firebase.UserCredential> signInWithEmailAndPassword({
     required String email,
     required String password,
   });
 
-  /// Creates a new user with email and password.
-  Future<UserCredential> createUserWithEmailAndPassword({
+  /// Compatibility login method.
+  Future<firebase.User?> login(String email, String password);
+
+  /// Creates a new user and a database profile.
+  Future<model.User?> register({
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
   });
@@ -22,9 +34,21 @@ abstract class AuthServiceInterface {
   /// Signs out the current user.
   Future<void> signOut();
 
+  /// Alias for signOut.
+  Future<void> logout();
+
   /// Reauthenticates the current user.
-  Future<void> reauthenticateWithCredential(AuthCredential credential);
+  Future<void> reauthenticateWithCredential(firebase.AuthCredential credential);
 
   /// Updates the password of the current user.
   Future<void> updatePassword(String newPassword);
+
+  /// Changes the password with re-authentication.
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  });
+
+  /// Resends email verification.
+  Future<void> resendEmailVerification();
 }
