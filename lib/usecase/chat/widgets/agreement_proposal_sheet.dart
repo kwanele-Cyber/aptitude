@@ -27,13 +27,23 @@ class _AgreementProposalSheetState extends State<AgreementProposalSheet> {
   late String _requestSkill;
   int _sessions = 5;
   int _minutes = 60;
-  final String _frequency = 'Weekly';
+  String _frequency = 'Weekly';
+  static const List<String> _frequencyOptions = [
+    'Daily',
+    'Weekly',
+    'Biweekly',
+    'Monthly',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _offerSkill = widget.commonSkills.isNotEmpty ? widget.commonSkills[0] : 'Skill A';
-    _requestSkill = widget.commonSkills.length > 1 ? widget.commonSkills[1] : 'Skill B';
+    _offerSkill = widget.commonSkills.isNotEmpty
+        ? widget.commonSkills[0]
+        : 'Skill A';
+    _requestSkill = widget.commonSkills.length > 1
+        ? widget.commonSkills[1]
+        : 'Skill B';
   }
 
   @override
@@ -51,36 +61,42 @@ class _AgreementProposalSheetState extends State<AgreementProposalSheet> {
           children: [
             const Text(
               'Propose Swap Agreement',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 24),
-            
+
             // Skill Pairing
             Row(
               children: [
-                Expanded(
-                  child: _buildFieldLabel('I will teach'),
-                ),
+                Expanded(child: _buildFieldLabel('I will teach')),
                 const Icon(Icons.sync, color: Color(0xFF7C3AED), size: 16),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: _buildFieldLabel('You will teach'),
-                ),
+                Expanded(child: _buildFieldLabel('You will teach')),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: _buildSkillSelector(_offerSkill, (val) => setState(() => _offerSkill = val!)),
+                  child: _buildSkillSelector(
+                    _offerSkill,
+                    (val) => setState(() => _offerSkill = val!),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildSkillSelector(_requestSkill, (val) => setState(() => _requestSkill = val!)),
+                  child: _buildSkillSelector(
+                    _requestSkill,
+                    (val) => setState(() => _requestSkill = val!),
+                  ),
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
             _buildFieldLabel('Number of Sessions'),
             Slider(
@@ -92,7 +108,7 @@ class _AgreementProposalSheetState extends State<AgreementProposalSheet> {
               label: '$_sessions sessions',
               onChanged: (val) => setState(() => _sessions = val.toInt()),
             ),
-            
+
             const SizedBox(height: 12),
             _buildFieldLabel('Minutes per Session'),
             Row(
@@ -102,44 +118,93 @@ class _AgreementProposalSheetState extends State<AgreementProposalSheet> {
                 return GestureDetector(
                   onTap: () => setState(() => _minutes = m),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: selected ? const Color(0xFF7C3AED) : Colors.white.withValues(alpha: 0.05),
+                      color: selected
+                          ? const Color(0xFF7C3AED)
+                          : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('$m m', style: TextStyle(color: selected ? Colors.white : Colors.grey)),
+                    child: Text(
+                      '$m m',
+                      style: TextStyle(
+                        color: selected ? Colors.white : Colors.grey,
+                      ),
+                    ),
                   ),
                 );
               }).toList(),
             ),
-            
+
+            const SizedBox(height: 16),
+            _buildFieldLabel('Frequency'),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _frequency,
+                  dropdownColor: const Color(0xFF1A1A2E),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  isExpanded: true,
+                  items: _frequencyOptions
+                      .map(
+                        (frequency) => DropdownMenuItem(
+                          value: frequency,
+                          child: Text(frequency),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() => _frequency = value);
+                  },
+                ),
+              ),
+            ),
+
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  final agreement = Agreement(
-                    id: const Uuid().v4(),
-                    channelId: widget.channelId,
-                    proposerId: widget.myId,
-                    receiverId: widget.peerId,
-                    offerSkillId: _offerSkill,
-                    requestSkillId: _requestSkill,
-                    sessionsCount: _sessions,
-                    minutesPerSession: _minutes,
-                    frequency: _frequency,
-                    createdAt: DateTime.now().millisecondsSinceEpoch,
-                  );
-                  widget.onPropose(agreement);
-                  Navigator.pop(context);
-                },
+                onPressed: widget.commonSkills.isEmpty
+                    ? null
+                    : () {
+                        final agreement = Agreement(
+                          id: const Uuid().v4(),
+                          channelId: widget.channelId,
+                          proposerId: widget.myId,
+                          receiverId: widget.peerId,
+                          offerSkillId: _offerSkill,
+                          requestSkillId: _requestSkill,
+                          sessionsCount: _sessions,
+                          minutesPerSession: _minutes,
+                          frequency: _frequency,
+                          createdAt: DateTime.now().millisecondsSinceEpoch,
+                        );
+                        widget.onPropose(agreement);
+                        Navigator.pop(context);
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF7C3AED),
+                  disabledBackgroundColor: Colors.white12,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('Send Proposal', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Send Proposal',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -167,7 +232,9 @@ class _AgreementProposalSheetState extends State<AgreementProposalSheet> {
           style: const TextStyle(color: Colors.white, fontSize: 13),
           isExpanded: true,
           hint: const Text('Select', style: TextStyle(color: Colors.white24)),
-          items: widget.commonSkills.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+          items: widget.commonSkills
+              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+              .toList(),
           onChanged: onChanged,
         ),
       ),

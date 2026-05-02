@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/core/data/repositories/chat_repository.dart';
 import 'package:myapp/usecase/chat/view_model/chat_view_model.dart';
 import 'package:myapp/usecase/chat/widgets/chat_bubble.dart';
+import 'package:myapp/usecase/chat/widgets/agreement_message_card.dart';
 import 'package:myapp/usecase/chat/widgets/agreement_proposal_sheet.dart';
 import 'package:myapp/core/data/models/agreement.dart';
 import 'package:myapp/core/data/repositories/block_repository.dart';
@@ -21,7 +22,6 @@ class ChatScreen extends StatefulWidget {
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
-
 
 class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
@@ -52,7 +52,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: viewModel.isLoading
                       ? const Center(
-                          child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF7C3AED),
+                          ),
                         )
                       : ListView.builder(
                           controller: _scrollController,
@@ -62,14 +64,25 @@ class _ChatScreenState extends State<ChatScreen> {
                             return ChatBubble(
                               message: msg,
                               isMe: msg.senderId == viewModel.myUid,
-                              onAcceptAgreement: (aid) => viewModel.respondToAgreement(aid, AgreementStatus.accepted),
-                              onRejectAgreement: (aid) => viewModel.respondToAgreement(aid, AgreementStatus.rejected),
-                              onModifyAgreement: (aid, sessions, minutes, frequency) => viewModel.modifyAgreement(
-                                agreementId: aid,
-                                sessionsCount: sessions,
-                                minutesPerSession: minutes,
-                                frequency: frequency,
-                              ),
+                              onAcceptAgreement: (aid) =>
+                                  viewModel.respondToAgreement(
+                                    aid,
+                                    AgreementStatus.accepted,
+                                  ),
+                              onRejectAgreement: (aid) =>
+                                  viewModel.respondToAgreement(
+                                    aid,
+                                    AgreementStatus.rejected,
+                                  ),
+                              onCancelAgreement: viewModel.cancelAgreement,
+                              onModifyAgreement:
+                                  (aid, sessions, minutes, frequency) =>
+                                      viewModel.modifyAgreement(
+                                        agreementId: aid,
+                                        sessionsCount: sessions,
+                                        minutesPerSession: minutes,
+                                        frequency: frequency,
+                                      ),
                             );
                           },
                         ),
@@ -93,8 +106,14 @@ class _ChatScreenState extends State<ChatScreen> {
             radius: 16,
             backgroundColor: const Color(0xFF7C3AED),
             child: Text(
-              widget.peerName.isNotEmpty ? widget.peerName[0].toUpperCase() : '?',
-              style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+              widget.peerName.isNotEmpty
+                  ? widget.peerName[0].toUpperCase()
+                  : '?',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -109,13 +128,22 @@ class _ChatScreenState extends State<ChatScreen> {
               if (viewModel.peerIsTyping)
                 const Text(
                   'typing...',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF60A5FA), fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF60A5FA),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
             ],
           ),
         ],
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.fact_check_outlined, color: Colors.white70),
+          onPressed: () => _showAgreementsSheet(viewModel),
+          tooltip: 'View Agreements',
+        ),
         IconButton(
           icon: const Icon(Icons.handshake_outlined, color: Color(0xFF7C3AED)),
           onPressed: () => _showAgreementSheet(viewModel),
@@ -129,8 +157,10 @@ class _ChatScreenState extends State<ChatScreen> {
               final chatRepo = ChatRepository();
               final channel = await chatRepo.getChannel(widget.channelId);
               if (channel == null) return;
-              final peerId = channel.participants.firstWhere((p) => p != viewModel.myUid);
-              
+              final peerId = channel.participants.firstWhere(
+                (p) => p != viewModel.myUid,
+              );
+
               if (mounted) {
                 showDialog(
                   context: context,
@@ -151,7 +181,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Icon(Icons.flag_outlined, color: Colors.redAccent, size: 18),
                   SizedBox(width: 8),
-                  Text('Report User', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  Text(
+                    'Report User',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
                 ],
               ),
             ),
@@ -161,7 +194,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Icon(Icons.block_flipped, color: Colors.redAccent, size: 18),
                   SizedBox(width: 8),
-                  Text('Block User', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  Text(
+                    'Block User',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
                 ],
               ),
             ),
@@ -171,6 +207,88 @@ class _ChatScreenState extends State<ChatScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios, color: Colors.white70, size: 20),
         onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Future<void> _showAgreementsSheet(ChatViewModel viewModel) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.78,
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A2E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: FutureBuilder<List<Agreement>>(
+          future: viewModel.getChannelAgreements(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+              );
+            }
+
+            final agreements = snapshot.data ?? [];
+            if (agreements.isEmpty) {
+              return const Center(
+                child: Text(
+                  'No agreements yet',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Agreements',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: agreements.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final agreement = agreements[index];
+                      return AgreementMessageCard(
+                        agreementId: agreement.id,
+                        isMe: agreement.proposerId == viewModel.myUid,
+                        onAccept: () => viewModel.respondToAgreement(
+                          agreement.id,
+                          AgreementStatus.accepted,
+                        ),
+                        onReject: () => viewModel.respondToAgreement(
+                          agreement.id,
+                          AgreementStatus.rejected,
+                        ),
+                        onCancel: () => viewModel.cancelAgreement(agreement.id),
+                        onModify: (sessions, minutes, frequency) =>
+                            viewModel.modifyAgreement(
+                              agreementId: agreement.id,
+                              sessionsCount: sessions,
+                              minutesPerSession: minutes,
+                              frequency: frequency,
+                            ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -197,10 +315,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   decoration: const InputDecoration(
                     hintText: 'Type a message...',
                     hintStyle: TextStyle(color: Colors.white30),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     border: InputBorder.none,
                   ),
-                  onChanged: (val) => viewModel.updateTypingStatus(val.isNotEmpty),
+                  onChanged: (val) =>
+                      viewModel.updateTypingStatus(val.isNotEmpty),
                 ),
               ),
             ),
@@ -250,8 +372,8 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     }
-
   }
+
   void _confirmBlock(BuildContext context, ChatViewModel viewModel) {
     showDialog(
       context: context,
@@ -271,24 +393,30 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () async {
               final myUid = viewModel.myUid;
               if (myUid == null) return;
-              
+
               final chatRepo = ChatRepository();
               final channel = await chatRepo.getChannel(widget.channelId);
               if (channel == null) return;
-              
+
               final peerId = channel.participants.firstWhere((p) => p != myUid);
-              
+
               await BlockRepository().blockUser(myUid, peerId);
-              
+
               if (context.mounted) {
                 Navigator.pop(context); // Close dialog
                 Navigator.pop(context); // Close chat
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('User blocked'), backgroundColor: Colors.redAccent),
+                  const SnackBar(
+                    content: Text('User blocked'),
+                    backgroundColor: Colors.redAccent,
+                  ),
                 );
               }
             },
-            child: const Text('Block', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Block',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),

@@ -128,7 +128,7 @@ description:
 | C09 | ✅ Done | Create Agreement | Define exchange terms (skills, duration, frequency) |
 | C10 | ✅ Done | Accept Agreement | Confirm terms to proceed |
 | C11 | ✅ Done | Modify Agreement | Request/approve term adjustments |
-| C12 | ❌ Todo | Cancel Agreement | Terminate agreement before sessions |
+| C12 | ✅ Done | Cancel Agreement | Terminate agreement before sessions |
 | C13 | ✅ Done | View Agreement | Access active/past agreements |
 
 ---
@@ -139,12 +139,12 @@ description:
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
 | E01 | ✅ Done | Create Session | Schedule session with time, location, format |
-| E02 | ❌ Todo | Update Session | Modify session time/location |
-| E03 | ❌ Todo | Cancel Session | Cancel with cancellation policy enforcement |
-| E04 | ❌ Todo | Session Reminders | Push/email reminders (24h, 1h before) |
-| E05 | ❌ Todo | Calendar Integration | Sync to Google/Apple Calendar |
-| E06 | ❌ Todo | Recurring Sessions | Set up weekly recurring exchanges |
-| E07 | ❌ Todo | Session Waitlist | Join waitlist for full sessions |
+| E02 | ✅ Done | Update Session | Modify session time/location |
+| E03 | ✅ Done | Cancel Session | Cancel with cancellation policy enforcement |
+| E04 | ✅ Done | Session Reminders | Push/email reminders (24h, 1h before) |
+| E05 | ✅ Done | Calendar Integration | Sync to Google/Apple Calendar |
+| E06 | ✅ Done | Recurring Sessions | Set up weekly recurring exchanges |
+| E07 | ✅ Done | Session Waitlist | Join waitlist for full sessions |
 
 ### Session Lifecycle
 | ID | Status | Use Case | Description |

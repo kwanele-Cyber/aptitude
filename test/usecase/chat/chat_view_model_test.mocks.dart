@@ -159,6 +159,25 @@ class MockAgreementRepository extends _i1.Mock
           as _i5.Future<void>);
 
   @override
+  _i5.Future<void> modifyAgreementTerms({
+    required String? id,
+    required int? sessionsCount,
+    required int? minutesPerSession,
+    required String? frequency,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#modifyAgreementTerms, [], {
+              #id: id,
+              #sessionsCount: sessionsCount,
+              #minutesPerSession: minutesPerSession,
+              #frequency: frequency,
+            }),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
   _i5.Future<_i9.Agreement?> getAgreement(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#getAgreement, [id]),

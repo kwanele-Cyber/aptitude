@@ -9,7 +9,14 @@ class ChatBubble extends StatelessWidget {
   final bool isMe;
   final Function(String agreementId)? onAcceptAgreement;
   final Function(String agreementId)? onRejectAgreement;
-  final Function(String agreementId, int sessionsCount, int minutesPerSession, String frequency)? onModifyAgreement;
+  final Function(String agreementId)? onCancelAgreement;
+  final Function(
+    String agreementId,
+    int sessionsCount,
+    int minutesPerSession,
+    String frequency,
+  )?
+  onModifyAgreement;
 
   const ChatBubble({
     super.key,
@@ -17,6 +24,7 @@ class ChatBubble extends StatelessWidget {
     required this.isMe,
     this.onAcceptAgreement,
     this.onRejectAgreement,
+    this.onCancelAgreement,
     this.onModifyAgreement,
   });
 
@@ -47,12 +55,16 @@ class ChatBubble extends StatelessWidget {
                   isMe: isMe,
                   onAccept: () => onAcceptAgreement?.call(agreementId),
                   onReject: () => onRejectAgreement?.call(agreementId),
-                  onModify: (sessions, minutes, frequency) => onModifyAgreement?.call(agreementId, sessions, minutes, frequency),
+                  onCancel: () => onCancelAgreement?.call(agreementId),
+                  onModify: (sessions, minutes, frequency) => onModifyAgreement
+                      ?.call(agreementId, sessions, minutes, frequency),
                 )
               : Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isMe ? const Color(0xFF7C3AED) : const Color(0xFF1E293B),
+                    color: isMe
+                        ? const Color(0xFF7C3AED)
+                        : const Color(0xFF1E293B),
                     gradient: isMe
                         ? const LinearGradient(
                             colors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
@@ -72,7 +84,10 @@ class ChatBubble extends StatelessWidget {
                     children: [
                       Text(
                         message.content,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -90,7 +105,7 @@ class ChatBubble extends StatelessWidget {
                             Icon(
                               message.isRead ? Icons.done_all : Icons.done,
                               size: 14,
-                              color: message.isRead 
+                              color: message.isRead
                                   ? const Color(0xFF60A5FA) // Vibrant blue
                                   : Colors.white.withOpacity(0.5),
                             ),
@@ -110,7 +125,10 @@ class ChatBubble extends StatelessWidget {
       context: context,
       backgroundColor: const Color(0xFF1A1A2E),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
       builder: (context) => SafeArea(
         child: Column(
@@ -118,7 +136,10 @@ class ChatBubble extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.flag_outlined, color: Colors.redAccent),
-              title: const Text('Report Message', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Report Message',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 showDialog(
