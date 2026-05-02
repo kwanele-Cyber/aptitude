@@ -9,6 +9,7 @@ class ChatBubble extends StatelessWidget {
   final bool isMe;
   final Function(String agreementId)? onAcceptAgreement;
   final Function(String agreementId)? onRejectAgreement;
+  final Function(String agreementId, int sessionsCount, int minutesPerSession, String frequency)? onModifyAgreement;
 
   const ChatBubble({
     super.key,
@@ -16,6 +17,7 @@ class ChatBubble extends StatelessWidget {
     required this.isMe,
     this.onAcceptAgreement,
     this.onRejectAgreement,
+    this.onModifyAgreement,
   });
 
   @override
@@ -45,6 +47,7 @@ class ChatBubble extends StatelessWidget {
                   isMe: isMe,
                   onAccept: () => onAcceptAgreement?.call(agreementId),
                   onReject: () => onRejectAgreement?.call(agreementId),
+                  onModify: (sessions, minutes, frequency) => onModifyAgreement?.call(agreementId, sessions, minutes, frequency),
                 )
               : Container(
                   padding: const EdgeInsets.all(12),

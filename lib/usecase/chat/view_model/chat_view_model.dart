@@ -103,6 +103,33 @@ class ChatViewModel extends ChangeNotifier {
     await _chatRepo.sendMessage(channelId, message);
   }
 
+  Future<void> modifyAgreement({
+    required String agreementId,
+    required int sessionsCount,
+    required int minutesPerSession,
+    required String frequency,
+  }) async {
+    if (_myUid == null) return;
+
+    await _agreementRepo.modifyAgreementTerms(
+      id: agreementId,
+      sessionsCount: sessionsCount,
+      minutesPerSession: minutesPerSession,
+      frequency: frequency,
+    );
+
+    final message = ChatMessage(
+      id: const Uuid().v4(),
+      senderId: _myUid!,
+      content: 'I requested changes to the agreement terms.',
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+      type: MessageType.system,
+      metadata: {'agreementId': agreementId},
+    );
+
+    await _chatRepo.sendMessage(channelId, message);
+  }
+
   Future<void> sendMessage(String content) async {
     if (_myUid == null || content.trim().isEmpty) return;
     

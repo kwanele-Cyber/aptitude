@@ -7,22 +7,26 @@ class MatchService {
   final UserRepository _userRepo;
   final UserSkillsRepository _skillsRepo;
   final MatchEngine _engine;
+  final MatchFeedbackRepository _feedbackRepo;
 
   MatchService({
     UserRepository? userRepo,
     UserSkillsRepository? skillsRepo,
     MatchEngine? engine,
+    MatchFeedbackRepository? feedbackRepo,
   })  : _userRepo = userRepo ?? UserRepository(),
         _skillsRepo = skillsRepo ?? UserSkillsRepository(),
-        _engine = engine ?? MatchEngine();
+        _engine = engine ?? MatchEngine(),
+        _feedbackRepo = feedbackRepo ?? MatchFeedbackRepository();
 
   /// Fetches and ranks all potential matches for a given user.
   Future<List<MatchResult>> getRankedMatches(String uid) async {
     // 1. Get current user's skills
     final myOffers = await _skillsRepo.getUserOffers(uid);
     final myRequests = await _skillsRepo.getUserRequests(uid);
+    final me = await _userRepo.read(uid);
 
-    if (myOffers.isEmpty && myRequests.isEmpty) return [];
+    if ((myOffers.isEmpty && myRequests.isEmpty) || me == null) return [];
 
     // 2. Get all other users
     final allUsers = await _userRepo.listAll();
@@ -75,6 +79,10 @@ class MatchService {
           }
         }
       }
+
+      final geoBonus = _engine.calculateGeoProximityBonus(me: me, peer: peer);
+      final feedbackBonus = (await _feedbackRepo.averageRatingForUser(peer.uid) * 2).round();
+      bestScore += geoBonus + feedbackBonus;
 
       // 4. Record the result if there's any match
       if (bestScore > 0) {
