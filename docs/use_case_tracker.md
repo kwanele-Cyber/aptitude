@@ -86,8 +86,8 @@ description:
 | M01 | ✅ Done | Generate Matches | AI-powered matching algorithm |
 | M02 | ✅ Done | Rank Matches | Score-based prioritization (0-100) |
 | M03 | ✅ Done | Fetch Matches | Retrieve daily match suggestions |
-| M04 | ❌ Todo | Geo-Proximity Scoring | Haversine-based distance ranking |
-| M05 | ❌ Todo | Availability Matching | Match based on time slot compatibility |
+| M04 | ✅ Done | Geo-Proximity Scoring | Haversine-based distance ranking |
+| M05 | ✅ Done | Availability Matching | Match based on time slot compatibility |
 | M06 | ✅ Done | Skill Level Matching | Balance expert/beginner matches with scoring bonus |
 
 ### Match Interaction
@@ -103,7 +103,7 @@ description:
 ### Match Optimization
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| M13 | ❌ Todo | Feedback on Matches | Rate match quality to improve algorithm |
+| M13 | ✅ Done | Feedback on Matches | Rate match quality to improve algorithm |
 | M14 | ✅ Done | Refresh Matches | Request new match suggestions (RefreshIndicator) |
 
 ---

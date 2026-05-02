@@ -1,5 +1,6 @@
 import 'package:myapp/core/data/models/match_result.dart';
 import 'package:myapp/core/data/models/user.dart';
+import 'package:myapp/core/data/repositories/match_feedback_repository.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/core/data/repositories/user_skills_repository.dart';
 import 'package:myapp/core/services/match_engine.dart';
@@ -8,22 +9,26 @@ class MatchService {
   final UserRepository _userRepo;
   final UserSkillsRepository _skillsRepo;
   final MatchEngine _engine;
+  final MatchFeedbackRepository _feedbackRepo;
 
   MatchService({
     UserRepository? userRepo,
     UserSkillsRepository? skillsRepo,
     MatchEngine? engine,
+    MatchFeedbackRepository? feedbackRepo,
   })  : _userRepo = userRepo ?? UserRepository(),
         _skillsRepo = skillsRepo ?? UserSkillsRepository(),
-        _engine = engine ?? MatchEngine();
+        _engine = engine ?? MatchEngine(),
+        _feedbackRepo = feedbackRepo ?? MatchFeedbackRepository();
 
   /// Fetches and ranks all potential matches for a given user.
   Future<List<MatchResult>> getRankedMatches(String uid) async {
     // 1. Get current user's skills
     final myOffers = await _skillsRepo.getUserOffers(uid);
     final myRequests = await _skillsRepo.getUserRequests(uid);
+    final me = await _userRepo.read(uid);
 
-    if (myOffers.isEmpty && myRequests.isEmpty) return [];
+    if ((myOffers.isEmpty && myRequests.isEmpty) || me == null) return [];
 
     // 2. Get all other users
     final allUsers = await _userRepo.listAll();
@@ -37,8 +42,6 @@ class MatchService {
       final peerRequests = await _skillsRepo.getUserRequests(peer.uid);
 
       int bestScore = 0;
-      final matchingOffers = <MatchResult>[]; // Temporary storage for tracking logic
-
       // Iterate through my requests vs their offers (They can teach me)
       for (var myReq in myRequests) {
         for (var peerOff in peerOffers) {
@@ -76,6 +79,10 @@ class MatchService {
           }
         }
       }
+
+      final geoBonus = _engine.calculateGeoProximityBonus(me: me, peer: peer);
+      final feedbackBonus = (await _feedbackRepo.averageRatingForUser(peer.uid) * 2).round();
+      bestScore += geoBonus + feedbackBonus;
 
       // 4. Record the result if there's any match
       if (bestScore > 0) {
