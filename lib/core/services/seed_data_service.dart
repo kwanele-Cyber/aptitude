@@ -5,7 +5,7 @@ import 'package:myapp/core/data/models/skill.dart';
 import 'package:myapp/core/data/models/skill_enums.dart';
 import 'package:myapp/core/data/models/skill_offer.dart';
 import 'package:myapp/core/data/models/skill_request.dart';
-import 'package:myapp/core/data/models/user.dart' as userModel;
+import 'package:myapp/core/data/models/user.dart' as user_model;
 import 'package:myapp/core/data/models/chat_channel.dart';
 import 'package:myapp/core/data/models/chat_message.dart';
 import 'package:myapp/core/data/models/agreement.dart';
@@ -15,7 +15,6 @@ import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/core/data/repositories/user_skills_repository.dart';
 import 'package:myapp/core/data/repositories/chat_repository.dart';
 import 'package:myapp/core/data/repositories/agreement_repository.dart';
-import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -23,7 +22,6 @@ class SeedDataService {
   final _userRepo = UserRepository();
   final _skillsRepo = SkillsRepository();
   final _userSkillsRepo = UserSkillsRepository();
-  final _mainAuth = FirebaseAuth.instance;
 
   Future<String?> _getPersonaUid(String email, String password) async {
     // Create a secondary app to avoid logging out the current user
@@ -53,13 +51,13 @@ class SeedDataService {
   }
 
   Future<void> seed(String currentUid) async {
-    print('🌱 Starting data seed for UID: $currentUid');
+    debugPrint('🌱 Starting data seed for UID: $currentUid');
 
     // 0. Ensure Current User has a profile
     final currentUser = await _userRepo.read(currentUid);
     if (currentUser == null) {
       await _userRepo.create(
-        userModel.User(
+        user_model.User(
           uid: currentUid,
           email: 'you@example.com',
           firstName: 'You',
@@ -144,7 +142,7 @@ class SeedDataService {
     final marcoUid = await _getPersonaUid('marco@example.com', 'Password123!') ?? 'seed_user_3';
 
     final users = [
-      userModel.User(
+      user_model.User(
         uid: alexUid,
         email: 'alex@example.com',
         firstName: 'Alex',
@@ -158,7 +156,7 @@ class SeedDataService {
         createdAt: DateTime.now(),
         profileComplete: true,
       ),
-      userModel.User(
+      user_model.User(
         uid: sarahUid,
         email: 'sarah@example.com',
         firstName: 'Sarah',
@@ -172,7 +170,7 @@ class SeedDataService {
         createdAt: DateTime.now(),
         profileComplete: true,
       ),
-      userModel.User(
+      user_model.User(
         uid: marcoUid,
         email: 'marco@example.com',
         firstName: 'Marco',
@@ -296,6 +294,6 @@ class SeedDataService {
       timestamp: DateTime.now().subtract(const Duration(minutes: 29)).millisecondsSinceEpoch,
     ));
 
-    print('✅ Seeding complete!');
+    debugPrint('✅ Seeding complete!');
   }
 }

@@ -11,7 +11,6 @@ import 'package:myapp/usecase/connections/connections_screen.dart';
 import 'package:myapp/usecase/chat/chat_list_screen.dart';
 import 'package:myapp/usecase/profile/profile_screen.dart';
 import 'package:myapp/core/providers/notification_provider.dart';
-import 'package:myapp/usecase/notifications/notification_screen.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -143,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),

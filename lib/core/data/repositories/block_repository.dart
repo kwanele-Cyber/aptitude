@@ -1,15 +1,10 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:myapp/core/error/app_exception.dart';
-import 'package:myapp/core/services/firebase_service.dart';
-import 'package:myapp/core/services/interfaces/database_inteface.dart';
 
 class BlockRepository {
   final String _path = "blocks";
-  late final DatabaseService<DataSnapshot> _databaseService;
 
-  BlockRepository({DatabaseService<DataSnapshot>? databaseService}) {
-    _databaseService = databaseService ?? FirebaseService();
-  }
+  BlockRepository();
 
   Future<void> blockUser(String myUid, String targetUid) async {
     final ref = FirebaseDatabase.instance.ref("$_path/$myUid/$targetUid");

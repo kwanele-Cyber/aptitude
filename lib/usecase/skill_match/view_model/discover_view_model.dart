@@ -8,7 +8,6 @@ import 'package:myapp/core/data/repositories/block_repository.dart';
 import 'package:myapp/core/data/repositories/match_repository.dart';
 import 'package:myapp/core/data/repositories/chat_repository.dart';
 import 'package:myapp/core/error/error_handler.dart';
-import 'package:myapp/core/error/app_exception.dart';
 
 class DiscoverViewModel extends ChangeNotifier {
   final AuthService _authService;
@@ -39,10 +38,10 @@ class DiscoverViewModel extends ChangeNotifier {
   String? get error => _error;
 
   // Filter state
-  Set<SkillLevel> _selectedLevels = {};
+  final Set<SkillLevel> _selectedLevels = {};
   Set<SkillLevel> get selectedLevels => _selectedLevels;
 
-  Set<SkillFormat> _selectedFormats = {};
+  final Set<SkillFormat> _selectedFormats = {};
   Set<SkillFormat> get selectedFormats => _selectedFormats;
 
   String? _selectedSkillId;
@@ -83,8 +82,8 @@ class DiscoverViewModel extends ChangeNotifier {
 
         // 2. Proficiency Level Filter
         if (_selectedLevels.isNotEmpty) {
-           final peerAllSkills = [...m.matchingOffers, ...m.matchingRequests];
            // Logic for level matching
+           return true;
         }
 
         // 3. Trust Score Filter (M10)

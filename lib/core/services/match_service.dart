@@ -1,6 +1,4 @@
 import 'package:myapp/core/data/models/match_result.dart';
-import 'package:myapp/core/data/models/user.dart';
-import 'package:myapp/core/data/repositories/match_feedback_repository.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/core/data/repositories/user_skills_repository.dart';
 import 'package:myapp/core/services/match_engine.dart';
@@ -42,6 +40,8 @@ class MatchService {
       final peerRequests = await _skillsRepo.getUserRequests(peer.uid);
 
       int bestScore = 0;
+      // Temporary storage for tracking logic
+
       // Iterate through my requests vs their offers (They can teach me)
       for (var myReq in myRequests) {
         for (var peerOff in peerOffers) {

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/core/data/models/user.dart';
-import 'package:myapp/usecase/skill_match/skill_details_screen.dart';
-import 'package:myapp/usecase/profile/public_profile_screen.dart';
 import 'skill_chip.dart';
 
 import 'package:myapp/core/data/models/match_result.dart';
@@ -38,8 +35,8 @@ class MatchCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: result.isReciprocal 
-              ? const Color(0xFF7C3AED).withOpacity(0.5) 
-              : Colors.white.withOpacity(0.06),
+              ? const Color(0xFF7C3AED).withValues(alpha: 0.5) 
+              : Colors.white.withValues(alpha: 0.06),
           width: result.isReciprocal ? 2 : 1,
         ),
       ),
@@ -106,7 +103,7 @@ class MatchCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF22C55E).withOpacity(0.1),
+                            color: const Color(0xFF22C55E).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
@@ -132,7 +129,7 @@ class MatchCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

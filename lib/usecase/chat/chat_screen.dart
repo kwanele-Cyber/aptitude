@@ -4,7 +4,6 @@ import 'package:myapp/usecase/chat/view_model/chat_view_model.dart';
 import 'package:myapp/usecase/chat/widgets/chat_bubble.dart';
 import 'package:myapp/usecase/chat/widgets/agreement_proposal_sheet.dart';
 import 'package:myapp/core/data/models/agreement.dart';
-import 'package:myapp/core/data/models/chat_channel.dart';
 import 'package:myapp/core/data/repositories/block_repository.dart';
 import 'package:myapp/core/widgets/report_dialog.dart';
 import 'package:provider/provider.dart';
@@ -189,7 +188,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: TextField(

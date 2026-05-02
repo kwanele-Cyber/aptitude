@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:flutter/foundation.dart';
 import 'package:myapp/core/data/models/skill.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/data/models/location_model.dart';
@@ -89,14 +86,14 @@ extension UserExtension on User {
     return await repo.getSkill(skillId);
   }
 
-  Future<List<Skill>> addSkillsNames(List<String> SkillNames) async {
+  Future<List<Skill>> addSkillsNames(List<String> skillNames) async {
     final userRepo = UserRepository();
     final userSkillsRepo = UserSkillsRepository();
     List<Skill> results = [];
 
-    for (final skillname in SkillNames) {
+    for (final skillName in skillNames) {
       // We pass persist: false to avoid updating the DB in every iteration
-      Skill? skill = await addSkillByName(name: skillname, persist: false);
+      Skill? skill = await addSkillByName(name: skillName, persist: false);
       if (skill != null) {
         results.add(skill);
       }

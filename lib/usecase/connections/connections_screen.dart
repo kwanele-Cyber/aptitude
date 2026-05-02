@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:myapp/core/data/models/invite.dart';
 import 'package:myapp/usecase/connections/view_model/connections_view_model.dart';
 import 'package:myapp/usecase/connections/widgets/invite_card.dart';
-import 'package:myapp/usecase/chat/chat_screen.dart';
 import 'package:myapp/core/data/repositories/chat_repository.dart';
 import 'package:provider/provider.dart';
 
@@ -85,7 +84,7 @@ class _ConnectionsScreenContentState extends State<_ConnectionsScreenContent>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -102,7 +101,7 @@ class _ConnectionsScreenContentState extends State<_ConnectionsScreenContent>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(14),
       ),
       child: TabBar(

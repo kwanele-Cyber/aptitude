@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/core/services/auth_service.dart';
@@ -8,7 +7,7 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
@@ -21,17 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool isLoading = false;
 
-  User get user {
-    if (_user == null) {
-      _authService.getCurrentUser().then(
-        (user) => {
-          if (user != null) {_user = user},
-        },
-      );
-    }
-
-    return _user!;
-  }
+  User? get user => _user;
 
 
   @override
@@ -41,27 +30,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> loadUserData() async {
-    final data = user;
-
-    setState(() {
-      nameController.text = data.firstName ?? '';
-      phoneController.text = data.phone ?? '';
-    });
+    final data = await _authService.getCurrentUser();
+    if (data != null) {
+      setState(() {
+        _user = data;
+        nameController.text = data.firstName;
+        phoneController.text = data.phone ?? '';
+      });
+    }
   }
 
   Future<void> updateProfile() async {
     setState(() => isLoading = true);
 
-    await _userRepo.update(user.uid, {
+    await _userRepo.update(user!.uid, {
       "name": nameController.text.trim(),
       "phone": phoneController.text.trim(),
     });
 
     setState(() => isLoading = false);
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("Profile updated successfully")));
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Profile updated successfully")));
+    }
   }
 
   @override
@@ -84,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 30),
 
             ElevatedButton(
-              onPressed: isLoading ? null : updateProfile,
+              onPressed: (isLoading || _user == null) ? null : updateProfile,
               child: isLoading
                   ? CircularProgressIndicator(color: Colors.white)
                   : Text("Save Changes"),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/usecase/chat/view_model/chat_list_view_model.dart';
-import 'package:myapp/usecase/chat/chat_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -68,14 +67,17 @@ class _ChatListScreenState extends State<ChatListScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         onTap: () {
           final peerName = '${entry.peer.firstName} ${entry.peer.lastName}';
+          final chatViewModel = context.read<ChatListViewModel>();
           context.push('/chat/${entry.channel.id}?name=${Uri.encodeComponent(peerName)}')
-            .then((_) => context.read<ChatListViewModel>().loadChannels());
+            .then((_) {
+              if (mounted) chatViewModel.loadChannels();
+            });
         },
         leading: Container(
           width: 54,
@@ -85,7 +87,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             gradient: const LinearGradient(
               colors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.1), width: 2),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 2),
           ),
           child: Center(
             child: Text(
