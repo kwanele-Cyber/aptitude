@@ -65,6 +65,12 @@ class _ChatScreenState extends State<ChatScreen> {
                               isMe: msg.senderId == viewModel.myUid,
                               onAcceptAgreement: (aid) => viewModel.respondToAgreement(aid, AgreementStatus.accepted),
                               onRejectAgreement: (aid) => viewModel.respondToAgreement(aid, AgreementStatus.rejected),
+                              onModifyAgreement: (aid, sessions, minutes, frequency) => viewModel.modifyAgreement(
+                                agreementId: aid,
+                                sessionsCount: sessions,
+                                minutesPerSession: minutes,
+                                frequency: frequency,
+                              ),
                             );
                           },
                         ),

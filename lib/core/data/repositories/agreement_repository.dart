@@ -28,6 +28,24 @@ class AgreementRepository {
     );
   }
 
+  Future<void> modifyAgreementTerms({
+    required String id,
+    required int sessionsCount,
+    required int minutesPerSession,
+    required String frequency,
+  }) async {
+    await _databaseService.update(
+      location: "$_path/$id",
+      data: {
+        'sessionsCount': sessionsCount,
+        'minutesPerSession': minutesPerSession,
+        'frequency': frequency,
+        'status': AgreementStatus.pending.index,
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      },
+    );
+  }
+
   Future<Agreement?> getAgreement(String id) async {
     final snapshot = await _databaseService.read(location: "$_path/$id");
     if (snapshot != null && snapshot.exists && snapshot.value != null) {

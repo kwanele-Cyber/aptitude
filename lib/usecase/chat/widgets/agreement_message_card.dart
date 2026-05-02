@@ -11,6 +11,7 @@ class AgreementMessageCard extends StatelessWidget {
   final bool isMe;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
+  final Function(int sessionsCount, int minutesPerSession, String frequency)? onModify;
 
   const AgreementMessageCard({
     super.key,
@@ -18,7 +19,41 @@ class AgreementMessageCard extends StatelessWidget {
     required this.isMe,
     this.onAccept,
     this.onReject,
+    this.onModify,
   });
+
+  Future<void> _showModifyDialog(BuildContext context, Agreement agreement) async {
+    final sessionsCtrl = TextEditingController(text: agreement.sessionsCount.toString());
+    final minutesCtrl = TextEditingController(text: agreement.minutesPerSession.toString());
+    final frequencyCtrl = TextEditingController(text: agreement.frequency);
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Modify Agreement'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: sessionsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Sessions')),
+            TextField(controller: minutesCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Minutes/Session')),
+            TextField(controller: frequencyCtrl, decoration: const InputDecoration(labelText: 'Frequency')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              final sessions = int.tryParse(sessionsCtrl.text) ?? agreement.sessionsCount;
+              final minutes = int.tryParse(minutesCtrl.text) ?? agreement.minutesPerSession;
+              final frequency = frequencyCtrl.text.trim().isEmpty ? agreement.frequency : frequencyCtrl.text.trim();
+              onModify?.call(sessions, minutes, frequency);
+              Navigator.pop(context);
+            },
+            child: const Text('Submit Changes'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _showScheduling(BuildContext context, String aid) {
     return showModalBottomSheet(
@@ -140,6 +175,17 @@ class AgreementMessageCard extends StatelessWidget {
                   ],
                 ),
               ],
+              if (isMe && isPending) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => _showModifyDialog(context, agreement),
+                    icon: const Icon(Icons.edit, size: 14, color: Colors.amber),
+                    label: const Text('Modify Terms', style: TextStyle(color: Colors.amber, fontSize: 12)),
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -178,4 +224,3 @@ class AgreementMessageCard extends StatelessWidget {
     );
   }
 }
-

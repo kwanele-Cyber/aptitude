@@ -65,4 +65,29 @@ class Agreement {
       updatedAt: json['updatedAt'] as int?,
     );
   }
+
+  Agreement copyWith({
+    String? offerSkillId,
+    String? requestSkillId,
+    int? sessionsCount,
+    int? minutesPerSession,
+    String? frequency,
+    AgreementStatus? status,
+    int? updatedAt,
+  }) {
+    return Agreement(
+      id: id,
+      channelId: channelId,
+      proposerId: proposerId,
+      receiverId: receiverId,
+      offerSkillId: offerSkillId ?? this.offerSkillId,
+      requestSkillId: requestSkillId ?? this.requestSkillId,
+      sessionsCount: sessionsCount ?? this.sessionsCount,
+      minutesPerSession: minutesPerSession ?? this.minutesPerSession,
+      frequency: frequency ?? this.frequency,
+      status: status ?? this.status,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

@@ -127,7 +127,7 @@ description:
 |----|--------|----------|-------------|
 | C09 | ✅ Done | Create Agreement | Define exchange terms (skills, duration, frequency) |
 | C10 | ✅ Done | Accept Agreement | Confirm terms to proceed |
-| C11 | ❌ Todo | Modify Agreement | Request/approve term adjustments |
+| C11 | ✅ Done | Modify Agreement | Request/approve term adjustments |
 | C12 | ❌ Todo | Cancel Agreement | Terminate agreement before sessions |
 | C13 | ✅ Done | View Agreement | Access active/past agreements |
 
