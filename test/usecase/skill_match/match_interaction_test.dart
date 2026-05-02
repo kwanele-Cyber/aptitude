@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-import 'package:myapp/core/data/models/match.dart';
 import 'package:myapp/core/data/models/match_result.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/data/models/location_model.dart';

@@ -32,14 +32,14 @@ flowchart TD
 ## 2) Skill Creation, Discovery & Management (P1)
 
 ```mermaid
-flowchart TD
+flowchart TD    
     HOME[Home / Discover] --> OFFER[Create Skill Offer<br/>S01]
     HOME --> REQUEST[Create Skill Request<br/>S02]
     HOME --> SEARCH[Search Skills<br/>S08]
     HOME --> FILTER[Filter Skills<br/>S09]
     HOME --> FEED[Browse Feed<br/>S10]
-
-    OFFER --> AI_CAT[Suggest Category (AI)<br/>S13]
+    
+    OFFER --> AI_CAT["Suggest Category (AI)<br/>S13"]
     REQUEST --> AI_CAT
     AI_CAT --> DETAILS[Skill Details<br/>S11]
 
@@ -47,7 +47,7 @@ flowchart TD
     DETAILS --> DELETE[Delete Skill<br/>S04]
     DETAILS --> CLONE[Clone Skill<br/>S06]
     DETAILS --> ARCHIVE[Archive Skill<br/>S07]
-
+    
     SEARCH --> SAVE_SEARCH[Save Search<br/>S12]
     FILTER --> SAVE_SEARCH
     FEED --> DETAILS
@@ -72,8 +72,8 @@ flowchart TD
     IGNORE --> HISTORY
     SAVE --> HISTORY
 
-    TODO_GEO[Geo-Proximity Scoring<br/>M04 (TODO)]:::todo -.future ranking.-> RANKED
-    TODO_AVAIL[Availability Matching<br/>M05 (TODO)]:::todo -.future ranking.-> RANKED
+    TODO_GEO["Geo-Proximity Scoring<br/>M04 (TODO)"]:::todo -.future ranking.-> RANKED
+    TODO_AVAIL["Availability Matching<br/>M05 (TODO)"]:::todo -.future ranking.-> RANKED
 
     classDef todo fill:#fff3cd,stroke:#d39e00,color:#5c4400;
 ```
@@ -99,8 +99,8 @@ flowchart TD
     AGREEMENT_VIEW --> AGREEMENT_ACCEPT[Accept Agreement<br/>C10]
     AGREEMENT_ACCEPT --> SESSION_FLOW[Continue to Session Scheduling]
 
-    AGREEMENT_MOD[Modify Agreement<br/>C11 (TODO)]:::todo -.future branch.-> AGREEMENT_VIEW
-    AGREEMENT_CANCEL[Cancel Agreement<br/>C12 (TODO)]:::todo -.future branch.-> AGREEMENT_VIEW
+    AGREEMENT_MOD["Modify Agreement<br/>C11 (TODO)"]:::todo -.future branch.-> AGREEMENT_VIEW
+    AGREEMENT_CANCEL["Cancel Agreement<br/>C12 (TODO)"]:::todo -.future branch.-> AGREEMENT_VIEW
 
     classDef todo fill:#fff3cd,stroke:#d39e00,color:#5c4400;
 ```
@@ -121,9 +121,9 @@ flowchart TD
 
     UPCOMING --> REMINDERS[Reminders / Notifications<br/>X01/X02]
 
-    UPDATE_SESSION[Update Session<br/>E02 (TODO)]:::todo -.future action.-> SESSION_DETAIL
-    CANCEL_SESSION[Cancel Session<br/>E03 (TODO)]:::todo -.future action.-> SESSION_DETAIL
-    START_SESSION[Start Session<br/>E08 (TODO)]:::todo -.future action.-> SESSION_DETAIL
+    UPDATE_SESSION["Update Session<br/>E02 (TODO)"]:::todo -.future action.-> SESSION_DETAIL
+    CANCEL_SESSION["Cancel Session<br/>E03 (TODO)"]:::todo -.future action.-> SESSION_DETAIL
+    START_SESSION["Start Session<br/>E08 (TODO)"]:::todo -.future action.-> SESSION_DETAIL
 
     classDef todo fill:#fff3cd,stroke:#d39e00,color:#5c4400;
 ```
@@ -147,7 +147,7 @@ flowchart TD
 ## 7) End-to-End Primary User Journey
 
 ```mermaid
-flowchart LR
+flowchart TD
     AUTH[Register / Login] --> PROFILE[Create Profile]
     PROFILE --> SKILL[Post Offer/Request]
     SKILL --> MATCH[Discover + Match]
@@ -157,7 +157,7 @@ flowchart LR
     TERMS --> SESSION[Schedule Session]
     SESSION --> COMPLETE[Complete Session]
     COMPLETE --> FEEDBACK[Rate + Review]
-    FEEDBACK --> TRUST[Improved Trust & Better Future Matches]
+    FEEDBACK --> TRUST["Improved Trust & Better Future Matches"]
 ```
 
 ## Notes

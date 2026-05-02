@@ -33,13 +33,11 @@ abstract class AppException implements Exception {
 }
 
 class AuthException extends AppException {
-  AuthException(String message, [ErrorCode code = ErrorCode.unauthorized, dynamic original])
-      : super(message, code, original);
+  AuthException(super.message, [super.code = ErrorCode.unauthorized, super.original]);
 }
 
 class DatabaseException extends AppException {
-  DatabaseException(String message, [ErrorCode code = ErrorCode.databaseError, dynamic original])
-      : super(message, code, original);
+  DatabaseException(super.message, [super.code = ErrorCode.databaseError, super.original]);
 }
 
 class ValidationException extends AppException {
@@ -53,11 +51,9 @@ class NetworkException extends AppException {
 }
 
 class MatchException extends AppException {
-  MatchException(String message, [ErrorCode code = ErrorCode.unknown, dynamic original])
-      : super(message, code, original);
+  MatchException(super.message, [super.code = ErrorCode.unknown, super.original]);
 }
 
 class ChatException extends AppException {
-  ChatException(String message, [ErrorCode code = ErrorCode.unknown, dynamic original])
-      : super(message, code, original);
+  ChatException(super.message, [super.code = ErrorCode.unknown, super.original]);
 }

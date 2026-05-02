@@ -297,7 +297,7 @@ class _EditSkillScreenState extends State<EditSkillScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<ProofType>(
-                  value: selectedType,
+                  initialValue: selectedType,
                   dropdownColor: const Color(0xFF1A1A2E),
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(labelText: 'Type', labelStyle: TextStyle(color: Colors.grey)),
