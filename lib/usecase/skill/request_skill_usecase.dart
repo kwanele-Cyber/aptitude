@@ -6,11 +6,14 @@ class RequestSkillUseCase {
   Future<void> execute({
     required String userId,
     required String skillName,
+    required String message,
   }) async {
     await _firestore.collection('skill_requests').add({
       'userId': userId,
       'skillName': skillName,
-      'requestedAt': Timestamp.now(),
+      'message': message,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
     });
   }
 }

@@ -1,18 +1,20 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:myapp/core/data/models/skill.dart';
+import 'package:myapp/core/data/repositories/skill_repository.dart';
 
 class PostSkillUseCase {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   Future<void> execute({
-    required String userId,
-    required String skillName,
+    required String name,
     required String description,
+    required String category,
   }) async {
-    await _firestore.collection('skills').add({
-      'userId': userId,
-      'skillName': skillName,
-      'description': description,
-      'createdAt': Timestamp.now(),
-    });
+    final repo = SkillRepository();
+
+    final skill = Skill(
+      name: name,
+      description: description,
+      category: category,
+    );
+
+    await repo.create(data: skill);
   }
 }

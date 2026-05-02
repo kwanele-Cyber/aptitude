@@ -72,7 +72,7 @@ class UserRepository {
 
   /// Updates specific fields of a user without overwriting the entire record.
   /// Useful for things like updating just the 'bio' or 'location'.
-  Future<void> update(String userId, Map<String, dynamic> updates) async {
+  Future<void> update(String userId, Map<String, dynamic> updates, {required String location, required Map<String, dynamic> data}) async {
     try {
       await _databaseService.update(
         location: '$_basePath/$userId',

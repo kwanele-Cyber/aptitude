@@ -1,17 +1,31 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:myapp/core/data/models/skill.dart';
+import 'package:myapp/core/data/repositories/skill_repository.dart';
+import 'package:myapp/core/data/repositories/user_repository.dart';
 
 class AddSkillToProfileUseCase {
-  //ReviewNotes: Please use the created in lib/core/services/firebase_service.dart to centralize all data base related logic.
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  //ReviewNotes: The DataSchema used here is not compatible with the model for lib/core/data/models/skill.dart
-  //to query
   Future<void> execute({
     required String userId,
     required String skillName,
+    required String description,
+    required String category,
   }) async {
-    await _firestore.collection('users').doc(userId).update({
-      'skills': FieldValue.arrayUnion([skillName]),
-    });
+    final skillRepo = SkillRepository();
+    final userRepo = UserRepository();
+
+    final skill = Skill(
+      name: skillName,
+      description: description,
+      category: category,
+    );
+
+    await skillRepo.create(data: skill);
+
+    final user = await userRepo.read(userId);
+
+    if (user == null) throw Exception("User not found");
+
+    user.skills.add(skill.sid);
+
+    await userRepo.update(user.uid, user.toJson(), location: '', data: {});
   }
 }

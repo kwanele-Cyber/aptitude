@@ -1,9 +1,52 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:myapp/core/data/repositories/user_repository.dart';
 
 class DeleteSkillUseCase {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Future<void> execute({
+    required String userId,
+    required String skillName,
+  }) async {
+    final userRepo = UserRepository();
 
-  Future<void> execute(String skillId) async {
-    await _firestore.collection('skills').doc(skillId).delete();
+    final user = await userRepo.read(userId);
+
+    if (user == null) throw Exception("User not found");
+
+    user.skills.remove(skillName);
+
+    await userRepo.update(user.uid, user.toJson(), location: '', data: {});
+  }
+}import 'package:myapp/core/data/repositories/user_repository.dart';
+
+class DeleteSkillUseCase {
+  Future<void> execute({
+    required String userId,
+    required String skillName,
+  }) async {
+    final userRepo = UserRepository();
+
+    final user = await userRepo.read(userId);
+
+    if (user == null) throw Exception("User not found");
+
+    user.skills.remove(skillName);
+
+    await userRepo.update(user.uid, user.toJson());
+  }
+}import 'package:myapp/core/data/repositories/user_repository.dart';
+
+class DeleteSkillUseCase {
+  Future<void> execute({
+    required String userId,
+    required String skillName,
+  }) async {
+    final userRepo = UserRepository();
+
+    final user = await userRepo.read(userId);
+
+    if (user == null) throw Exception("User not found");
+
+    user.skills.remove(skillName);
+
+    await userRepo.update(user.uid, user.toJson());
   }
 }
