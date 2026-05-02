@@ -17,6 +17,7 @@ class User {
   String? twoFactorPin;
   double trustScore = 0.0;
   bool isVerified = false;
+  String role;
   DateTime? updatedAt;
   DateTime? createdAt;
 
@@ -40,7 +41,8 @@ class User {
     this.twoFactorEnabled = false,
     this.twoFactorPin,
     this.trustScore = 0.0,
-    this.isVerified = false 
+    this.isVerified = false,
+    this.role = 'member',
   });
 
   Map<String, dynamic> toJson() {
@@ -61,6 +63,7 @@ class User {
       'twoFactorPin': twoFactorPin,
       'trustScore': trustScore,
       'isVerified': isVerified,
+      'role': role,
       'updatedAt': updatedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
     };
@@ -92,6 +95,7 @@ class User {
       profileComplete: json['profileComplete'] as bool? ?? false,
       trustScore: (json['trustScore'] as num?)?.toDouble() ?? 0.0,
       isVerified: json['isVerified'] as bool? ?? false,
+      role: (json['role'] as String? ?? 'member').toLowerCase(),
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'] as String)
           : null,

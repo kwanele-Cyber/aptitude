@@ -23,6 +23,7 @@ extension UserExtension on User {
     String? bio,
     AddressModel? location,
     bool? profileComplete,
+    String? role,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -38,6 +39,7 @@ extension UserExtension on User {
       bio: bio ?? this.bio,
       location: location ?? this.location,
       profileComplete: profileComplete ?? this.profileComplete,
+      role: role ?? this.role,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
