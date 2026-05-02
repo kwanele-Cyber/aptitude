@@ -10,6 +10,8 @@ import 'package:myapp/usecase/auth2/register_screen.dart';
 import 'package:myapp/usecase/auth2/forgot_password_screen.dart';
 import 'package:myapp/usecase/chat/chat_screen.dart';
 import 'package:myapp/usecase/skill_match/home_screen.dart';
+import 'package:myapp/usecase/dashboard/role_dashboard_gate.dart';
+import 'package:myapp/usecase/landing_page/view/landing_page.dart';
 import 'package:myapp/usecase/profile/profile_screen.dart';
 import 'package:myapp/usecase/skill_match/create_skill_offer_screen.dart';
 import 'package:myapp/usecase/skill_match/create_skill_request_screen.dart';
@@ -51,6 +53,7 @@ final GoRouter router = GoRouter(
     // Routes that are accessible without being logged in
     final bool isAuthRoute =
         location == '/' ||
+        location == '/landing' ||
         location == '/auth/login' ||
         location == '/auth/register' ||
         location == '/auth/forgot';
@@ -62,7 +65,7 @@ final GoRouter router = GoRouter(
 
     // If logged in and trying to access an auth route, redirect to home
     if (isAuthRoute) {
-      return '/home';
+      return '/dashboard';
     }
 
     // No redirection needed
@@ -72,8 +75,12 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/',
       builder: (BuildContext context, GoRouterState state) {
-        return LoginScreen();
+        return const LandingPage();
       },
+    ),
+    GoRoute(
+      path: '/landing',
+      builder: (context, state) => const LandingPage(),
     ),
     GoRoute(
       path: '/auth/login',
@@ -103,7 +110,13 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/home',
       builder: (context, state) {
-        return HomeScreen();
+        return const HomeScreen();
+      },
+    ),
+    GoRoute(
+      path: '/dashboard',
+      builder: (context, state) {
+        return const RoleDashboardGate();
       },
     ),
     GoRoute(
@@ -206,4 +219,3 @@ final GoRouter router = GoRouter(
     ),
   ],
 );
-
