@@ -159,9 +159,9 @@ class _SkillDetailsScreenState extends State<SkillDetailsScreen> with SingleTick
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF7C3AED).withOpacity(0.1),
+                color: const Color(0xFF7C3AED).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF7C3AED).withOpacity(0.3)),
+                border: Border.all(color: const Color(0xFF7C3AED).withValues(alpha: 0.3)),
               ),
               child: Text(
                 _skill!.category.toUpperCase(),

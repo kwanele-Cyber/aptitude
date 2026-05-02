@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/core/data/models/agreement.dart';
-import 'package:myapp/core/data/models/chat_channel.dart';
 import 'package:uuid/uuid.dart';
 
 class AgreementProposalSheet extends StatefulWidget {
@@ -28,7 +27,7 @@ class _AgreementProposalSheetState extends State<AgreementProposalSheet> {
   late String _requestSkill;
   int _sessions = 5;
   int _minutes = 60;
-  String _frequency = 'Weekly';
+  final String _frequency = 'Weekly';
 
   @override
   void initState() {
@@ -105,7 +104,7 @@ class _AgreementProposalSheetState extends State<AgreementProposalSheet> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected ? const Color(0xFF7C3AED) : Colors.white.withOpacity(0.05),
+                      color: selected ? const Color(0xFF7C3AED) : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text('$m m', style: TextStyle(color: selected ? Colors.white : Colors.grey)),
@@ -158,7 +157,7 @@ class _AgreementProposalSheetState extends State<AgreementProposalSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonHideUnderline(

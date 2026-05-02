@@ -8,13 +8,7 @@ import 'package:myapp/core/services/auth_service.dart';
 
 import 'package:myapp/core/data/extension/model_extensions.dart';
 import 'package:myapp/usecase/skill_match/widgets/skill_chip.dart';
-import 'package:myapp/core/data/models/skill_offer.dart';
-import 'package:myapp/core/data/models/skill_request.dart';
-import 'package:myapp/core/data/repositories/user_skills_repository.dart';
 import 'package:myapp/usecase/skill_match/view_model/user_skills_view_model.dart';
-import 'package:myapp/usecase/profile/blocked_users_screen.dart';
-import 'package:myapp/usecase/auth2/two_factor_setup_screen.dart';
-import 'package:myapp/usecase/profile/data_export_screen.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -79,9 +73,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           setState(() {
             _user = user;
             _skills = names;
-            _bioCtrl.text = user.bio ?? '';
-            _locationCtrl.text = user.location.address ?? '';
-            _title = user.title ?? 'Developer';
+            _bioCtrl.text = user.bio;
+            _locationCtrl.text = user.location.address;
+            _title = user.title;
             _loading = false;
           });
         }
@@ -183,12 +177,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 }
               } catch (e) {
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-                  );
-                }
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                    );
+                  }
               }
             },
             child: const Text('Delete Forever', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
@@ -379,7 +373,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         label: const Text('Delete Account', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          backgroundColor: Colors.redAccent.withOpacity(0.1),
+                          backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
@@ -404,7 +398,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -530,7 +524,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF7C3AED).withOpacity(0.2),
+            color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -567,7 +561,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -597,7 +591,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: DropdownButtonHideUnderline(
@@ -629,7 +623,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 hintText: 'Tell people about yourself...',
                 hintStyle: TextStyle(color: Colors.grey[600]),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -653,7 +647,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   size: 18,
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -672,7 +666,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: TextField(
@@ -730,10 +724,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.06),
+                              color: Colors.white.withValues(alpha: 0.06),
                               borderRadius: BorderRadius.circular(15),
                               border: Border.all(
-                                color: const Color(0xFF7C3AED).withOpacity(0.3),
+                                color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
                               ),
                             ),
                             child: Text(
@@ -773,10 +767,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: OutlinedButton(
                   onPressed: () => setState(() {
                     _isEditing = false;
-                    _skills = List<String>.from(widget.userData.skills ?? []);
-                    _bioCtrl.text = widget.userData.bio ?? '';
-                    _locationCtrl.text = widget.userData.location.address ?? '';
-                    _title = widget.userData.title ?? 'Developer';
+                    _skills = List<String>.from(widget.userData.skills);
+                    _bioCtrl.text = widget.userData.bio;
+                    _locationCtrl.text = widget.userData.location.address;
+                    _title = widget.userData.title;
                   }),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF7C3AED)),
@@ -832,9 +826,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/data/models/match.dart';
 import 'package:myapp/usecase/skill_match/view_model/match_history_view_model.dart';
-import 'package:myapp/usecase/profile/public_profile_screen.dart';
+
 import 'package:provider/provider.dart';
 
 class MatchHistoryScreen extends StatelessWidget {

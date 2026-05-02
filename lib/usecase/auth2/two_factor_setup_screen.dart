@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
-import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/core/data/models/user.dart';
 
 class TwoFactorSetupScreen extends StatefulWidget {
@@ -58,7 +57,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                 Switch(
                   value: _enabled,
                   onChanged: (val) => setState(() => _enabled = val),
-                  activeColor: const Color(0xFF7C3AED),
+                  activeThumbColor: const Color(0xFF7C3AED),
                 ),
               ],
             ),
@@ -74,7 +73,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                 style: const TextStyle(color: Colors.white, fontSize: 24, letterSpacing: 8),
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   counterStyle: const TextStyle(color: Colors.grey),
                 ),
@@ -106,9 +105,9 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF7C3AED).withOpacity(0.1),
+        color: const Color(0xFF7C3AED).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF7C3AED).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFF7C3AED).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

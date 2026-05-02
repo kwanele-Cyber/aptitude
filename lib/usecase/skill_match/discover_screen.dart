@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/core/data/models/invite.dart';
 import 'package:myapp/core/data/models/saved_search.dart';
 import 'package:myapp/core/data/models/skill_enums.dart';
 import 'package:myapp/core/data/repositories/search_repository.dart';
 import 'package:myapp/core/data/repositories/skills_repository.dart';
-import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/core/data/repositories/invite_repository.dart';
 import 'package:myapp/core/data/models/user.dart' as model;
 import 'package:myapp/core/services/auth_service.dart';
-import 'package:myapp/core/data/models/match_result.dart';
 import 'package:myapp/usecase/skill_match/view_model/discover_view_model.dart';
 import 'package:myapp/usecase/skill_match/widgets/match_card.dart';
-import 'package:myapp/usecase/skill_match/match_history_screen.dart';
 import 'package:myapp/core/services/seed_data_service.dart';
-import 'package:myapp/core/services/auth_service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
 
@@ -44,66 +39,14 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
   final _searchRepo = SearchRepository();
   final _auth = AuthService();
   
-  String? _selectedSkillName;
   final _searchController = SearchController();
-
-  // Local state for UI chips, though we could move this to VM later
-  Set<SkillLevel> _selectedLevels = {};
-  Set<SkillFormat> _selectedFormats = {};
 
   @override
   void initState() {
     super.initState();
   }
 
-  Future<void> _sendRequest(String toUid, model.User toUser) async {
-    final me = await _auth.getCurrentUser();
-    if (me == null) {
-      throw Exception("User Not authenticated");
-    }
 
-    final myUid = me.uid;
-
-    final alreadySent = await _inviteRepo.hasExistingInvite(myUid, toUid);
-
-    if (alreadySent) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invite already sent!'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-      return;
-    }
-
-    final mySkills = widget.userData.skills;
-    final theirSkills = toUser.skills;
-    final common = mySkills.where((s) => theirSkills.contains(s)).toList();
-
-    final invite = Invite(
-      id: const Uuid().v4(),
-      from: myUid,
-      to: toUid,
-      fromName: '${widget.userData.firstName} ${widget.userData.lastName}',
-      toName: '${toUser.firstName} ${toUser.lastName}',
-      commonSkills: common,
-      status: InviteStatus.pending,
-      createdAt: DateTime.now().toIso8601String(),
-    );
-
-    await _inviteRepo.sendInvite(invite);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invite sent successfully!'),
-          backgroundColor: Color(0xFF22C55E),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,7 +227,7 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
       padding: const EdgeInsets.only(right: 8),
       child: Chip(
         label: Text(label, style: const TextStyle(fontSize: 10, color: Colors.white)),
-        backgroundColor: const Color(0xFF7C3AED).withOpacity(0.3),
+        backgroundColor: const Color(0xFF7C3AED).withValues(alpha: 0.3),
         onDeleted: onDeleted,
         deleteIconColor: Colors.white70,
         padding: EdgeInsets.zero,
@@ -329,7 +272,7 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
                           });
                         },
                         selectedColor: const Color(0xFF7C3AED),
-                        backgroundColor: Colors.white.withOpacity(0.05),
+                        backgroundColor: Colors.white.withValues(alpha: 0.05),
                       );
                     }).toList(),
                   ),
@@ -349,7 +292,7 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
                           });
                         },
                         selectedColor: const Color(0xFF7C3AED),
-                        backgroundColor: Colors.white.withOpacity(0.05),
+                        backgroundColor: Colors.white.withValues(alpha: 0.05),
                       );
                     }).toList(),
                   ),
@@ -381,7 +324,7 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
                     title: const Text('Verified Members Only', style: TextStyle(color: Colors.white, fontSize: 14)),
                     subtitle: const Text('Only show users with verified expertise', style: TextStyle(color: Colors.grey, fontSize: 12)),
                     value: viewModel.onlyVerified,
-                    activeColor: const Color(0xFF7C3AED),
+                    activeThumbColor: const Color(0xFF7C3AED),
                     contentPadding: EdgeInsets.zero,
                     onChanged: (val) {
                       setModalState(() {
@@ -435,7 +378,7 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
             TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
           backgroundColor: WidgetStatePropertyAll<Color>(
-            Colors.white.withOpacity(0.05),
+            Colors.white.withValues(alpha: 0.05),
           ),
           elevation: const WidgetStatePropertyAll<double>(0),
           shape: WidgetStatePropertyAll<OutlinedBorder>(
@@ -572,8 +515,8 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
                   }
                   
                   viewModel.setSkill(sid, s.query);
-                  for (var l in s.levels) viewModel.toggleLevel(l);
-                  for (var f in s.formats) viewModel.toggleFormat(f);
+                  for (var l in s.levels) { viewModel.toggleLevel(l); }
+                  for (var f in s.formats) { viewModel.toggleFormat(f); }
 
                   if (mounted) {
                     Navigator.pop(context);
@@ -596,7 +539,7 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(

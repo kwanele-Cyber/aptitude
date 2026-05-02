@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/core/data/repositories/user_skills_repository.dart';
 import 'package:myapp/core/data/repositories/chat_repository.dart';
