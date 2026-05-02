@@ -6,6 +6,7 @@ class ChatMessage {
   final String content;
   final int timestamp;
   final MessageType type;
+  final bool isRead;
   final Map<String, dynamic>? metadata;
 
   ChatMessage({
@@ -14,6 +15,7 @@ class ChatMessage {
     required this.content,
     required this.timestamp,
     this.type = MessageType.text,
+    this.isRead = false,
     this.metadata,
   });
 
@@ -25,6 +27,7 @@ class ChatMessage {
       'timestamp': timestamp,
       'type': type.index,
       'metadata': metadata,
+      'isRead': isRead,
     };
   }
 
@@ -35,7 +38,8 @@ class ChatMessage {
       content: json['content'] as String,
       timestamp: json['timestamp'] as int,
       type: MessageType.values[json['type'] as int? ?? 0],
-      metadata: json['metadata'] as Map<String, dynamic>?,
+      metadata: json['metadata'] != null ? Map<String, dynamic>.from(json['metadata'] as Map) : null,
+      isRead: json['isRead'] as bool? ?? false,
     );
   }
 }

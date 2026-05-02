@@ -1,12 +1,18 @@
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/core/utils/logger.dart';
 import 'package:myapp/core/data/models/location_model.dart';
+import 'package:myapp/usecase/chat/view_model/chat_list_view_model.dart';
 import 'discover_screen.dart';
-import 'connections_screen.dart';
-import 'profile_screen.dart';
+import 'package:myapp/usecase/connections/connections_screen.dart';
+import 'package:myapp/usecase/chat/chat_list_screen.dart';
+import 'package:myapp/usecase/profile/profile_screen.dart';
+import 'package:myapp/core/providers/notification_provider.dart';
+import 'package:myapp/usecase/notifications/notification_screen.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -74,11 +80,61 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F1A),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Aptitude',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          Consumer<NotificationProvider>(
+            builder: (context, provider, child) {
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none, color: Colors.white70),
+                    onPressed: () => context.push('/notifications'),
+                  ),
+                  if (provider.unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEC4899),
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          '${provider.unreadCount}',
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: IndexedStack(
         index: _currentTab,
         children: [
           DiscoverScreen(userData: _userData!),
           const ConnectionsScreen(),
+          ChangeNotifierProvider(
+            create: (_) => ChatListViewModel(),
+            child: const ChatListScreen(),
+          ),
           ProfileScreen(userData: _userData!),
         ],
       ),
@@ -111,6 +167,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icon(Icons.people_outline),
                 activeIcon: Icon(Icons.people),
                 label: 'Connections',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.chat_bubble_outline),
+                activeIcon: Icon(Icons.chat_bubble),
+                label: 'Messages',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline),

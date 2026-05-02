@@ -2,13 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:myapp/core/routing/router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:myapp/firebase_options.dart';
+import 'package:myapp/core/providers/notification_provider.dart';
+import 'package:provider/provider.dart';
+
+import 'package:myapp/core/services/push_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  
+  await PushNotificationService().initialize();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NotificationProvider()..init()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

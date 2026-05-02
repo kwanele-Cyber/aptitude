@@ -4,6 +4,7 @@ import 'package:myapp/core/data/models/location_model.dart';
 import 'package:myapp/core/data/repositories/user_repository.dart';
 import 'package:myapp/core/services/interfaces/auth_service_interface.dart';
 import 'package:myapp/core/utils/logger.dart';
+import 'package:myapp/core/services/push_notification_service.dart';
 
 class AuthService implements AuthServiceInterface {
   final firebase.FirebaseAuth _firebaseAuth;
@@ -24,6 +25,9 @@ class AuthService implements AuthServiceInterface {
   @override
   Future<firebase.User?> login(String email, String password) async {
     final result = await signInWithEmailAndPassword(email: email, password: password);
+    if (result.user != null) {
+      await PushNotificationService().updateToken(result.user!.uid);
+    }
     return result.user;
   }
 
@@ -94,6 +98,7 @@ class AuthService implements AuthServiceInterface {
       );
 
       await _userRepo.create(newUser);
+      await PushNotificationService().updateToken(fUser.uid);
       return newUser;
     } catch (e) {
       rethrow;
@@ -164,5 +169,29 @@ class AuthService implements AuthServiceInterface {
     } else if (user == null) {
       throw Exception('No user logged in to resend verification.');
     }
+  }
+
+  @override
+  Future<void> resetPassword(String email) async {
+    await _firebaseAuth.sendPasswordResetEmail(email: email);
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    final user = _firebaseAuth.currentUser;
+    if (user != null) {
+      final uid = user.uid;
+      // 1. Delete DB profile first
+      await _userRepo.delete(uid);
+      // 2. Delete Auth record
+      await user.delete();
+    }
+  }
+
+  @override
+  Future<bool> verify2FAPin(String uid, String pin) async {
+    final user = await _userRepo.read(uid);
+    if (user == null || !user.twoFactorEnabled) return true;
+    return user.twoFactorPin == pin;
   }
 }

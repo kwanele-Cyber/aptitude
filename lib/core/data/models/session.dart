@@ -1,49 +1,74 @@
-import 'package:uuid/uuid.dart';
-
 enum SessionStatus { scheduled, completed, cancelled }
 
 class Session {
-  String sid;
-  final String postId;
-  final String teacherId;
-  final String learnerId;
-  final DateTime scheduledTime;
-  final String? location;
+  final String id;
+  final String agreementId;
+  final String title;
+  final DateTime startTime;
+  final int durationMinutes;
   final SessionStatus status;
+  final String location; // Could be a physical address or a meeting link
+  final String? notes;
+  final bool isRated;
 
   Session({
-    String? sid,
-    required this.postId,
-    required this.teacherId,
-    required this.learnerId,
-    required this.scheduledTime,
-    this.location,
-    required this.status,
-  }) : sid = sid ?? const Uuid().v4();
-
-
+    required this.id,
+    required this.agreementId,
+    required this.title,
+    required this.startTime,
+    required this.durationMinutes,
+    this.status = SessionStatus.scheduled,
+    this.location = 'Online',
+    this.notes,
+    this.isRated = false,
+  });
 
   Map<String, dynamic> toJson() {
     return {
-      'sid': sid,
-      'postId': postId,
-      'teacherId': teacherId,
-      'learnerId': learnerId,
-      'scheduledTime': scheduledTime.millisecondsSinceEpoch,
+      'id': id,
+      'agreementId': agreementId,
+      'title': title,
+      'startTime': startTime.toIso8601String(),
+      'durationMinutes': durationMinutes,
+      'status': status.index,
       'location': location,
-      'status': status.name,
+      'notes': notes,
+      'isRated': isRated,
     };
   }
 
   factory Session.fromJson(Map<String, dynamic> json) {
     return Session(
-      sid: json['sid'],
-      postId: json['postId'],
-      teacherId: json['teacherId'],
-      learnerId: json['learnerId'],
-      scheduledTime: DateTime.fromMillisecondsSinceEpoch(json['scheduledTime']),
-      location: json['location'],
-      status: SessionStatus.values.firstWhere((e) => e.name == json['status']),
+      id: json['id'] as String,
+      agreementId: json['agreementId'] as String,
+      title: json['title'] as String,
+      startTime: DateTime.parse(json['startTime'] as String),
+      durationMinutes: json['durationMinutes'] as int,
+      status: SessionStatus.values[json['status'] as int? ?? 0],
+      location: json['location'] as String? ?? 'Online',
+      notes: json['notes'] as String?,
+      isRated: json['isRated'] as bool? ?? false,
+    );
+  }
+
+  Session copyWith({
+    SessionStatus? status,
+    String? notes,
+    DateTime? startTime,
+    int? durationMinutes,
+    String? location,
+    bool? isRated,
+  }) {
+    return Session(
+      id: id,
+      agreementId: agreementId,
+      title: title,
+      startTime: startTime ?? this.startTime,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      status: status ?? this.status,
+      location: location ?? this.location,
+      notes: notes ?? this.notes,
+      isRated: isRated ?? this.isRated,
     );
   }
 }

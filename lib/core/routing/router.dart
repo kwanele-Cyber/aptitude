@@ -7,12 +7,20 @@ import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/usecase/auth2/change_password_screen.dart';
 import 'package:myapp/usecase/auth2/login_screen.dart';
 import 'package:myapp/usecase/auth2/register_screen.dart';
-import 'package:myapp/usecase/chatsystem/screens/chat_screen.dart';
+import 'package:myapp/usecase/auth2/forgot_password_screen.dart';
+import 'package:myapp/usecase/chat/chat_screen.dart';
 import 'package:myapp/usecase/skill_match/home_screen.dart';
-import 'package:myapp/usecase/skill_match/profile_screen.dart';
+import 'package:myapp/usecase/profile/profile_screen.dart';
 import 'package:myapp/usecase/skill_match/create_skill_offer_screen.dart';
 import 'package:myapp/usecase/skill_match/create_skill_request_screen.dart';
 import 'package:myapp/usecase/skill_match/edit_skill_screen.dart';
+import 'package:myapp/usecase/skill_match/match_history_screen.dart';
+import 'package:myapp/usecase/skill_match/skill_details_screen.dart';
+import 'package:myapp/usecase/profile/public_profile_screen.dart';
+import 'package:myapp/usecase/notifications/notification_screen.dart';
+import 'package:myapp/usecase/profile/blocked_users_screen.dart';
+import 'package:myapp/usecase/auth2/two_factor_setup_screen.dart';
+import 'package:myapp/usecase/profile/data_export_screen.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
@@ -88,7 +96,7 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/auth/forgot',
       builder: (context, state) {
-        return ChangePasswordScreen();
+        return const ForgotPasswordScreen();
       },
     ),
 
@@ -118,7 +126,11 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/chat/:chatId',
       builder: (context, state) {
-        return ChatScreen(chatId: state.pathParameters['chatId']!);
+        final peerName = state.uri.queryParameters['name'] ?? 'Chat';
+        return ChatScreen(
+          channelId: state.pathParameters['chatId']!,
+          peerName: peerName,
+        );
       },
     ),
     GoRoute(
@@ -144,5 +156,54 @@ final GoRouter router = GoRouter(
         );
       },
     ),
+    GoRoute(
+      path: '/match-history',
+      builder: (context, state) {
+        return const MatchHistoryScreen();
+      },
+    ),
+    GoRoute(
+      path: '/skill/:id',
+      builder: (context, state) {
+        final sid = state.pathParameters['id']!;
+        final skillName = state.uri.queryParameters['name'];
+        return SkillDetailsScreen(sid: sid, skillName: skillName);
+      },
+    ),
+    GoRoute(
+      path: '/profile/:uid',
+      builder: (context, state) {
+        final uid = state.pathParameters['uid']!;
+        return PublicProfileScreen(uid: uid);
+      },
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) {
+        return const NotificationScreen();
+      },
+    ),
+    GoRoute(
+      path: '/profile/blocked',
+      builder: (context, state) {
+        return const BlockedUsersScreen();
+      },
+    ),
+    GoRoute(
+      path: '/profile/2fa',
+      builder: (context, state) {
+        // We expect userData to be passed via the 'extra' parameter
+        final userData = state.extra as User?;
+        if (userData == null) return const Scaffold(body: Center(child: Text('User data required')));
+        return TwoFactorSetupScreen(userData: userData);
+      },
+    ),
+    GoRoute(
+      path: '/profile/export',
+      builder: (context, state) {
+        return const DataExportScreen();
+      },
+    ),
   ],
 );
+

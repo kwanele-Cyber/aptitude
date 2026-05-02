@@ -51,4 +51,13 @@ abstract class AuthServiceInterface {
 
   /// Resends email verification.
   Future<void> resendEmailVerification();
+
+  /// Sends a password reset email.
+  Future<void> resetPassword(String email);
+
+  /// Deletes the current user account and data.
+  Future<void> deleteAccount();
+
+  /// Verifies the 2FA PIN for a user.
+  Future<bool> verify2FAPin(String uid, String pin);
 }

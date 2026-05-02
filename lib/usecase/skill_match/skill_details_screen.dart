@@ -198,6 +198,12 @@ class _SkillDetailsScreenState extends State<SkillDetailsScreen> with SingleTick
       itemBuilder: (context, index) {
         final user = users[index];
         return MatchCard(
+          onConnect: () {
+            // TODO: Implement direct connection or chat initiation
+          },
+          onReject: () {},
+          onIgnore: () {},
+          onSave: () {},
           result: MatchResult(
             peer: user,
             score: 0,
@@ -221,10 +227,7 @@ class _SkillDetailsScreenState extends State<SkillDetailsScreen> with SingleTick
                     description: '',
                   )]
                 : [],
-          ),
-          onConnect: () {
-            // Logic to send invite (could be passed from Discovery or shared repo)
-          },
+          )
         );
       },
     );

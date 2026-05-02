@@ -13,6 +13,10 @@ class User {
   AddressModel location;
   String? phone;
   bool profileComplete = false;
+  bool twoFactorEnabled = false;
+  String? twoFactorPin;
+  double trustScore = 0.0;
+  bool isVerified = false;
   DateTime? updatedAt;
   DateTime? createdAt;
 
@@ -32,7 +36,11 @@ class User {
     required this.profileComplete,
     required this.createdAt,
     this.updatedAt,
-    this.phone = ''
+    this.phone = '',
+    this.twoFactorEnabled = false,
+    this.twoFactorPin,
+    this.trustScore = 0.0,
+    this.isVerified = false 
   });
 
   Map<String, dynamic> toJson() {
@@ -49,6 +57,10 @@ class User {
       'location': location.toJson(),
       'phone': phone,
       'profileComplete': profileComplete,
+      'twoFactorEnabled': twoFactorEnabled,
+      'twoFactorPin': twoFactorPin,
+      'trustScore': trustScore,
+      'isVerified': isVerified,
       'updatedAt': updatedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
     };
@@ -78,6 +90,8 @@ class User {
               : AddressModel.empty()),
       phone: json['phone'] as String? ?? '',
       profileComplete: json['profileComplete'] as bool? ?? false,
+      trustScore: (json['trustScore'] as num?)?.toDouble() ?? 0.0,
+      isVerified: json['isVerified'] as bool? ?? false,
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'] as String)
           : null,

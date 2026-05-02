@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/core/data/models/invite.dart';
 import 'package:myapp/core/data/models/saved_search.dart';
 import 'package:myapp/core/data/models/skill_enums.dart';
@@ -11,6 +12,7 @@ import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/core/data/models/match_result.dart';
 import 'package:myapp/usecase/skill_match/view_model/discover_view_model.dart';
 import 'package:myapp/usecase/skill_match/widgets/match_card.dart';
+import 'package:myapp/usecase/skill_match/match_history_screen.dart';
 import 'package:myapp/core/services/seed_data_service.dart';
 import 'package:myapp/core/services/auth_service.dart';
 import 'package:uuid/uuid.dart';
@@ -131,10 +133,28 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
                       itemCount: viewModel.matches.length,
                       itemBuilder: (context, index) {
                         final result = viewModel.matches[index];
-                        
                         return MatchCard(
                           result: result,
-                          onConnect: () => _sendRequest(result.peer.uid, result.peer),
+                          onConnect: () async {
+                            await viewModel.acceptMatch(result);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Match Accepted! Chat started.'),
+                                  backgroundColor: Color(0xFF22C55E),
+                                ),
+                              );
+                            }
+                          },
+                          onReject: () async {
+                            await viewModel.rejectMatch(result);
+                          },
+                          onIgnore: () async {
+                            await viewModel.ignoreMatch(result);
+                          },
+                          onSave: () async {
+                            await viewModel.saveMatch(result);
+                          },
                         );
                       },
                     ),
@@ -209,6 +229,11 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
                 tooltip: 'Save Search',
               ),
               IconButton(
+                onPressed: () => context.push('/match-history'),
+                icon: const Icon(Icons.history, color: Colors.white70),
+                tooltip: 'Match History',
+              ),
+              IconButton(
                 onPressed: () => _showFilterSheet(viewModel),
                 icon: Icon(
                   Icons.tune,
@@ -241,6 +266,14 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
           ...viewModel.selectedFormats.map((f) => _buildChip(f.name, () {
                 viewModel.toggleFormat(f);
               })),
+          if (viewModel.minTrustScore > 0)
+            _buildChip('Trust > ${viewModel.minTrustScore.toStringAsFixed(1)}', () {
+              viewModel.setMinTrustScore(0.0);
+            }),
+          if (viewModel.onlyVerified)
+            _buildChip('Verified Only', () {
+              viewModel.setOnlyVerified(false);
+            }),
         ],
       ),
     );
@@ -320,7 +353,43 @@ class _DiscoverScreenContentState extends State<_DiscoverScreenContent> {
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Minimum Trust Score', style: TextStyle(color: Colors.grey)),
+                      Text(
+                        viewModel.minTrustScore.toStringAsFixed(1),
+                        style: const TextStyle(color: Color(0xFF7C3AED), fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: viewModel.minTrustScore,
+                    min: 0.0,
+                    max: 5.0,
+                    divisions: 10,
+                    activeColor: const Color(0xFF7C3AED),
+                    onChanged: (val) {
+                      setModalState(() {
+                        viewModel.setMinTrustScore(val);
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text('Verified Members Only', style: TextStyle(color: Colors.white, fontSize: 14)),
+                    subtitle: const Text('Only show users with verified expertise', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    value: viewModel.onlyVerified,
+                    activeColor: const Color(0xFF7C3AED),
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (val) {
+                      setModalState(() {
+                        viewModel.setOnlyVerified(val);
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

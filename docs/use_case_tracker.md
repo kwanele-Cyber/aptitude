@@ -24,8 +24,8 @@ description:
 | F06 | ✅ Done | Auth State Sync | Global auth state management across app |
 | F07 | ✅ Done | Email Verification | Verify email before allowing matchmaking |
 | F08 | ✅ Done | Password Reset | Secure password recovery via email |
-| F09 | ❌ Todo | Account Recovery | Recovery codes for account restoration |
-| F10 | ❌ Todo | Two-Factor Authentication | Optional 2FA for high-trust accounts |
+| F09 | ✅ Done | Account Recovery | Recovery codes for account restoration |
+| F10 | ✅ Done | Two-Factor Authentication | Optional 2FA for high-trust accounts |
 
 ### User Core System
 | ID | Status | Use Case | Description |
@@ -33,16 +33,16 @@ description:
 | F11 | ✅ Done | Create User Profile | Initial profile creation with required fields |
 | F12 | ✅ Done | Update User Profile | Edit skills, availability, location, bio |
 | F13 | ✅ Done | Fetch User Profile | Retrieve own user data |
-| F14 | ❌ Todo | View Other User Profile | Public profile access with privacy controls |
-| F15 | ❌ Todo | Delete Account | Permanent account removal with cooldown period |
-| F16 | ❌ Todo | Export User Data | GDPR-compliant data export (JSON/CSV) |
+| F14 | ✅ Done | View Other User Profile | Public profile access with privacy controls |
+| F15 | ✅ Done | Delete Account | Permanent account removal with cooldown period |
+| F16 | ✅ Done | Export User Data | GDPR-compliant data export (JSON/CSV) |
 
 ### Shared Infrastructure
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
 | F17 | ✅ Done | Core Models Initialization | UserModel, SkillModel, MatchModel, etc. |
 | F18 | ✅ Done | Firebase Database Service Layer | Abstract DB access with repository pattern |
-| F19 | ❌ Todo | Exception Framework Setup | CustomException hierarchy with error codes |
+| F19 | ✅ Done | Exception Framework Setup | CustomException hierarchy with error codes |
 | F20 | ✅ Done | State Management Setup | Riverpod/Bloc global configuration |
 | F21 | ✅ Done | Common Utilities Setup | Validators, constants, logging, formatters |
 
@@ -83,28 +83,28 @@ description:
 ### Matching Engine
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| M01 | ❌ Todo | Generate Matches | AI-powered matching algorithm |
-| M02 | ❌ Todo | Rank Matches | Score-based prioritization (0-100) |
-| M03 | ❌ Todo | Fetch Matches | Retrieve daily match suggestions |
+| M01 | ✅ Done | Generate Matches | AI-powered matching algorithm |
+| M02 | ✅ Done | Rank Matches | Score-based prioritization (0-100) |
+| M03 | ✅ Done | Fetch Matches | Retrieve daily match suggestions |
 | M04 | ❌ Todo | Geo-Proximity Scoring | Haversine-based distance ranking |
 | M05 | ❌ Todo | Availability Matching | Match based on time slot compatibility |
-| M06 | ❌ Todo | Skill Level Matching | Balance expert/beginner matches |
+| M06 | ✅ Done | Skill Level Matching | Balance expert/beginner matches with scoring bonus |
 
 ### Match Interaction
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| M07 | ❌ Todo | Accept Match | User accepts match suggestion |
-| M08 | ❌ Todo | Reject Match | User declines with reason (optional) |
-| M09 | ❌ Todo | Ignore Match | Passive dismissal (no notification) |
-| M10 | ❌ Todo | Match Filtering | Filter by trust score, location, verified status |
-| M11 | ❌ Todo | Save Match | Bookmark match for later review |
-| M12 | ❌ Todo | Match History | View past accepted/rejected matches |
+| M07 | ✅ Done | Accept Match | User accepts match suggestion |
+| M08 | ✅ Done | Reject Match | User declines with reason (optional) |
+| M09 | ✅ Done | Ignore Match | Passive dismissal (no notification) |
+| M10 | ✅ Done | Match Filtering | Filter by trust score, location, verified status |
+| M11 | ✅ Done | Save Match | Bookmark match for later review |
+| M12 | ✅ Done | Match History | View past accepted/rejected matches |
 
 ### Match Optimization
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
 | M13 | ❌ Todo | Feedback on Matches | Rate match quality to improve algorithm |
-| M14 | ❌ Todo | Refresh Matches | Request new match suggestions |
+| M14 | ✅ Done | Refresh Matches | Request new match suggestions (RefreshIndicator) |
 
 ---
 
@@ -113,23 +113,23 @@ description:
 ### Messaging System
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| C01 | ❌ Todo | Initiate Chat | Open conversation channel post-match |
-| C02 | ❌ Todo | Send Message | Text, image, location, file sharing |
-| C03 | ❌ Todo | Receive Message | Real-time push notifications |
-| C04 | ❌ Todo | Message History | Load paginated conversation history |
-| C05 | ❌ Todo | Read Receipts | Show message seen status |
-| C06 | ❌ Todo | Typing Indicator | Real-time typing status |
-| C07 | ❌ Todo | Block User | Block communication from specific user |
-| C08 | ❌ Todo | Report Message | Report inappropriate message content |
+| C01 | ✅ Done | Initiate Chat | Open conversation channel post-match |
+| C02 | ✅ Done | Send Message | Text, image, location, file sharing |
+| C03 | ✅ Done | Receive Message | Real-time push notifications (FCM) |
+| C04 | ✅ Done | Message History | Load paginated conversation history |
+| C05 | ✅ Done | Read Receipts | Show message seen status (Single/Double Ticks) |
+| C06 | ✅ Done | Typing Indicator | Real-time typing status |
+| C07 | ✅ Done | Block User | Block communication from specific user |
+| C08 | ✅ Done | Report Message | Report inappropriate message content |
 
 ### Agreement System
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| C09 | ❌ Todo | Create Agreement | Define exchange terms (skills, duration, frequency) |
-| C10 | ❌ Todo | Accept Agreement | Confirm terms to proceed |
+| C09 | ✅ Done | Create Agreement | Define exchange terms (skills, duration, frequency) |
+| C10 | ✅ Done | Accept Agreement | Confirm terms to proceed |
 | C11 | ❌ Todo | Modify Agreement | Request/approve term adjustments |
 | C12 | ❌ Todo | Cancel Agreement | Terminate agreement before sessions |
-| C13 | ❌ Todo | View Agreement | Access active/past agreements |
+| C13 | ✅ Done | View Agreement | Access active/past agreements |
 
 ---
 
@@ -138,7 +138,7 @@ description:
 ### Scheduling
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| E01 | ❌ Todo | Create Session | Schedule session with time, location, format |
+| E01 | ✅ Done | Create Session | Schedule session with time, location, format |
 | E02 | ❌ Todo | Update Session | Modify session time/location |
 | E03 | ❌ Todo | Cancel Session | Cancel with cancellation policy enforcement |
 | E04 | ❌ Todo | Session Reminders | Push/email reminders (24h, 1h before) |
@@ -150,10 +150,10 @@ description:
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
 | E08 | ❌ Todo | Start Session | Begin session with check-in |
-| E09 | ❌ Todo | Complete Session | Mark session complete |
+| E09 | ✅ Done | Complete Session | Mark session complete |
 | E10 | ❌ Todo | Track Attendance | Verify presence (QR code, geolocation) |
 | E11 | ❌ Todo | Session Verification | Code-based attendance proof |
-| E12 | ❌ Todo | Session History | View past sessions with details |
+| E12 | ✅ Done | Session History | View past sessions with details |
 | E13 | ❌ Todo | Session Rating | Rate session quality immediately after |
 
 ### Session Materials
@@ -169,8 +169,8 @@ description:
 ### Feedback System
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| T01 | ❌ Todo | Submit Rating | Rate user 1-5 stars after session |
-| T02 | ❌ Todo | Write Review | Detailed written feedback |
+| T01 | ✅ Done | Submit Rating | Rate user 1-5 stars after session |
+| T02 | ✅ Done | Write Review | Detailed written feedback |
 | T03 | ❌ Todo | View Reviews | Read user reviews (with filtering) |
 | T04 | ❌ Todo | Edit Review | Modify own review (within 48h) |
 | T05 | ❌ Todo | Respond to Review | Reply to received feedback |
@@ -178,9 +178,9 @@ description:
 ### Trust System
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| T06 | ❌ Todo | Calculate Trust Score | AI-computed reputation (0-100) |
+| T06 | ✅ Done | Calculate Trust Score | AI-computed reputation (0-100) |
 | T07 | ❌ Todo | Update Reputation | Dynamic score based on behavior |
-| T08 | ❌ Todo | Trust-Based Filtering | Filter matches by trust threshold |
+| T08 | ✅ Done | Trust-Based Filtering | Filter matches by trust threshold in Discover feed |
 | T09 | ❌ Todo | View Trust Factors | See what affects your trust score |
 | T10 | ❌ Todo | Appeal Trust Score | Request review of score adjustment |
 
@@ -199,15 +199,15 @@ description:
 ### Notification System
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| X01 | ❌ Todo | Send Notification | Trigger events (matches, messages, reminders) |
-| X02 | ❌ Todo | Receive Notification | Multi-channel delivery (push, email, SMS) |
+| X01 | ✅ Done | Send Notification | Trigger events (matches, messages, reminders) |
+| X02 | ✅ Done | Receive Notification | Multi-channel delivery (push, email, SMS) |
 | X03 | ❌ Todo | Notification Preferences | Granular user settings by type |
-| X04 | ❌ Todo | Notification History | View past notifications |
+| X04 | ✅ Done | Notification History | View past notifications |
 
 ### Dispute & Safety
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| X05 | ❌ Todo | Report User | Raise issue with evidence |
+| X05 | ✅ Done | Report User | Raise issue with evidence (ReportDialog) |
 | X06 | ❌ Todo | Create Dispute | Session conflict or agreement violation |
 | X07 | ❌ Todo | Resolve Dispute | Admin-mediated resolution |
 | X08 | ❌ Todo | Appeal Decision | Request dispute decision review |
@@ -285,5 +285,15 @@ description:
 | A24 | ❌ Todo | Read-Only DB Access | Analytics team access without write permissions |
 | A25 | ❌ Todo | Temporary Admin Grant | Time-bound admin access for specific tasks |
 | A26 | ❌ Todo | Admin Recovery Key Management | Secure offline recovery key storage and rotation |
+
+---
+
+# 🛠️ FEATURE REFINEMENTS & SAFETY POLISH (New)
+
+| ID | Status | Use Case | Description |
+|----|--------|----------|-------------|
+| X15 | ✅ Done | Filtering Integration | Automatically filter out blocked users in Discovery and Chat ViewModels |
+| X16 | ✅ Done | Blocked List Management | Add a "Blocked Users" section to Profile settings to review/manage blocks |
+| X17 | ❌ Todo | Auto-Block Suggestion | Prompt user to block a peer immediately after filing a safety report |
 
 ---
