@@ -28,6 +28,13 @@ class SessionViewModel extends ChangeNotifier {
 
   List<Session> _sessions = [];
   List<Session> get sessions => _sessions;
+  List<Session> get sessionHistory => _sessions
+      .where(
+        (session) =>
+            session.status == SessionStatus.completed ||
+            session.status == SessionStatus.cancelled,
+      )
+      .toList();
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -172,7 +179,89 @@ class SessionViewModel extends ChangeNotifier {
   }
 
   Future<void> completeSession(Session session) async {
-    final updated = session.copyWith(status: SessionStatus.completed);
+    _clearError();
+    if (session.status == SessionStatus.cancelled) {
+      _setError('Cancelled sessions cannot be completed');
+      return;
+    }
+
+    final updated = session.copyWith(
+      status: SessionStatus.completed,
+      completedAt: DateTime.now(),
+    );
+    await _sessionRepo.updateSession(updated);
+    await loadSessions();
+  }
+
+  Future<void> startSession(Session session) async {
+    _clearError();
+    if (session.status != SessionStatus.scheduled) {
+      _setError('Only scheduled sessions can be started');
+      return;
+    }
+
+    final updated = session.copyWith(
+      status: SessionStatus.inProgress,
+      startedAt: DateTime.now(),
+      verificationCode: _verificationCode(session),
+    );
+    await _sessionRepo.updateSession(updated);
+    await loadSessions();
+  }
+
+  bool verifyAttendanceCode(Session session, String code) {
+    final expected = session.verificationCode;
+    return expected != null && expected == code.trim();
+  }
+
+  Future<void> checkInToSession({
+    required Session session,
+    required AttendanceVerificationMethod method,
+    String? code,
+    double? latitude,
+    double? longitude,
+  }) async {
+    _clearError();
+    final uid = await _currentUid();
+    if (uid == null) {
+      _setError('You must be signed in to check in');
+      return;
+    }
+    if (session.status != SessionStatus.inProgress) {
+      _setError('Session must be started before check-in');
+      return;
+    }
+    if ((method == AttendanceVerificationMethod.code ||
+            method == AttendanceVerificationMethod.qr) &&
+        !verifyAttendanceCode(session, code ?? '')) {
+      _setError('Invalid session verification code');
+      return;
+    }
+    if (method == AttendanceVerificationMethod.geolocation &&
+        (latitude == null || longitude == null)) {
+      _setError('Location is required for geolocation check-in');
+      return;
+    }
+
+    final attendeeIds = session.attendeeIds.contains(uid)
+        ? session.attendeeIds
+        : [...session.attendeeIds, uid];
+    final attendanceRecords = Map<String, AttendanceRecord>.from(
+      session.attendanceRecords,
+    );
+    attendanceRecords[uid] = AttendanceRecord(
+      userId: uid,
+      checkedInAt: DateTime.now(),
+      method: method,
+      verificationCode: code?.trim(),
+      latitude: latitude,
+      longitude: longitude,
+    );
+
+    final updated = session.copyWith(
+      attendeeIds: attendeeIds,
+      attendanceRecords: attendanceRecords,
+    );
     await _sessionRepo.updateSession(updated);
     await loadSessions();
   }
@@ -281,6 +370,20 @@ class SessionViewModel extends ChangeNotifier {
     required double score,
     required String comment,
   }) async {
+    _clearError();
+    if (session.status != SessionStatus.completed) {
+      _setError('Only completed sessions can be rated');
+      return;
+    }
+    if (session.isRated) {
+      _setError('This session has already been rated');
+      return;
+    }
+    if (score < 1 || score > 5) {
+      _setError('Session rating must be between 1 and 5');
+      return;
+    }
+
     final rating = Rating(
       id: const Uuid().v4(),
       sessionId: session.id,
@@ -352,5 +455,14 @@ class SessionViewModel extends ChangeNotifier {
       return _currentUidProvider();
     }
     return (await (_auth ?? AuthService()).getCurrentUser())?.uid;
+  }
+
+  String _verificationCode(Session session) {
+    final source = '${session.id}-${DateTime.now().millisecondsSinceEpoch}';
+    final hash = source.codeUnits.fold<int>(
+      0,
+      (value, unit) => (value * 31 + unit) & 0x7fffffff,
+    );
+    return (hash % 1000000).toString().padLeft(6, '0');
   }
 }

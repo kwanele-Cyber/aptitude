@@ -1,6 +1,48 @@
-enum SessionStatus { scheduled, completed, cancelled }
+enum SessionStatus { scheduled, completed, cancelled, inProgress }
 
 enum SessionFormat { online, inPerson, hybrid }
+
+enum AttendanceVerificationMethod { code, qr, geolocation, manual }
+
+class AttendanceRecord {
+  final String userId;
+  final DateTime checkedInAt;
+  final AttendanceVerificationMethod method;
+  final String? verificationCode;
+  final double? latitude;
+  final double? longitude;
+
+  AttendanceRecord({
+    required this.userId,
+    required this.checkedInAt,
+    required this.method,
+    this.verificationCode,
+    this.latitude,
+    this.longitude,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'checkedInAt': checkedInAt.toIso8601String(),
+      'method': method.index,
+      'verificationCode': verificationCode,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+  }
+
+  factory AttendanceRecord.fromJson(Map<String, dynamic> json) {
+    return AttendanceRecord(
+      userId: json['userId'] as String,
+      checkedInAt: DateTime.parse(json['checkedInAt'] as String),
+      method: AttendanceVerificationMethod.values[json['method'] as int? ?? 0],
+      verificationCode: json['verificationCode'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+    );
+  }
+}
 
 class Session {
   final String id;
@@ -19,6 +61,10 @@ class Session {
   final List<String> attendeeIds;
   final List<String> waitlistUserIds;
   final String? recurrenceGroupId;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+  final String? verificationCode;
+  final Map<String, AttendanceRecord> attendanceRecords;
 
   Session({
     required this.id,
@@ -37,9 +83,15 @@ class Session {
     this.attendeeIds = const [],
     this.waitlistUserIds = const [],
     this.recurrenceGroupId,
+    this.startedAt,
+    this.completedAt,
+    this.verificationCode,
+    this.attendanceRecords = const {},
   });
 
   bool get isFull => attendeeIds.length >= capacity;
+  bool get hasStarted => status == SessionStatus.inProgress;
+  bool get isComplete => status == SessionStatus.completed;
 
   Map<String, dynamic> toJson() {
     return {
@@ -59,6 +111,12 @@ class Session {
       'attendeeIds': attendeeIds,
       'waitlistUserIds': waitlistUserIds,
       'recurrenceGroupId': recurrenceGroupId,
+      'startedAt': startedAt?.toIso8601String(),
+      'completedAt': completedAt?.toIso8601String(),
+      'verificationCode': verificationCode,
+      'attendanceRecords': attendanceRecords.map(
+        (key, value) => MapEntry(key, value.toJson()),
+      ),
     };
   }
 
@@ -90,6 +148,23 @@ class Session {
               .toList() ??
           const [],
       recurrenceGroupId: json['recurrenceGroupId'] as String?,
+      startedAt: json['startedAt'] == null
+          ? null
+          : DateTime.parse(json['startedAt'] as String),
+      completedAt: json['completedAt'] == null
+          ? null
+          : DateTime.parse(json['completedAt'] as String),
+      verificationCode: json['verificationCode'] as String?,
+      attendanceRecords:
+          (json['attendanceRecords'] as Map?)?.map(
+            (key, value) => MapEntry(
+              key.toString(),
+              AttendanceRecord.fromJson(
+                Map<String, dynamic>.from(value as Map),
+              ),
+            ),
+          ) ??
+          const {},
     );
   }
 
@@ -108,6 +183,10 @@ class Session {
     List<String>? attendeeIds,
     List<String>? waitlistUserIds,
     String? recurrenceGroupId,
+    DateTime? startedAt,
+    DateTime? completedAt,
+    String? verificationCode,
+    Map<String, AttendanceRecord>? attendanceRecords,
   }) {
     return Session(
       id: id,
@@ -127,6 +206,10 @@ class Session {
       attendeeIds: attendeeIds ?? this.attendeeIds,
       waitlistUserIds: waitlistUserIds ?? this.waitlistUserIds,
       recurrenceGroupId: recurrenceGroupId ?? this.recurrenceGroupId,
+      startedAt: startedAt ?? this.startedAt,
+      completedAt: completedAt ?? this.completedAt,
+      verificationCode: verificationCode ?? this.verificationCode,
+      attendanceRecords: attendanceRecords ?? this.attendanceRecords,
     );
   }
 }

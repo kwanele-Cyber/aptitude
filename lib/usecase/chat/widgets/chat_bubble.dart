@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:myapp/core/data/models/chat_message.dart';
 import 'package:intl/intl.dart';
@@ -7,10 +9,10 @@ import 'package:myapp/usecase/chat/widgets/agreement_message_card.dart';
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
   final bool isMe;
-  final Function(String agreementId)? onAcceptAgreement;
-  final Function(String agreementId)? onRejectAgreement;
-  final Function(String agreementId)? onCancelAgreement;
-  final Function(
+  final FutureOr<void> Function(String agreementId)? onAcceptAgreement;
+  final FutureOr<void> Function(String agreementId)? onRejectAgreement;
+  final FutureOr<void> Function(String agreementId)? onCancelAgreement;
+  final FutureOr<void> Function(
     String agreementId,
     int sessionsCount,
     int minutesPerSession,
@@ -96,7 +98,7 @@ class ChatBubble extends StatelessWidget {
                           Text(
                             time,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 10,
                             ),
                           ),
@@ -107,7 +109,7 @@ class ChatBubble extends StatelessWidget {
                               size: 14,
                               color: message.isRead
                                   ? const Color(0xFF60A5FA) // Vibrant blue
-                                  : Colors.white.withOpacity(0.5),
+                                  : Colors.white.withValues(alpha: 0.5),
                             ),
                           ],
                         ],

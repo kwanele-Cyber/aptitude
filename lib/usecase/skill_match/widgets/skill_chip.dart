@@ -27,11 +27,11 @@ class SkillChip extends StatelessWidget {
               : null,
           color: isSelected || onTap == null
               ? null
-              : const Color(0xFF7C3AED).withOpacity(0.15),
+              : const Color(0xFF7C3AED).withValues(alpha:0.15),
           borderRadius: BorderRadius.circular(20),
           border: isSelected
               ? null
-              : Border.all(color: const Color(0xFF7C3AED).withOpacity(0.3)),
+              : Border.all(color: const Color(0xFF7C3AED).withValues(alpha:0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

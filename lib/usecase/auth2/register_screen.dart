@@ -6,7 +6,7 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
@@ -193,7 +193,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     if (user != null) {
                       showMessage("Account created successfully");
-                      if (mounted) context.pop();
+                      if (!context.mounted) return;
+                      context.pop();
                     }
                   } catch (e) {
                     showMessage(getErrorMessage(e.toString()));

@@ -122,7 +122,7 @@ class PublicProfileScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    const Color(0xFF0F0F1A).withOpacity(0.8),
+                    const Color(0xFF0F0F1A).withValues(alpha:0.8),
                     const Color(0xFF0F0F1A),
                   ],
                 ),
@@ -236,7 +236,7 @@ class PublicProfileScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha:0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

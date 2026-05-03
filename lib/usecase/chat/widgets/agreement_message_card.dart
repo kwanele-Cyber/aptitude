@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:myapp/core/data/models/agreement.dart';
 import 'package:myapp/core/data/repositories/agreement_repository.dart';
@@ -6,24 +8,70 @@ import 'package:myapp/usecase/session_execution/widgets/schedule_session_sheet.d
 import 'package:myapp/usecase/session_execution/widgets/session_list_sheet.dart';
 import 'package:provider/provider.dart';
 
-class AgreementMessageCard extends StatelessWidget {
+class AgreementMessageCard extends StatefulWidget {
   final String agreementId;
+  final Agreement? agreement;
   final bool isMe;
-  final VoidCallback? onAccept;
-  final VoidCallback? onReject;
-  final VoidCallback? onCancel;
-  final Function(int sessionsCount, int minutesPerSession, String frequency)?
+  final FutureOr<void> Function()? onAccept;
+  final FutureOr<void> Function()? onReject;
+  final FutureOr<void> Function()? onCancel;
+  final FutureOr<void> Function(
+    int sessionsCount,
+    int minutesPerSession,
+    String frequency,
+  )?
   onModify;
 
   const AgreementMessageCard({
     super.key,
     required this.agreementId,
+    this.agreement,
     required this.isMe,
     this.onAccept,
     this.onReject,
     this.onCancel,
     this.onModify,
   });
+
+  @override
+  State<AgreementMessageCard> createState() => _AgreementMessageCardState();
+}
+
+class _AgreementMessageCardState extends State<AgreementMessageCard> {
+  final AgreementRepository _repo = AgreementRepository();
+  late Future<Agreement?> _agreementFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _agreementFuture = widget.agreement != null
+        ? Future.value(widget.agreement)
+        : _repo.getAgreement(widget.agreementId);
+  }
+
+  @override
+  void didUpdateWidget(covariant AgreementMessageCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.agreementId != widget.agreementId ||
+        oldWidget.agreement != widget.agreement) {
+      _agreementFuture = widget.agreement != null
+          ? Future.value(widget.agreement)
+          : _repo.getAgreement(widget.agreementId);
+    }
+  }
+
+  void _refreshAgreement() {
+    if (!mounted) return;
+    setState(() {
+      _agreementFuture = _repo.getAgreement(widget.agreementId);
+    });
+  }
+
+  Future<void> _runAction(FutureOr<void> Function()? action) async {
+    if (action == null) return;
+    await action();
+    _refreshAgreement();
+  }
 
   Future<void> _showModifyDialog(
     BuildContext context,
@@ -36,51 +84,60 @@ class AgreementMessageCard extends StatelessWidget {
       text: agreement.minutesPerSession.toString(),
     );
     final frequencyCtrl = TextEditingController(text: agreement.frequency);
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Modify Agreement'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: sessionsCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Sessions'),
+    try {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Modify Agreement'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: sessionsCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Sessions'),
+              ),
+              TextField(
+                controller: minutesCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Minutes/Session'),
+              ),
+              TextField(
+                controller: frequencyCtrl,
+                decoration: const InputDecoration(labelText: 'Frequency'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
-            TextField(
-              controller: minutesCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Minutes/Session'),
-            ),
-            TextField(
-              controller: frequencyCtrl,
-              decoration: const InputDecoration(labelText: 'Frequency'),
+            ElevatedButton(
+              onPressed: () {
+                final sessions =
+                    int.tryParse(sessionsCtrl.text) ?? agreement.sessionsCount;
+                final minutes =
+                    int.tryParse(minutesCtrl.text) ??
+                    agreement.minutesPerSession;
+                final frequency = frequencyCtrl.text.trim().isEmpty
+                    ? agreement.frequency
+                    : frequencyCtrl.text.trim();
+                _runAction(
+                  () => widget.onModify?.call(sessions, minutes, frequency),
+                );
+                Navigator.pop(context);
+              },
+              child: const Text('Submit Changes'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final sessions =
-                  int.tryParse(sessionsCtrl.text) ?? agreement.sessionsCount;
-              final minutes =
-                  int.tryParse(minutesCtrl.text) ?? agreement.minutesPerSession;
-              final frequency = frequencyCtrl.text.trim().isEmpty
-                  ? agreement.frequency
-                  : frequencyCtrl.text.trim();
-              onModify?.call(sessions, minutes, frequency);
-              Navigator.pop(context);
-            },
-            child: const Text('Submit Changes'),
-          ),
-        ],
-      ),
-    );
+      );
+    } finally {
+      sessionsCtrl.dispose();
+      minutesCtrl.dispose();
+      frequencyCtrl.dispose();
+    }
   }
 
   Future<void> _confirmCancel(BuildContext context, Agreement agreement) async {
@@ -101,7 +158,7 @@ class AgreementMessageCard extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              onCancel?.call();
+              _runAction(widget.onCancel);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -138,12 +195,37 @@ class AgreementMessageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final repo = AgreementRepository();
-
     return FutureBuilder<Agreement?>(
-      future: repo.getAgreement(agreementId),
+      future: _agreementFuture,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox(height: 50);
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 72,
+            child: Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF7C3AED),
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: Text(
+              'Agreement unavailable',
+              style: TextStyle(color: Colors.grey[400], fontSize: 12),
+            ),
+          );
+        }
+
         final agreement = snapshot.data!;
         final isPending = agreement.status == AgreementStatus.pending;
         final isAccepted = agreement.status == AgreementStatus.accepted;
@@ -159,8 +241,8 @@ class AgreementMessageCard extends StatelessWidget {
             color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isMe
-                  ? const Color(0xFF7C3AED).withOpacity(0.5)
+              color: widget.isMe
+                  ? const Color(0xFF7C3AED).withValues(alpha: 0.5)
                   : Colors.white10,
             ),
           ),
@@ -176,7 +258,7 @@ class AgreementMessageCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isMe ? 'Proposal Sent' : 'New Swap Proposal',
+                    widget.isMe ? 'Proposal Sent' : 'New Swap Proposal',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -254,13 +336,13 @@ class AgreementMessageCard extends StatelessWidget {
                 ),
               ],
 
-              if (!isMe && isPending) ...[
+              if (!widget.isMe && isPending) ...[
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: onReject,
+                        onPressed: () => _runAction(widget.onReject),
                         child: const Text(
                           'Decline',
                           style: TextStyle(
@@ -273,7 +355,7 @@ class AgreementMessageCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: onAccept,
+                        onPressed: () => _runAction(widget.onAccept),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7C3AED),
                           foregroundColor: Colors.white,
@@ -293,7 +375,7 @@ class AgreementMessageCard extends StatelessWidget {
                   ],
                 ),
               ],
-              if (isMe && isPending) ...[
+              if (widget.isMe && isPending) ...[
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -362,7 +444,7 @@ class AgreementMessageCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/core/data/models/user_role.dart';
 import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/usecase/dashboard/admin_dashboard_screen.dart';
 import 'package:myapp/usecase/dashboard/member_dashboard_screen.dart';
-import 'package:myapp/usecase/dashboard/mentor_dashboard_screen.dart';
 
 class RoleDashboardGate extends StatelessWidget {
   const RoleDashboardGate({super.key});
@@ -16,13 +16,11 @@ class RoleDashboardGate extends StatelessWidget {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
-        final role = snapshot.data?.role ?? 'member';
+        final role = snapshot.data?.role ?? UserRole.user;
         switch (role) {
-          case 'admin':
+          case UserRole.admin:
             return const AdminDashboardScreen();
-          case 'mentor':
-            return const MentorDashboardScreen();
-          default:
+          case UserRole.user:
             return const MemberDashboardScreen();
         }
       },

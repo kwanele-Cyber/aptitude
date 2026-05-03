@@ -100,12 +100,13 @@ class _CreateSkillRequestFormState extends State<_CreateSkillRequestForm> {
                     : () async {
                         if (_formKey.currentState!.validate()) {
                           final success = await viewModel.saveRequest();
-                          if (success && mounted) {
+                          if (!context.mounted) return;
+                          if (success) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Learning request created!')),
                             );
                             Navigator.pop(context);
-                          } else if (mounted) {
+                          } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text('Failed to save learning request')),

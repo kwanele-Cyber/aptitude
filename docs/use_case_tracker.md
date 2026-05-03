@@ -149,18 +149,18 @@ description:
 ### Session Lifecycle
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| E08 | ❌ Todo | Start Session | Begin session with check-in |
+| E08 | ✅ Done | Start Session | Begin session with check-in |
 | E09 | ✅ Done | Complete Session | Mark session complete |
-| E10 | ❌ Todo | Track Attendance | Verify presence (QR code, geolocation) |
-| E11 | ❌ Todo | Session Verification | Code-based attendance proof |
+| E10 | ✅ Done | Track Attendance | Verify presence (QR code, geolocation) |
+| E11 | ✅ Done | Session Verification | Code-based attendance proof |
 | E12 | ✅ Done | Session History | View past sessions with details |
-| E13 | ❌ Todo | Session Rating | Rate session quality immediately after |
+| E13 | ✅ Done | Session Rating | Rate session quality immediately after |
 
 ### Session Materials
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| E14 | ❌ Todo | Share Materials | Upload/download session resources |
-| E15 | ❌ Todo | Session Notes | Collaborative note-taking during session |
+| E14 | ✅ Done | Share Materials | Upload/download session resources |
+| E15 | ✅ Done | Session Notes | Collaborative note-taking during session |
 
 ---
 

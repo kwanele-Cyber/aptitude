@@ -99,8 +99,10 @@ flowchart TD
     AGREEMENT_VIEW --> AGREEMENT_ACCEPT[Accept Agreement<br/>C10]
     AGREEMENT_ACCEPT --> SESSION_FLOW[Continue to Session Scheduling]
 
-    AGREEMENT_MOD["Modify Agreement<br/>C11 (TODO)"]:::todo -.future branch.-> AGREEMENT_VIEW
-    AGREEMENT_CANCEL["Cancel Agreement<br/>C12 (TODO)"]:::todo -.future branch.-> AGREEMENT_VIEW
+    AGREEMENT_VIEW --> AGREEMENT_MOD[Modify Agreement<br/>C11]
+    AGREEMENT_MOD --> AGREEMENT_VIEW
+    AGREEMENT_VIEW --> AGREEMENT_CANCEL[Cancel Agreement<br/>C12]
+    AGREEMENT_CANCEL --> CHANNEL
 
     classDef todo fill:#fff3cd,stroke:#d39e00,color:#5c4400;
 ```
@@ -113,17 +115,19 @@ flowchart TD
     CREATE_SESSION --> UPCOMING[Upcoming Sessions]
     UPCOMING --> SESSION_DETAIL[Session Detail]
 
-    SESSION_DETAIL --> COMPLETE[Complete Session<br/>E09]
+    SESSION_DETAIL --> START_SESSION[Start Session<br/>E08]
+    START_SESSION --> VERIFY[Session Verification<br/>E11]
+    VERIFY --> ATTENDANCE[Track Attendance<br/>E10]
+    ATTENDANCE --> COMPLETE[Complete Session<br/>E09]
     COMPLETE --> SESSION_HISTORY[Session History<br/>E12]
 
-    COMPLETE --> RATE[Rate User<br/>T01]
+    COMPLETE --> RATE[Session Rating<br/>E13/T01]
     RATE --> REVIEW[Write Review<br/>T02]
 
     UPCOMING --> REMINDERS[Reminders / Notifications<br/>X01/X02]
 
-    UPDATE_SESSION["Update Session<br/>E02 (TODO)"]:::todo -.future action.-> SESSION_DETAIL
-    CANCEL_SESSION["Cancel Session<br/>E03 (TODO)"]:::todo -.future action.-> SESSION_DETAIL
-    START_SESSION["Start Session<br/>E08 (TODO)"]:::todo -.future action.-> SESSION_DETAIL
+    SESSION_DETAIL --> UPDATE_SESSION[Update Session<br/>E02]
+    SESSION_DETAIL --> CANCEL_SESSION[Cancel Session<br/>E03]
 
     classDef todo fill:#fff3cd,stroke:#d39e00,color:#5c4400;
 ```

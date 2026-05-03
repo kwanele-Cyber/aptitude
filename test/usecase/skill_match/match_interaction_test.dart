@@ -9,13 +9,13 @@ import 'package:myapp/core/data/repositories/chat_repository.dart';
 import 'package:myapp/core/data/repositories/block_repository.dart';
 import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/core/services/match_service.dart';
-import 'package:myapp/usecase/skill_match/view_model/discover_view_model.dart';
+import 'package:myapp/usecase/skill_match/view_model/matches_view_model.dart';
 
 import 'match_interaction_test.mocks.dart';
 
 @GenerateMocks([AuthService, MatchService, BlockRepository, MatchRepository, ChatRepository])
 void main() {
-  late DiscoverViewModel viewModel;
+  late MatchesViewModel viewModel;
   late MockAuthService mockAuth;
   late MockMatchService mockMatchService;
   late MockBlockRepository mockBlockRepo;
@@ -66,7 +66,7 @@ void main() {
     mockMatchRepo = MockMatchRepository();
     mockChatRepo = MockChatRepository();
 
-    viewModel = DiscoverViewModel(
+    viewModel = MatchesViewModel(
       authService: mockAuth,
       matchService: mockMatchService,
       blockRepo: mockBlockRepo,

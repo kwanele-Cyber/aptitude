@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/data/models/user.dart';
@@ -6,6 +5,7 @@ import 'package:myapp/core/services/auth_service.dart';
 import 'package:myapp/core/utils/logger.dart';
 import 'package:myapp/core/data/models/location_model.dart';
 import 'package:myapp/usecase/chat/view_model/chat_list_view_model.dart';
+import 'matches_screen.dart';
 import 'discover_screen.dart';
 import 'package:myapp/usecase/connections/connections_screen.dart';
 import 'package:myapp/usecase/chat/chat_list_screen.dart';
@@ -129,6 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentTab,
         children: [
           DiscoverScreen(userData: _userData!),
+          MatchesScreen(userData: _userData!),
           const ConnectionsScreen(),
           ChangeNotifierProvider(
             create: (_) => ChatListViewModel(),
@@ -152,8 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Colors.transparent,
             selectedItemColor: const Color(0xFF7C3AED),
             unselectedItemColor: Colors.grey[600],
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
             elevation: 0,
             type: BottomNavigationBarType.fixed,
             items: const [
@@ -161,6 +162,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icon(Icons.explore_outlined),
                 activeIcon: Icon(Icons.explore),
                 label: 'Discover',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.people_outline),
+                activeIcon: Icon(Icons.people),
+                label: 'Matches',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.people_outline),

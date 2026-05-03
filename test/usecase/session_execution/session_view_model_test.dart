@@ -1,4 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:myapp/core/data/models/rating.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myapp/core/data/models/session.dart';
 import 'package:myapp/core/data/repositories/rating_repository.dart';
@@ -8,14 +9,16 @@ import 'package:myapp/usecase/session_execution/view_model/session_view_model.da
 
 void main() {
   late FakeSessionRepository sessionRepo;
+  late FakeRatingRepository ratingRepo;
   late SessionViewModel viewModel;
 
   setUp(() {
     sessionRepo = FakeSessionRepository();
+    ratingRepo = FakeRatingRepository();
     viewModel = SessionViewModel(
       agreementId: 'agreement_1',
       sessionRepo: sessionRepo,
-      ratingRepo: FakeRatingRepository(),
+      ratingRepo: ratingRepo,
       currentUidProvider: () async => 'user_1',
     );
   });
@@ -144,6 +147,143 @@ void main() {
 
       expect(sessionRepo.sessions.single.waitlistUserIds, ['user_1']);
     });
+
+    test(
+      'startSession begins a scheduled session with a verification code',
+      () async {
+        final session = _session();
+        sessionRepo.sessions.add(session);
+
+        await viewModel.startSession(session);
+
+        final started = sessionRepo.sessions.single;
+        expect(started.status, SessionStatus.inProgress);
+        expect(started.startedAt, isNotNull);
+        expect(started.verificationCode, hasLength(6));
+      },
+    );
+
+    test('checkInToSession rejects an invalid verification code', () async {
+      final session = _session(
+        status: SessionStatus.inProgress,
+        verificationCode: '123456',
+      );
+      sessionRepo.sessions.add(session);
+
+      await viewModel.checkInToSession(
+        session: session,
+        method: AttendanceVerificationMethod.code,
+        code: '000000',
+      );
+
+      expect(sessionRepo.sessions.single.attendeeIds, isEmpty);
+      expect(viewModel.errorMessage, 'Invalid session verification code');
+    });
+
+    test('checkInToSession tracks attendance with code proof', () async {
+      final session = _session(
+        status: SessionStatus.inProgress,
+        verificationCode: '123456',
+      );
+      sessionRepo.sessions.add(session);
+
+      await viewModel.checkInToSession(
+        session: session,
+        method: AttendanceVerificationMethod.code,
+        code: '123456',
+      );
+
+      final updated = sessionRepo.sessions.single;
+      expect(updated.attendeeIds, ['user_1']);
+      expect(
+        updated.attendanceRecords['user_1']?.method,
+        AttendanceVerificationMethod.code,
+      );
+      expect(updated.attendanceRecords['user_1']?.verificationCode, '123456');
+    });
+
+    test('checkInToSession tracks geolocation attendance proof', () async {
+      final session = _session(status: SessionStatus.inProgress);
+      sessionRepo.sessions.add(session);
+
+      await viewModel.checkInToSession(
+        session: session,
+        method: AttendanceVerificationMethod.geolocation,
+        latitude: -26.2041,
+        longitude: 28.0473,
+      );
+
+      final record = sessionRepo.sessions.single.attendanceRecords['user_1'];
+      expect(record?.method, AttendanceVerificationMethod.geolocation);
+      expect(record?.latitude, -26.2041);
+      expect(record?.longitude, 28.0473);
+    });
+
+    test(
+      'completeSession marks session complete with completion time',
+      () async {
+        final session = _session(status: SessionStatus.inProgress);
+        sessionRepo.sessions.add(session);
+
+        await viewModel.completeSession(session);
+
+        expect(sessionRepo.sessions.single.status, SessionStatus.completed);
+        expect(sessionRepo.sessions.single.completedAt, isNotNull);
+      },
+    );
+
+    test('sessionHistory returns completed and cancelled sessions', () async {
+      final scheduled = _session(id: 'scheduled');
+      final completed = _session(
+        id: 'completed',
+        status: SessionStatus.completed,
+      );
+      final cancelled = _session(
+        id: 'cancelled',
+        status: SessionStatus.cancelled,
+      );
+      sessionRepo.sessions.addAll([scheduled, completed, cancelled]);
+
+      await viewModel.loadSessions();
+
+      expect(viewModel.sessionHistory.map((session) => session.id), [
+        'completed',
+        'cancelled',
+      ]);
+    });
+
+    test('submitRating only allows completed sessions', () async {
+      final session = _session(status: SessionStatus.inProgress);
+      sessionRepo.sessions.add(session);
+
+      await viewModel.submitRating(
+        session: session,
+        fromUid: 'user_1',
+        toUid: 'user_2',
+        score: 5,
+        comment: 'Great',
+      );
+
+      expect(ratingRepo.ratings, isEmpty);
+      expect(viewModel.errorMessage, 'Only completed sessions can be rated');
+    });
+
+    test('submitRating records feedback and marks session as rated', () async {
+      final session = _session(status: SessionStatus.completed);
+      sessionRepo.sessions.add(session);
+
+      await viewModel.submitRating(
+        session: session,
+        fromUid: 'user_1',
+        toUid: 'user_2',
+        score: 4,
+        comment: 'Useful session',
+      );
+
+      expect(ratingRepo.ratings, hasLength(1));
+      expect(ratingRepo.ratings.single.score, 4);
+      expect(sessionRepo.sessions.single.isRated, true);
+    });
   });
 }
 
@@ -154,6 +294,8 @@ Session _session({
   String location = 'Online',
   int capacity = 2,
   List<String> attendeeIds = const [],
+  SessionStatus status = SessionStatus.scheduled,
+  String? verificationCode,
 }) {
   return Session(
     id: id,
@@ -164,6 +306,8 @@ Session _session({
     location: location,
     capacity: capacity,
     attendeeIds: attendeeIds,
+    status: status,
+    verificationCode: verificationCode,
   );
 }
 
@@ -198,6 +342,13 @@ class FakeSessionRepository extends SessionRepository {
 
 class FakeRatingRepository extends RatingRepository {
   FakeRatingRepository() : super(databaseService: _NoopDatabaseService());
+
+  final List<Rating> ratings = [];
+
+  @override
+  Future<void> submitRating(Rating rating) async {
+    ratings.add(rating);
+  }
 }
 
 class _NoopDatabaseService implements DatabaseService<DataSnapshot> {

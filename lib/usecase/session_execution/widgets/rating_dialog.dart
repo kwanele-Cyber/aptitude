@@ -19,6 +19,12 @@ class _RatingDialogState extends State<RatingDialog> {
   bool _submitting = false;
 
   @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: const Color(0xFF1A1A2E),
@@ -30,7 +36,11 @@ class _RatingDialogState extends State<RatingDialog> {
           children: [
             const Text(
               'How was the session?',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -60,8 +70,11 @@ class _RatingDialogState extends State<RatingDialog> {
                 hintText: 'Add a comment (optional)',
                 hintStyle: TextStyle(color: Colors.grey[600]),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                fillColor: Colors.white.withValues(alpha: 0.05),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -72,11 +85,23 @@ class _RatingDialogState extends State<RatingDialog> {
                 onPressed: _submitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF7C3AED),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: _submitting
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Submit Feedback', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Submit Feedback',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
           ],
@@ -95,24 +120,40 @@ class _RatingDialogState extends State<RatingDialog> {
 
       // Find the "toUid" from the agreement
       final agreementRepo = AgreementRepository();
-      final agreement = await agreementRepo.getAgreement(widget.session.agreementId);
+      final agreement = await agreementRepo.getAgreement(
+        widget.session.agreementId,
+      );
       if (agreement == null) return;
 
-      final toUid = agreement.proposerId == me.uid ? agreement.receiverId : agreement.proposerId;
+      final toUid = agreement.proposerId == me.uid
+          ? agreement.receiverId
+          : agreement.proposerId;
 
       if (mounted) {
-        await context.read<SessionViewModel>().submitRating(
+        final viewModel = context.read<SessionViewModel>();
+        await viewModel.submitRating(
           session: widget.session,
           fromUid: me.uid,
           toUid: toUid,
           score: _rating,
           comment: _commentController.text,
         );
-        
+
+        final error = viewModel.errorMessage;
+        if (error != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
+          );
+          return;
+        }
+
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thank you for your feedback!'), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text('Thank you for your feedback!'),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       }

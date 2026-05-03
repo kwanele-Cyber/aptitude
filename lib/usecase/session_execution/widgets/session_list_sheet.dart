@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/core/data/models/session.dart';
 import 'package:myapp/usecase/session_execution/view_model/session_view_model.dart';
+import 'package:myapp/usecase/session_execution/view_model/material_view_model.dart';
+import 'package:myapp/usecase/session_execution/view_model/note_view_model.dart';
 import 'package:myapp/usecase/session_execution/widgets/rating_dialog.dart';
 import 'package:myapp/usecase/session_execution/widgets/schedule_session_sheet.dart';
+import 'package:myapp/usecase/session_execution/widgets/session_materials_sheet.dart';
+import 'package:myapp/usecase/session_execution/widgets/session_notes_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -85,6 +89,7 @@ class _SessionListSheetState extends State<SessionListSheet> {
     final isCompleted = session.status == SessionStatus.completed;
     final isCancelled = session.status == SessionStatus.cancelled;
     final isScheduled = session.status == SessionStatus.scheduled;
+    final isInProgress = session.status == SessionStatus.inProgress;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -172,6 +177,17 @@ class _SessionListSheetState extends State<SessionListSheet> {
                         ),
                       ),
                     ],
+                    if (session.verificationCode != null && isInProgress) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Check-in code: ${session.verificationCode}',
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -183,6 +199,22 @@ class _SessionListSheetState extends State<SessionListSheet> {
             runSpacing: 4,
             alignment: WrapAlignment.end,
             children: [
+              IconButton(
+                onPressed: () => _showMaterials(context, session),
+                icon: const Icon(
+                  Icons.folder_outlined,
+                  color: Color(0xFFA78BFA),
+                ),
+                tooltip: 'Materials',
+              ),
+              IconButton(
+                onPressed: () => _showNotes(context, session),
+                icon: const Icon(
+                  Icons.note_alt_outlined,
+                  color: Color(0xFF34D399),
+                ),
+                tooltip: 'Notes',
+              ),
               if (isScheduled) ...[
                 IconButton(
                   onPressed: () =>
@@ -199,12 +231,12 @@ class _SessionListSheetState extends State<SessionListSheet> {
                   tooltip: 'Cancel',
                 ),
                 IconButton(
-                  onPressed: () => viewModel.completeSession(session),
+                  onPressed: () => viewModel.startSession(session),
                   icon: const Icon(
-                    Icons.check_circle_outline,
-                    color: Colors.green,
+                    Icons.play_circle_outline,
+                    color: Color(0xFF60A5FA),
                   ),
-                  tooltip: 'Complete',
+                  tooltip: 'Start',
                 ),
                 if (session.isFull)
                   TextButton.icon(
@@ -223,6 +255,25 @@ class _SessionListSheetState extends State<SessionListSheet> {
                     ),
                     tooltip: 'Calendar',
                   ),
+              ],
+              if (isInProgress) ...[
+                TextButton.icon(
+                  onPressed: () =>
+                      _showCheckInDialog(context, session, viewModel),
+                  icon: const Icon(Icons.verified_user_outlined, size: 16),
+                  label: const Text('Check in'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF60A5FA),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => viewModel.completeSession(session),
+                  icon: const Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.green,
+                  ),
+                  tooltip: 'Complete',
+                ),
               ],
               if (isCompleted && !session.isRated)
                 TextButton.icon(
@@ -312,6 +363,36 @@ class _SessionListSheetState extends State<SessionListSheet> {
     );
   }
 
+  Future<void> _showMaterials(
+    BuildContext context,
+    Session session,
+  ) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ChangeNotifierProvider(
+        create: (_) => MaterialViewModel(sessionId: session.id),
+        child: SessionMaterialsSheet(sessionId: session.id),
+      ),
+    );
+  }
+
+  Future<void> _showNotes(
+    BuildContext context,
+    Session session,
+  ) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ChangeNotifierProvider(
+        create: (_) => NoteViewModel(sessionId: session.id),
+        child: SessionNotesSheet(sessionId: session.id),
+      ),
+    );
+  }
+
   Future<void> _showCalendarInvite(
     BuildContext context,
     Session session,
@@ -333,9 +414,60 @@ class _SessionListSheetState extends State<SessionListSheet> {
     );
   }
 
+  Future<void> _showCheckInDialog(
+    BuildContext context,
+    Session session,
+    SessionViewModel viewModel,
+  ) async {
+    final codeController = TextEditingController();
+    try {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Session Check-in'),
+          content: TextField(
+            controller: codeController,
+            decoration: const InputDecoration(labelText: 'Verification code'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await viewModel.checkInToSession(
+                  session: session,
+                  method: AttendanceVerificationMethod.code,
+                  code: codeController.text,
+                );
+                if (context.mounted) Navigator.pop(context);
+                final error = viewModel.errorMessage;
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error ?? 'Checked in'),
+                      backgroundColor: error == null
+                          ? Colors.green
+                          : Colors.redAccent,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Check in'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      codeController.dispose();
+    }
+  }
+
   Widget _buildStatusChip(SessionStatus status) {
     final color = switch (status) {
       SessionStatus.scheduled => const Color(0xFF60A5FA),
+      SessionStatus.inProgress => Colors.amber,
       SessionStatus.completed => Colors.green,
       SessionStatus.cancelled => Colors.redAccent,
     };

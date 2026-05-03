@@ -1,3 +1,4 @@
+import 'package:myapp/core/data/models/user_role.dart';
 import 'package:myapp/core/data/models/skill.dart';
 import 'package:myapp/core/data/models/user.dart';
 import 'package:myapp/core/data/models/location_model.dart';
@@ -20,7 +21,7 @@ extension UserExtension on User {
     String? bio,
     AddressModel? location,
     bool? profileComplete,
-    String? role,
+    UserRole? role,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {

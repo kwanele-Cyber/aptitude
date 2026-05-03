@@ -1,4 +1,5 @@
 import 'package:myapp/core/data/models/location_model.dart';
+import 'package:myapp/core/data/models/user_role.dart';
 
 class User {
   final String uid;
@@ -17,7 +18,7 @@ class User {
   String? twoFactorPin;
   double trustScore = 0.0;
   bool isVerified = false;
-  String role;
+  UserRole role;
   DateTime? updatedAt;
   DateTime? createdAt;
 
@@ -42,7 +43,7 @@ class User {
     this.twoFactorPin,
     this.trustScore = 0.0,
     this.isVerified = false,
-    this.role = 'member',
+    this.role = UserRole.user,
   });
 
   Map<String, dynamic> toJson() {
@@ -63,7 +64,7 @@ class User {
       'twoFactorPin': twoFactorPin,
       'trustScore': trustScore,
       'isVerified': isVerified,
-      'role': role,
+      'role': role.value,
       'updatedAt': updatedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
     };
@@ -95,7 +96,7 @@ class User {
       profileComplete: json['profileComplete'] as bool? ?? false,
       trustScore: (json['trustScore'] as num?)?.toDouble() ?? 0.0,
       isVerified: json['isVerified'] as bool? ?? false,
-      role: (json['role'] as String? ?? 'member').toLowerCase(),
+      role: UserRole.fromString(json['role'] as String? ?? ''),
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'] as String)
           : null,

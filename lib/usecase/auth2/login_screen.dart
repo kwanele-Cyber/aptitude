@@ -8,7 +8,7 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
             center: Alignment.topLeft,
             radius: 1.5,
             colors: [
-              const Color(0xFF7C3AED).withOpacity(0.1),
+              const Color(0xFF7C3AED).withValues(alpha:0.1),
               const Color(0xFF0F0F1A),
             ],
           ),
@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF7C3AED).withOpacity(0.1),
+                    color: const Color(0xFF7C3AED).withValues(alpha:0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.lock_person_outlined, size: 64, color: Color(0xFF7C3AED)),
@@ -74,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: "Email",
                     labelStyle: TextStyle(color: Colors.grey[500]),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
+                    fillColor: Colors.white.withValues(alpha:0.05),
                     prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[600]),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                   ),
@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: "Password",
                     labelStyle: TextStyle(color: Colors.grey[500]),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
+                    fillColor: Colors.white.withValues(alpha:0.05),
                     prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[600]),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                   ),
@@ -125,16 +125,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (fUser != null) {
                                 final userModel = await auth.getCurrentUserModel();
                                 if (userModel != null && userModel.twoFactorEnabled) {
-                                  if (mounted) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => TwoFactorVerificationScreen(uid: fUser.uid),
-                                      ),
-                                    );
-                                  }
+                                  if (!context.mounted) return;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TwoFactorVerificationScreen(uid: fUser.uid),
+                                    ),
+                                  );
                                 } else {
-                                  if (mounted) context.go('/home');
+                                  if (!context.mounted) return;
+                                  context.go('/home');
                                 }
                               }
                             } catch (e) {

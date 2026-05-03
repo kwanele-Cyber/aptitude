@@ -45,7 +45,7 @@ class ManualSnapshot implements DataSnapshot {
   ManualSnapshot(this.value);
   @override bool get exists => value != null;
   @override String? get key => 'key';
-  @override int get childrenCount => (value as Map?)?.length ?? 0;
+  int get childrenCount => (value as Map?)?.length ?? 0;
   @override bool hasChild(String path) => false;
   @override DataSnapshot child(String path) => ManualSnapshot(null);
   @override Iterable<DataSnapshot> get children {

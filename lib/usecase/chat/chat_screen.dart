@@ -264,6 +264,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       final agreement = agreements[index];
                       return AgreementMessageCard(
                         agreementId: agreement.id,
+                        agreement: agreement,
                         isMe: agreement.proposerId == viewModel.myUid,
                         onAccept: () => viewModel.respondToAgreement(
                           agreement.id,

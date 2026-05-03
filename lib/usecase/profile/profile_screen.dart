@@ -170,19 +170,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               try {
                 await _authService.deleteAccount();
-                if (mounted) {
-                  context.go('/');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Account deleted successfully')),
-                  );
-                }
+                if (!context.mounted) return;
+                context.go('/');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Account deleted successfully')),
+                );
               } catch (e) {
-                  if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-                    );
-                  }
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                  );
               }
             },
             child: const Text('Delete Forever', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),

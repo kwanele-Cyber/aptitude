@@ -102,12 +102,13 @@ class _CreateSkillOfferFormState extends State<_CreateSkillOfferForm> {
                     : () async {
                         if (_formKey.currentState!.validate()) {
                           final success = await viewModel.saveOffer();
-                          if (success && mounted) {
+                          if (!context.mounted) return;
+                          if (success) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Skill offer created!')),
                             );
                             Navigator.pop(context);
-                          } else if (mounted) {
+                          } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text('Failed to save skill offer')),
