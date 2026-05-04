@@ -21,6 +21,12 @@ import 'package:myapp/features/auth/domain/usecases/get_user_profile_usecase.dar
 import 'package:myapp/features/auth/domain/usecases/recover_account_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/verify_2fa_usecase.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
+import 'package:myapp/features/skills/data/datasources/skill_remote_datasource.dart';
+import 'package:myapp/features/skills/data/datasources/skill_remote_datasource_firebase.dart';
+import 'package:myapp/features/skills/data/repository/skill_repository_impl.dart';
+import 'package:myapp/features/skills/domain/repository/skill_repository.dart';
+import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
+import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sl = GetIt.instance;
@@ -74,6 +80,20 @@ Future init() async {
   );
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceFirebase(),
+  );
+
+  // Skill ecosystem
+  sl.registerFactory(() => SkillBloc(
+        createSkillOfferUseCase: sl(),
+      ));
+
+  sl.registerLazySingleton(() => CreateSkillOfferUseCase(repository: sl()));
+
+  sl.registerLazySingleton<SkillRepository>(
+    () => SkillRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<SkillRemoteDataSource>(
+    () => SkillRemoteDataSourceFirebase(),
   );
 
   final sharedPreferences = await SharedPreferences.getInstance();
