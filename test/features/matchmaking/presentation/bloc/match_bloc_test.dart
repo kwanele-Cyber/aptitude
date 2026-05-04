@@ -6,6 +6,7 @@ import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/fetch_match_history_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/generate_matches_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/submit_match_feedback_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/update_match_status_usecase.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_event.dart';
@@ -23,6 +24,9 @@ class MockSaveMatchUseCase extends Mock implements SaveMatchUseCase {}
 
 class MockFetchMatchHistoryUseCase extends Mock
     implements FetchMatchHistoryUseCase {}
+
+class MockSubmitMatchFeedbackUseCase extends Mock
+    implements SubmitMatchFeedbackUseCase {}
 
 final tMatch = MatchEntity(
   id: 'match1',
@@ -44,6 +48,7 @@ void main() {
   late MockUpdateMatchStatusUseCase mockUpdateStatusUseCase;
   late MockSaveMatchUseCase mockSaveUseCase;
   late MockFetchMatchHistoryUseCase mockFetchHistoryUseCase;
+  late MockSubmitMatchFeedbackUseCase mockSubmitFeedbackUseCase;
 
   setUpAll(() {
     registerFallbackValue(const GenerateMatchesParams(userId: ''));
@@ -53,6 +58,10 @@ void main() {
     ));
     registerFallbackValue(const SaveMatchParams(matchId: ''));
     registerFallbackValue(const FetchMatchHistoryParams(userId: ''));
+    registerFallbackValue(const SubmitMatchFeedbackParams(
+      matchId: '',
+      rating: 1,
+    ));
   });
 
   setUp(() {
@@ -60,12 +69,14 @@ void main() {
     mockUpdateStatusUseCase = MockUpdateMatchStatusUseCase();
     mockSaveUseCase = MockSaveMatchUseCase();
     mockFetchHistoryUseCase = MockFetchMatchHistoryUseCase();
+    mockSubmitFeedbackUseCase = MockSubmitMatchFeedbackUseCase();
 
     bloc = MatchBloc(
       generateMatchesUseCase: mockGenerateUseCase,
       updateMatchStatusUseCase: mockUpdateStatusUseCase,
       saveMatchUseCase: mockSaveUseCase,
       fetchMatchHistoryUseCase: mockFetchHistoryUseCase,
+      submitMatchFeedbackUseCase: mockSubmitFeedbackUseCase,
     );
   });
 
@@ -278,6 +289,42 @@ void main() {
       },
       act: (bloc) =>
           bloc.add(FetchMatchHistoryRequested(userId: 'user1')),
+      expect: () => [
+        isA<MatchLoading>(),
+        isA<MatchError>(),
+      ],
+    );
+  });
+
+  group('SubmitFeedbackRequested', () {
+    blocTest<MatchBloc, MatchState>(
+      'emits [MatchLoading, FeedbackSubmitted] on success',
+      build: () {
+        when(() => mockSubmitFeedbackUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return bloc;
+      },
+      act: (bloc) =>
+          bloc.add(SubmitFeedbackRequested(matchId: 'match1', rating: 4)),
+      expect: () => [
+        isA<MatchLoading>(),
+        isA<FeedbackSubmitted>().having(
+          (s) => s.matchId,
+          'matchId',
+          'match1',
+        ),
+      ],
+    );
+
+    blocTest<MatchBloc, MatchState>(
+      'emits [MatchLoading, MatchError] on failure',
+      build: () {
+        when(() => mockSubmitFeedbackUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) =>
+          bloc.add(SubmitFeedbackRequested(matchId: 'match1', rating: 4)),
       expect: () => [
         isA<MatchLoading>(),
         isA<MatchError>(),

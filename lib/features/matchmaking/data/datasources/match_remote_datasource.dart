@@ -8,6 +8,7 @@ abstract class MatchRemoteDataSource {
   Future<void> saveMatch(MatchModel match);
   Future<void> updateMatchStatus(String matchId, Map<String, dynamic> data);
   Future<List<MatchModel>> fetchMatchesForUser(String userId);
+  Future<void> saveFeedback(String matchId, Map<String, dynamic> data);
 }
 
 class MatchRemoteDataSourceMock implements MatchRemoteDataSource {
@@ -32,5 +33,10 @@ class MatchRemoteDataSourceMock implements MatchRemoteDataSource {
   Future<List<MatchModel>> fetchMatchesForUser(String userId) async {
     await Future.delayed(const Duration(seconds: 1));
     return [];
+  }
+
+  @override
+  Future<void> saveFeedback(String matchId, Map<String, dynamic> data) async {
+    await Future.delayed(const Duration(seconds: 1));
   }
 }

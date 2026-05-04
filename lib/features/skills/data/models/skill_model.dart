@@ -16,6 +16,9 @@ class SkillModel extends SkillEntity {
     super.archivedAt,
     super.isVerified,
     super.portfolioUrls,
+    super.latitude,
+    super.longitude,
+    super.availability,
   });
 
   factory SkillModel.fromJson(String id, Map<String, dynamic> json) {
@@ -43,6 +46,12 @@ class SkillModel extends SkillEntity {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      availability: (json['availability'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 
@@ -61,6 +70,9 @@ class SkillModel extends SkillEntity {
       'archivedAt': archivedAt?.toIso8601String(),
       'isVerified': isVerified,
       'portfolioUrls': portfolioUrls,
+      'latitude': latitude,
+      'longitude': longitude,
+      'availability': availability,
     };
   }
 

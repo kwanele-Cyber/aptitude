@@ -18,6 +18,8 @@ class MatchEntity extends Equatable {
   final SkillFormat targetSkillFormat;
   final double targetTrustScore;
   final bool targetIsVerified;
+  final double? distance;
+  final List<String> targetAvailability;
 
   const MatchEntity({
     required this.id,
@@ -34,6 +36,8 @@ class MatchEntity extends Equatable {
     required this.targetSkillFormat,
     this.targetTrustScore = 0,
     this.targetIsVerified = false,
+    this.distance,
+    this.targetAvailability = const [],
   });
 
   @override
@@ -52,5 +56,7 @@ class MatchEntity extends Equatable {
         targetSkillFormat,
         targetTrustScore,
         targetIsVerified,
+        distance,
+        targetAvailability,
       ];
 }

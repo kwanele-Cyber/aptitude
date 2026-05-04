@@ -19,6 +19,9 @@ class SkillEntity {
   final DateTime? archivedAt;
   final bool isVerified;
   final List<String> portfolioUrls;
+  final double? latitude;
+  final double? longitude;
+  final List<String> availability;
 
   const SkillEntity({
     required this.id,
@@ -35,5 +38,8 @@ class SkillEntity {
     this.archivedAt,
     this.isVerified = false,
     this.portfolioUrls = const [],
+    this.latitude,
+    this.longitude,
+    this.availability = const [],
   });
 }

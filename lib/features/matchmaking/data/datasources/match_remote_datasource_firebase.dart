@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:myapp/core/error/exceptions.dart';
+import 'package:myapp/core/utils/geo_utils.dart';
 import 'package:myapp/features/matchmaking/data/datasources/match_remote_datasource.dart';
 import 'package:myapp/features/matchmaking/data/models/match_model.dart';
 import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
@@ -31,6 +32,15 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
       String matchId, Map<String, dynamic> data) async {
     try {
       await _matchesRef.child(matchId).update(data);
+    } catch (e) {
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> saveFeedback(String matchId, Map<String, dynamic> data) async {
+    try {
+      await _matchesRef.child(matchId).child('feedback').set(data);
     } catch (e) {
       throw ServerException();
     }
@@ -78,14 +88,14 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
 
       for (final offer in userOffers) {
         for (final request in otherRequests) {
-          final score = _calculateMatchScore(offer, request);
-          if (score >= 20) {
+          final result = _calculateMatchScore(offer, request);
+          if (result.score >= 20) {
             matches.add(MatchModel(
               id: '${offer.id}_${request.id}',
               targetUserId: request.userId,
               targetSkillId: request.id,
               matchedSkillId: offer.id,
-              score: score,
+              score: result.score,
               status: MatchStatus.pending,
               createdAt: now,
               targetUserName: '',
@@ -93,6 +103,8 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
               targetSkillCategory: request.category,
               targetSkillLevel: request.level,
               targetSkillFormat: request.format,
+              distance: result.distance,
+              targetAvailability: result.commonAvailability,
             ));
           }
         }
@@ -107,14 +119,14 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
 
       for (final request in userRequests) {
         for (final offer in otherOffers) {
-          final score = _calculateMatchScore(offer, request);
-          if (score >= 20) {
+          final result = _calculateMatchScore(offer, request);
+          if (result.score >= 20) {
             matches.add(MatchModel(
               id: '${request.id}_${offer.id}',
               targetUserId: offer.userId,
               targetSkillId: offer.id,
               matchedSkillId: request.id,
-              score: score,
+              score: result.score,
               status: MatchStatus.pending,
               createdAt: now,
               targetUserName: '',
@@ -122,6 +134,8 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
               targetSkillCategory: offer.category,
               targetSkillLevel: offer.level,
               targetSkillFormat: offer.format,
+              distance: result.distance,
+              targetAvailability: result.commonAvailability,
             ));
           }
         }
@@ -143,7 +157,8 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
     }
   }
 
-  double _calculateMatchScore(SkillModel a, SkillModel b) {
+  ({double score, double? distance, List<String> commonAvailability})
+      _calculateMatchScore(SkillModel a, SkillModel b) {
     double score = 0;
 
     // Category match: up to 30 points
@@ -157,11 +172,11 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
     // Level compatibility: up to 25 points
     final levelDiff = (a.level.index - b.level.index).abs();
     if (levelDiff == 0) {
-      score += 25; // Same level
+      score += 25;
     } else if (levelDiff == 1) {
-      score += 15; // Adjacent level
+      score += 15;
     } else {
-      score += 5; // Far apart
+      score += 5;
     }
 
     // Format compatibility: up to 20 points
@@ -175,6 +190,36 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
     final commonTags = a.tags.where((t) => b.tags.contains(t)).length;
     score += (commonTags * 5).clamp(0, 15);
 
-    return score.clamp(0, 100).toDouble();
+    // Geo-proximity: up to 10 points
+    double? distance;
+    if (a.latitude != null &&
+        a.longitude != null &&
+        b.latitude != null &&
+        b.longitude != null) {
+      distance = haversineDistance(
+        a.latitude!,
+        a.longitude!,
+        b.latitude!,
+        b.longitude!,
+      );
+      if (distance <= 5) {
+        score += 10;
+      } else if (distance <= 20) {
+        score += 7;
+      } else if (distance <= 50) {
+        score += 4;
+      } else {
+        score += 1;
+      }
+    }
+
+    // Availability overlap: up to 5 points
+    final commonA = a.availability
+        .where((slot) => b.availability.contains(slot))
+        .toList();
+    score += (commonA.length * 2).clamp(0, 5);
+
+    return (score: score.clamp(0, 100).toDouble(), distance: distance,
+        commonAvailability: commonA);
   }
 }

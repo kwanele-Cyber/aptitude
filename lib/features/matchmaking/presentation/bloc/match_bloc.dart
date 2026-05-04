@@ -3,6 +3,7 @@ import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/fetch_match_history_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/generate_matches_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/submit_match_feedback_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/update_match_status_usecase.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_event.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_state.dart';
@@ -12,12 +13,14 @@ class MatchBloc extends Bloc<MatchEvent, MatchState> {
   final UpdateMatchStatusUseCase updateMatchStatusUseCase;
   final SaveMatchUseCase saveMatchUseCase;
   final FetchMatchHistoryUseCase fetchMatchHistoryUseCase;
+  final SubmitMatchFeedbackUseCase submitMatchFeedbackUseCase;
 
   MatchBloc({
     required this.generateMatchesUseCase,
     required this.updateMatchStatusUseCase,
     required this.saveMatchUseCase,
     required this.fetchMatchHistoryUseCase,
+    required this.submitMatchFeedbackUseCase,
   }) : super(MatchInitial()) {
     on<FetchMatchesRequested>(_onFetchMatchesRequested);
     on<AcceptMatchRequested>(_onAcceptMatchRequested);
@@ -25,6 +28,7 @@ class MatchBloc extends Bloc<MatchEvent, MatchState> {
     on<IgnoreMatchRequested>(_onIgnoreMatchRequested);
     on<SaveMatchRequested>(_onSaveMatchRequested);
     on<FetchMatchHistoryRequested>(_onFetchMatchHistoryRequested);
+    on<SubmitFeedbackRequested>(_onSubmitFeedbackRequested);
   }
 
   Future _onFetchMatchesRequested(
@@ -158,6 +162,29 @@ class MatchBloc extends Bloc<MatchEvent, MatchState> {
       },
       (right) async {
         emit(MatchHistoryLoaded(matches: right));
+      },
+    );
+  }
+
+  Future _onSubmitFeedbackRequested(
+    SubmitFeedbackRequested event,
+    Emitter<MatchState> emit,
+  ) async {
+    emit(MatchLoading());
+    final result = await submitMatchFeedbackUseCase(
+      SubmitMatchFeedbackParams(
+        matchId: event.matchId,
+        rating: event.rating,
+        comment: event.comment,
+      ),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(MatchError(message: 'Failed to submit feedback'));
+      },
+      (right) async {
+        emit(FeedbackSubmitted(matchId: event.matchId));
       },
     );
   }
