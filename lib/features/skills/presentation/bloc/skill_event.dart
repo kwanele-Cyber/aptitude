@@ -110,6 +110,8 @@ class SearchSkillsRequested extends SkillEvent {
   List<Object?> get props => [query];
 }
 
+class BrowseSkillsFeedRequested extends SkillEvent {}
+
 class FilterSkillsRequested extends SkillEvent {
   final String? category;
   final SkillLevel? level;

@@ -430,4 +430,36 @@ void main() {
       ],
     );
   });
+
+  group('BrowseSkillsFeedRequested', () {
+    final tSkills = [tSkill];
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillsFeedLoaded] on success',
+      build: () {
+        when(() => mockFilterUseCase(any()))
+            .thenAnswer((_) async => Right(tSkills));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(BrowseSkillsFeedRequested()),
+      expect: () => [
+        SkillLoading(),
+        isA<SkillsFeedLoaded>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockFilterUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(BrowseSkillsFeedRequested()),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to load skills feed'),
+      ],
+    );
+  });
 }

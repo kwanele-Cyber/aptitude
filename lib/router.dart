@@ -20,6 +20,7 @@ import 'package:myapp/features/auth/presentation/pages/recovery_codes_page.dart'
 import 'package:myapp/features/auth/presentation/pages/two_factor_verification_page.dart';
 import 'package:myapp/features/auth/presentation/pages/user_profile_page.dart';
 import 'package:myapp/features/skills/presentation/pages/edit_skill_page.dart';
+import 'package:myapp/features/skills/presentation/pages/browse_skills_feed_page.dart';
 import 'package:myapp/features/skills/presentation/pages/search_skills_page.dart';
 import 'package:myapp/features/skills/presentation/pages/filter_skills_page.dart';
 
@@ -98,6 +99,10 @@ class AppRouter {
         builder: (context, state) => EditSkillPage(
           skill: state.extra as SkillEntity,
         ),
+      ),
+      GoRoute(
+        path: '/skills/feed',
+        builder: (context, state) => const BrowseSkillsFeedPage(),
       ),
       GoRoute(
         path: '/skills/search',
