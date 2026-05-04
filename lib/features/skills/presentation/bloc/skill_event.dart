@@ -100,3 +100,12 @@ class RestoreSkillRequested extends SkillEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class SearchSkillsRequested extends SkillEvent {
+  final String query;
+
+  SearchSkillsRequested({required this.query});
+
+  @override
+  List<Object?> get props => [query];
+}

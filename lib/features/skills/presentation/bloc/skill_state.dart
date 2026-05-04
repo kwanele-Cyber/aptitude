@@ -73,6 +73,16 @@ class SkillRestored extends SkillState {
   List<Object?> get props => [id];
 }
 
+class SkillsSearchCompleted extends SkillState {
+  final String query;
+  final List<SkillEntity> skills;
+
+  SkillsSearchCompleted({required this.query, required this.skills});
+
+  @override
+  List<Object?> get props => [query, skills];
+}
+
 class SkillError extends SkillState {
   final String message;
 

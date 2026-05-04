@@ -250,4 +250,38 @@ void main() {
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
+
+  group('searchSkills', () {
+    final skillsList = [tSkillModel];
+
+    test('should search skills on success', () async {
+      when(() => mockRemote.searchSkills(any()))
+          .thenAnswer((_) async => skillsList);
+
+      final result = await repository.searchSkills('flutter');
+
+      expect(result.isRight(), true);
+      expect(result.getOrElse(() => []), isA<List<SkillEntity>>());
+      verify(() => mockRemote.searchSkills('flutter')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.searchSkills(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.searchSkills('flutter');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+
+    test('should return ServerFailure on generic exception', () async {
+      when(() => mockRemote.searchSkills(any())).thenThrow(Exception());
+
+      final result = await repository.searchSkills('flutter');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }

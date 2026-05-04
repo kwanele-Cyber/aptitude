@@ -5,6 +5,7 @@ import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
@@ -17,6 +18,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
   final CloneSkillUseCase cloneSkillUseCase;
   final ArchiveSkillUseCase archiveSkillUseCase;
   final RestoreSkillUseCase restoreSkillUseCase;
+  final SearchSkillsUseCase searchSkillsUseCase;
 
   SkillBloc({
     required this.createSkillOfferUseCase,
@@ -26,6 +28,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     required this.cloneSkillUseCase,
     required this.archiveSkillUseCase,
     required this.restoreSkillUseCase,
+    required this.searchSkillsUseCase,
   }) : super(SkillInitial()) {
     on<CreateSkillOfferRequested>(_onCreateSkillOfferRequested);
     on<UpdateSkillRequested>(_onUpdateSkillRequested);
@@ -34,6 +37,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<CloneSkillRequested>(_onCloneSkillRequested);
     on<ArchiveSkillRequested>(_onArchiveSkillRequested);
     on<RestoreSkillRequested>(_onRestoreSkillRequested);
+    on<SearchSkillsRequested>(_onSearchSkillsRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -182,6 +186,25 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
       },
       (right) async {
         emit(SkillRestored(id: event.id));
+      },
+    );
+  }
+
+  Future _onSearchSkillsRequested(
+    SearchSkillsRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await searchSkillsUseCase(
+      SearchSkillsParams(query: event.query),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to search skills'));
+      },
+      (right) async {
+        emit(SkillsSearchCompleted(query: event.query, skills: right));
       },
     );
   }
