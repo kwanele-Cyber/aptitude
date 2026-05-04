@@ -5,6 +5,7 @@ import 'package:myapp/core/usecases/usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/change_password_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/check_auth_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/delete_account_usecase.dart';
+import 'package:myapp/features/auth/domain/usecases/export_user_data_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/generate_recovery_codes_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/get_user_profile_usecase.dart';
@@ -35,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GenerateRecoveryCodesUseCase generateRecoveryCodesUseCase;
   final RecoverAccountUseCase recoverAccountUseCase;
   final GetUserProfileUseCase getUserProfileUseCase;
+  final ExportUserDataUseCase exportUserDataUseCase;
 
   AuthBloc({
     required this.loginUseCase,
@@ -51,6 +53,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.generateRecoveryCodesUseCase,
     required this.recoverAccountUseCase,
     required this.getUserProfileUseCase,
+    required this.exportUserDataUseCase,
   }) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onAuthLoginRequested);
@@ -65,6 +68,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthGenerateRecoveryCodesRequested>(_onAuthGenerateRecoveryCodesRequested);
     on<AuthRecoverAccountRequested>(_onAuthRecoverAccountRequested);
     on<AuthViewUserProfileRequested>(_onAuthViewUserProfileRequested);
+    on<AuthExportUserDataRequested>(_onAuthExportUserDataRequested);
   }
 
   Future _onAuthCheckRequested(
@@ -350,6 +354,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (right) async {
         emit(AuthUserProfileLoaded(user: right));
+      },
+    );
+  }
+
+  Future _onAuthExportUserDataRequested(
+    AuthExportUserDataRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await exportUserDataUseCase(NoParams());
+
+    await result.fold(
+      (left) async {
+        emit(AuthError(message: 'Failed to export user data'));
+      },
+      (right) async {
+        emit(AuthUserDataExported(data: right));
       },
     );
   }

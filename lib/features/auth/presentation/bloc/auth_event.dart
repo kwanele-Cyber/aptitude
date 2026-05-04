@@ -92,6 +92,8 @@ class AuthViewUserProfileRequested extends AuthEvent {
   List<Object?> get props => [uid];
 }
 
+class AuthExportUserDataRequested extends AuthEvent {}
+
 class AuthRecoverAccountRequested extends AuthEvent {
   final String email;
   final String recoveryCode;

@@ -20,6 +20,7 @@ import 'package:myapp/features/auth/domain/usecases/recover_account_usecase.dart
 import 'package:myapp/features/auth/domain/usecases/update_profile_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/verify_2fa_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/get_user_profile_usecase.dart';
+import 'package:myapp/features/auth/domain/usecases/export_user_data_usecase.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -388,6 +389,30 @@ void main() {
 
       expect(result.isLeft(), true);
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
+
+  group('ExportUserDataUseCase', () {
+    test('should call repository.exportUserData', () async {
+      when(() => mockRepository.exportUserData())
+          .thenAnswer((_) async => const Right('{"key":"value"}'));
+
+      final useCase = ExportUserDataUseCase(repository: mockRepository);
+      final result = await useCase(NoParams());
+
+      verify(() => mockRepository.exportUserData()).called(1);
+      expect(result.isRight(), true);
+      expect(result.getOrElse(() => ''), '{"key":"value"}');
+    });
+
+    test('should return Failure when repository fails', () async {
+      when(() => mockRepository.exportUserData())
+          .thenAnswer((_) async => Left(ServerFailure()));
+
+      final useCase = ExportUserDataUseCase(repository: mockRepository);
+      final result = await useCase(NoParams());
+
+      expect(result.isLeft(), true);
     });
   });
 }

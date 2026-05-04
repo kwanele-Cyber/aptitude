@@ -8,6 +8,7 @@ import 'package:myapp/features/auth/presentation/pages/change_password_page.dart
 import 'package:myapp/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:myapp/features/auth/presentation/pages/home_page.dart';
 import 'package:myapp/features/auth/presentation/pages/login_page.dart';
+import 'package:myapp/features/auth/presentation/pages/export_data_page.dart';
 import 'package:myapp/features/auth/presentation/pages/profile_page.dart';
 import 'package:myapp/features/auth/presentation/pages/register_page.dart';
 import 'package:myapp/features/auth/presentation/pages/splash_page.dart';
@@ -74,6 +75,10 @@ class AppRouter {
       GoRoute(
         path: '/recovery-codes',
         builder: (context, state) => const RecoveryCodesPage(),
+      ),
+      GoRoute(
+        path: '/export-data',
+        builder: (context, state) => const ExportDataPage(),
       ),
       GoRoute(
         path: '/account-recovery',

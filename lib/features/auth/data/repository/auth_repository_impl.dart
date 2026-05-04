@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:myapp/core/error/exceptions.dart';
 import 'package:myapp/core/error/failures.dart';
@@ -197,6 +199,16 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Right(null);
     } on InvalidCredentialsException {
       return Left(InvalidCredentialsFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> exportUserData() async {
+    try {
+      final data = await remoteDataSource.exportUserData();
+      return Right(json.encode(data));
     } catch (e) {
       return Left(ServerFailure());
     }
