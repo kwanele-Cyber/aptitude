@@ -21,6 +21,7 @@ import 'package:myapp/features/auth/presentation/pages/two_factor_verification_p
 import 'package:myapp/features/auth/presentation/pages/user_profile_page.dart';
 import 'package:myapp/features/skills/presentation/pages/edit_skill_page.dart';
 import 'package:myapp/features/skills/presentation/pages/search_skills_page.dart';
+import 'package:myapp/features/skills/presentation/pages/filter_skills_page.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -101,6 +102,10 @@ class AppRouter {
       GoRoute(
         path: '/skills/search',
         builder: (context, state) => const SearchSkillsPage(),
+      ),
+      GoRoute(
+        path: '/skills/filter',
+        builder: (context, state) => const FilterSkillsPage(),
       ),
       GoRoute(
         path: '/account-recovery',

@@ -29,6 +29,7 @@ import 'package:myapp/features/skills/domain/usecases/archive_skill_usecase.dart
 import 'package:myapp/features/skills/domain/usecases/clone_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
@@ -99,6 +100,7 @@ Future init() async {
         archiveSkillUseCase: sl(),
         restoreSkillUseCase: sl(),
         searchSkillsUseCase: sl(),
+        filterSkillsUseCase: sl(),
       ));
 
   sl.registerLazySingleton(() => CreateSkillOfferUseCase(repository: sl()));
@@ -110,6 +112,7 @@ Future init() async {
   sl.registerLazySingleton(() => ArchiveSkillUseCase(repository: sl()));
   sl.registerLazySingleton(() => RestoreSkillUseCase(repository: sl()));
   sl.registerLazySingleton(() => SearchSkillsUseCase(repository: sl()));
+  sl.registerLazySingleton(() => FilterSkillsUseCase(repository: sl()));
 
   sl.registerLazySingleton<SkillRepository>(
     () => SkillRepositoryImpl(remoteDataSource: sl()),

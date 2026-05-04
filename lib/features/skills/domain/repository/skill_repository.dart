@@ -12,4 +12,5 @@ abstract class SkillRepository {
   Future<Either<Failure, void>> archiveSkill(String id);
   Future<Either<Failure, void>> restoreSkill(String id);
   Future<Either<Failure, List<SkillEntity>>> searchSkills(String query);
+  Future<Either<Failure, List<SkillEntity>>> fetchAllSkills();
 }

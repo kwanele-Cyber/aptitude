@@ -109,3 +109,20 @@ class SearchSkillsRequested extends SkillEvent {
   @override
   List<Object?> get props => [query];
 }
+
+class FilterSkillsRequested extends SkillEvent {
+  final String? category;
+  final SkillLevel? level;
+  final SkillFormat? format;
+  final SkillType? type;
+
+  FilterSkillsRequested({
+    this.category,
+    this.level,
+    this.format,
+    this.type,
+  });
+
+  @override
+  List<Object?> get props => [category, level, format, type];
+}

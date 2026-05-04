@@ -4,6 +4,7 @@ import 'package:myapp/features/skills/domain/usecases/clone_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
@@ -19,6 +20,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
   final ArchiveSkillUseCase archiveSkillUseCase;
   final RestoreSkillUseCase restoreSkillUseCase;
   final SearchSkillsUseCase searchSkillsUseCase;
+  final FilterSkillsUseCase filterSkillsUseCase;
 
   SkillBloc({
     required this.createSkillOfferUseCase,
@@ -29,6 +31,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     required this.archiveSkillUseCase,
     required this.restoreSkillUseCase,
     required this.searchSkillsUseCase,
+    required this.filterSkillsUseCase,
   }) : super(SkillInitial()) {
     on<CreateSkillOfferRequested>(_onCreateSkillOfferRequested);
     on<UpdateSkillRequested>(_onUpdateSkillRequested);
@@ -38,6 +41,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<ArchiveSkillRequested>(_onArchiveSkillRequested);
     on<RestoreSkillRequested>(_onRestoreSkillRequested);
     on<SearchSkillsRequested>(_onSearchSkillsRequested);
+    on<FilterSkillsRequested>(_onFilterSkillsRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -205,6 +209,36 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
       },
       (right) async {
         emit(SkillsSearchCompleted(query: event.query, skills: right));
+      },
+    );
+  }
+
+  Future _onFilterSkillsRequested(
+    FilterSkillsRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await filterSkillsUseCase(
+      FilterSkillsParams(
+        category: event.category,
+        level: event.level,
+        format: event.format,
+        type: event.type,
+      ),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to filter skills'));
+      },
+      (right) async {
+        emit(SkillsFiltered(
+          skills: right,
+          category: event.category,
+          level: event.level,
+          format: event.format,
+          type: event.type,
+        ));
       },
     );
   }
