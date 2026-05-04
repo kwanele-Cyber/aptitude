@@ -10,6 +10,7 @@ import 'package:myapp/features/auth/presentation/pages/home_page.dart';
 import 'package:myapp/features/auth/presentation/pages/login_page.dart';
 import 'package:myapp/features/auth/presentation/pages/export_data_page.dart';
 import 'package:myapp/features/auth/presentation/pages/profile_page.dart';
+import 'package:myapp/features/skills/presentation/pages/create_skill_offer_page.dart';
 import 'package:myapp/features/auth/presentation/pages/register_page.dart';
 import 'package:myapp/features/auth/presentation/pages/splash_page.dart';
 import 'package:myapp/features/auth/presentation/pages/two_factor_setup_page.dart';
@@ -79,6 +80,10 @@ class AppRouter {
       GoRoute(
         path: '/export-data',
         builder: (context, state) => const ExportDataPage(),
+      ),
+      GoRoute(
+        path: '/skills/create',
+        builder: (context, state) => const CreateSkillOfferPage(),
       ),
       GoRoute(
         path: '/account-recovery',
