@@ -92,6 +92,15 @@ class SkillsFeedLoaded extends SkillState {
   List<Object?> get props => [skills];
 }
 
+class SkillDetailsLoaded extends SkillState {
+  final SkillEntity skill;
+
+  SkillDetailsLoaded({required this.skill});
+
+  @override
+  List<Object?> get props => [skill];
+}
+
 class SkillsFiltered extends SkillState {
   final List<SkillEntity> skills;
   final String? category;

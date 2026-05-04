@@ -112,6 +112,15 @@ class SearchSkillsRequested extends SkillEvent {
 
 class BrowseSkillsFeedRequested extends SkillEvent {}
 
+class ViewSkillDetailsRequested extends SkillEvent {
+  final String id;
+
+  ViewSkillDetailsRequested({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}
+
 class FilterSkillsRequested extends SkillEvent {
   final String? category;
   final SkillLevel? level;

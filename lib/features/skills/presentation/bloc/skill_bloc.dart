@@ -5,6 +5,7 @@ import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/get_skill_by_id_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
@@ -21,6 +22,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
   final RestoreSkillUseCase restoreSkillUseCase;
   final SearchSkillsUseCase searchSkillsUseCase;
   final FilterSkillsUseCase filterSkillsUseCase;
+  final GetSkillByIdUseCase getSkillByIdUseCase;
 
   SkillBloc({
     required this.createSkillOfferUseCase,
@@ -32,6 +34,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     required this.restoreSkillUseCase,
     required this.searchSkillsUseCase,
     required this.filterSkillsUseCase,
+    required this.getSkillByIdUseCase,
   }) : super(SkillInitial()) {
     on<CreateSkillOfferRequested>(_onCreateSkillOfferRequested);
     on<UpdateSkillRequested>(_onUpdateSkillRequested);
@@ -43,6 +46,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<SearchSkillsRequested>(_onSearchSkillsRequested);
     on<FilterSkillsRequested>(_onFilterSkillsRequested);
     on<BrowseSkillsFeedRequested>(_onBrowseSkillsFeedRequested);
+    on<ViewSkillDetailsRequested>(_onViewSkillDetailsRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -259,6 +263,25 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
       },
       (right) async {
         emit(SkillsFeedLoaded(skills: right));
+      },
+    );
+  }
+
+  Future _onViewSkillDetailsRequested(
+    ViewSkillDetailsRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await getSkillByIdUseCase(
+      GetSkillByIdParams(id: event.id),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to load skill details'));
+      },
+      (right) async {
+        emit(SkillDetailsLoaded(skill: right));
       },
     );
   }
