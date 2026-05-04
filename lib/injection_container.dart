@@ -30,6 +30,7 @@ import 'package:myapp/features/auth/domain/usecases/generate_recovery_codes_usec
 import 'package:myapp/features/auth/domain/usecases/get_user_profile_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/recover_account_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/verify_2fa_usecase.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/skills/data/datasources/skill_remote_datasource.dart';
 import 'package:myapp/features/skills/data/datasources/skill_remote_datasource_firebase.dart';
@@ -56,7 +57,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 final sl = GetIt.instance;
 
 Future init() async {
-  // Register dependencies here
+  sl.registerFactory(() => AdminBloc());
+
   sl.registerFactory(
     () => AuthBloc(
       loginUseCase: sl(),

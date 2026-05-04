@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/features/admin/presentation/pages/admin_dashboard_page.dart';
+import 'package:myapp/features/admin/presentation/pages/admin_stub_pages.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
 import 'package:myapp/features/auth/presentation/pages/change_password_page.dart';
@@ -13,7 +15,6 @@ import 'package:myapp/features/auth/presentation/pages/profile_page.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/presentation/pages/create_skill_offer_page.dart';
 import 'package:myapp/features/auth/presentation/pages/register_page.dart';
-import 'package:myapp/features/auth/presentation/pages/splash_page.dart';
 import 'package:myapp/features/auth/presentation/pages/two_factor_setup_page.dart';
 import 'package:myapp/features/auth/presentation/pages/account_recovery_page.dart';
 import 'package:myapp/features/auth/presentation/pages/recovery_codes_page.dart';
@@ -34,18 +35,36 @@ class AppRouter {
   AppRouter({required this.authBloc});
 
   static const _publicRoutes = <String>{
-    '/splash',
     '/login',
     '/register',
     '/forgot-password',
   };
 
+  static const _adminRoutes = <String>{
+    '/admin',
+    '/admin/users',
+    '/admin/moderation',
+    '/admin/penalties',
+    '/admin/analytics',
+    '/admin/config',
+    '/admin/categories',
+    '/admin/broadcast',
+    '/admin/audit',
+    '/admin/roles',
+    '/admin/database',
+  };
+
   GoRouter get router => GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/home',
     refreshListenable: GoRouterRefreshStream(authBloc.stream),
     redirect: (context, state) {
       final authState = authBloc.state;
       final location = state.matchedLocation;
+
+      // Don't redirect while auth is being checked
+      if (authState is AuthInitial || authState is AuthLoading) {
+        return null;
+      }
 
       final isPublicRoute = _publicRoutes.contains(location);
 
@@ -54,15 +73,29 @@ class AppRouter {
       }
 
       if (authState is AuthAuthenticated) {
-        if (location == '/login' || location == '/splash') {
+        final isAdmin = authState.userEntity.isAdmin;
+        final isOnAdminRoute = _adminRoutes.contains(location);
+        final isOnPublicRoute = _publicRoutes.contains(location);
+
+        // Admin on user-only route -> redirect to /admin
+        if (isAdmin && !isOnAdminRoute && !isOnPublicRoute) {
+          return '/admin';
+        }
+
+        // Regular user on admin route -> redirect to /home
+        if (!isAdmin && isOnAdminRoute) {
           return '/home';
+        }
+
+        // Authenticated user on /login -> redirect to appropriate dashboard
+        if (location == '/login') {
+          return isAdmin ? '/admin' : '/home';
         }
       }
 
       return null;
     },
     routes: [
-      GoRoute(path: '/splash', builder: (context, state) => SplashPage()),
       GoRoute(path: '/login', builder: (context, state) => LoginPage()),
       GoRoute(path: '/register', builder: (context, state) => RegisterPage()),
       GoRoute(path: '/forgot-password', builder: (context, state) => ForgotPasswordPage()),
@@ -142,6 +175,19 @@ class AppRouter {
         path: '/account-recovery',
         builder: (context, state) => const AccountRecoveryPage(),
       ),
+
+      // Admin routes
+      GoRoute(path: '/admin', builder: (context, state) => const AdminDashboardPage()),
+      GoRoute(path: '/admin/users', builder: (context, state) => const AdminUserManagementPage()),
+      GoRoute(path: '/admin/moderation', builder: (context, state) => const AdminContentModerationPage()),
+      GoRoute(path: '/admin/penalties', builder: (context, state) => const AdminPenaltiesPage()),
+      GoRoute(path: '/admin/analytics', builder: (context, state) => const AdminAnalyticsPage()),
+      GoRoute(path: '/admin/config', builder: (context, state) => const AdminSystemConfigPage()),
+      GoRoute(path: '/admin/categories', builder: (context, state) => const AdminCategoryManagementPage()),
+      GoRoute(path: '/admin/broadcast', builder: (context, state) => const AdminBroadcastPage()),
+      GoRoute(path: '/admin/audit', builder: (context, state) => const AdminAuditLogPage()),
+      GoRoute(path: '/admin/roles', builder: (context, state) => const AdminRoleManagementPage()),
+      GoRoute(path: '/admin/database', builder: (context, state) => const AdminDatabasePage()),
     ],
   );
 }

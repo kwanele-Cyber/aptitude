@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
+import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
+import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
+import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/firebase_options.dart';
 import 'package:myapp/router.dart';
 
@@ -20,16 +24,52 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => di.sl<AuthBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) {
+          final bloc = di.sl<AuthBloc>();
+          bloc.add(AuthCheckRequested());
+          return bloc;
+        }),
+        BlocProvider(create: (_) => di.sl<AdminBloc>()),
+        BlocProvider(create: (_) => di.sl<MatchBloc>()),
+        BlocProvider(create: (_) => di.sl<SkillBloc>()),
+      ],
       child: Builder(
         builder: (context) {
           final authBloc = context.read<AuthBloc>();
           final appRouter = AppRouter(authBloc: authBloc);
 
           return MaterialApp.router(
-            title: 'Flutter Auth App',
-            theme: ThemeData(primarySwatch: Colors.blue),
+            title: 'Aptitude',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF6366F1),
+                brightness: Brightness.light,
+              ),
+              useMaterial3: true,
+              appBarTheme: const AppBarTheme(
+                centerTitle: true,
+                elevation: 0,
+                scrolledUnderElevation: 1,
+              ),
+              cardTheme: CardThemeData(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+            ),
             routerConfig: appRouter.router,
           );
         },
