@@ -28,6 +28,15 @@ class SkillUpdated extends SkillState {
   List<Object?> get props => [skill];
 }
 
+class SkillDeleted extends SkillState {
+  final String id;
+
+  SkillDeleted({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}
+
 class SkillError extends SkillState {
   final String message;
 

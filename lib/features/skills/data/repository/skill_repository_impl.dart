@@ -35,4 +35,16 @@ class SkillRepositoryImpl implements SkillRepository {
       return Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteSkill(String id) async {
+    try {
+      await remoteDataSource.deleteSkill(id);
+      return const Right(null);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
 }

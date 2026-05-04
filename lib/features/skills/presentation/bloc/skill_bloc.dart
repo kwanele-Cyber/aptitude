@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
@@ -7,13 +8,16 @@ import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
 class SkillBloc extends Bloc<SkillEvent, SkillState> {
   final CreateSkillOfferUseCase createSkillOfferUseCase;
   final UpdateSkillUseCase updateSkillUseCase;
+  final DeleteSkillUseCase deleteSkillUseCase;
 
   SkillBloc({
     required this.createSkillOfferUseCase,
     required this.updateSkillUseCase,
+    required this.deleteSkillUseCase,
   }) : super(SkillInitial()) {
     on<CreateSkillOfferRequested>(_onCreateSkillOfferRequested);
     on<UpdateSkillRequested>(_onUpdateSkillRequested);
+    on<DeleteSkillRequested>(_onDeleteSkillRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -67,6 +71,25 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
       },
       (right) async {
         emit(SkillUpdated(skill: right));
+      },
+    );
+  }
+
+  Future _onDeleteSkillRequested(
+    DeleteSkillRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await deleteSkillUseCase(
+      DeleteSkillParams(id: event.id),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to delete skill'));
+      },
+      (right) async {
+        emit(SkillDeleted(id: event.id));
       },
     );
   }

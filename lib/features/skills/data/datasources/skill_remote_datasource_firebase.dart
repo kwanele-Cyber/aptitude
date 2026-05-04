@@ -69,4 +69,17 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
       throw ServerException();
     }
   }
+
+  @override
+  Future<void> deleteSkill(String id) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) throw ServerException();
+
+      await _skillsRef.child(id).remove();
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
 }
