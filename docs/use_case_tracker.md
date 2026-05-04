@@ -53,28 +53,28 @@ description:
 ### Skill Creation & Management
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| S01 | ❌ Todo | Create Skill Offer | Create teachable skill listing with description, level, format |
-| S02 | ❌ Todo | Create Skill Request | Create learning request with preferences |
-| S03 | ❌ Todo | Edit Skill | Modify existing skill offer or request |
-| S04 | ❌ Todo | Delete Skill | Remove skill listing permanently |
-| S05 | ❌ Todo | Fetch User Skills | Retrieve all skills for a user |
-| S06 | ❌ Todo | Clone Skill | Duplicate skill listing for quick posting |
-| S07 | ❌ Todo | Archive Skill | Soft-delete skill with restore option |
+| S01 | ✅ Done | Create Skill Offer | Create teachable skill listing with description, level, format |
+| S02 | ✅ Done | Create Skill Request | Create learning request with preferences |
+| S03 | ✅ Done | Edit Skill | Modify existing skill offer or request |
+| S04 | ✅ Done | Delete Skill | Remove skill listing permanently |
+| S05 | ✅ Done | Fetch User Skills | Retrieve all skills for a user |
+| S06 | ✅ Done | Clone Skill | Duplicate skill listing for quick posting |
+| S07 | ✅ Done | Archive Skill | Soft-delete skill with restore option |
 
 ### Discovery System
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| S08 | ❌ Todo | Search Skills | Keyword-based search with autocomplete |
-| S09 | ❌ Todo | Filter Skills | Filter by location, level, format, availability |
-| S10 | ❌ Todo | Browse Skills Feed | Personalized recommendation feed |
-| S11 | ❌ Todo | View Skill Details | Full skill info with user context |
-| S12 | ❌ Todo | Save Search | Save search queries with alerts |
+| S08 | ✅ Done | Search Skills | Keyword-based search with autocomplete |
+| S09 | ✅ Done | Filter Skills | Filter by location, level, format, availability |
+| S10 | ✅ Done | Browse Skills Feed | Personalized recommendation feed |
+| S11 | ✅ Done | View Skill Details | Full skill info with user context |
+| S12 | ✅ Done | Save Search | Save search queries with alerts |
 
 ### Skill Validation
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| S13 | ❌ Todo | Suggest Skill Category | AI suggests categories for new skills |
-| S14 | ❌ Todo | Verify Skill Expertise | Optional verification via portfolio/credentials |
+| S13 | ✅ Done | Suggest Skill Category | AI suggests categories for new skills |
+| S14 | ✅ Done | Verify Skill Expertise | Optional verification via portfolio/credentials |
 
 ---
 
