@@ -8,6 +8,7 @@ void main() {
       'title': 'Flutter Development',
       'description': 'Teaches Flutter from basics',
       'category': 'Technology',
+      'type': 'offer',
       'level': 'intermediate',
       'format': 'online',
       'userId': 'user123',
@@ -45,6 +46,7 @@ void main() {
 
       expect(json['title'], 'Flutter Development');
       expect(json['category'], 'Technology');
+      expect(json['type'], 'offer');
       expect(json['level'], 'intermediate');
       expect(json['format'], 'online');
       expect(json['userId'], 'user123');
@@ -57,6 +59,39 @@ void main() {
       expect(SkillModel.parseLevel('advanced'), SkillLevel.advanced);
       expect(SkillModel.parseLevel(null), SkillLevel.beginner);
       expect(SkillModel.parseLevel('unknown'), SkillLevel.beginner);
+    });
+
+    test('parseType should return correct enum values', () {
+      expect(SkillModel.parseType('offer'), SkillType.offer);
+      expect(SkillModel.parseType('request'), SkillType.request);
+      expect(SkillModel.parseType(null), SkillType.offer);
+      expect(SkillModel.parseType('unknown'), SkillType.offer);
+    });
+
+    test('fromJson should parse type field correctly', () {
+      final requestJson = {...tJson, 'type': 'request'};
+      final model = SkillModel.fromJson('skill1', requestJson);
+
+      expect(model.type, SkillType.request);
+    });
+
+    test('toJson should include type field', () {
+      final model = SkillModel(
+        id: 'skill1',
+        title: 'Flutter Development',
+        description: 'Teaches Flutter from basics',
+        category: 'Technology',
+        type: SkillType.request,
+        level: SkillLevel.intermediate,
+        format: SkillFormat.online,
+        userId: 'user123',
+        tags: ['mobile', 'dart'],
+        createdAt: DateTime(2024, 1, 15),
+      );
+
+      final json = model.toJson();
+
+      expect(json['type'], 'request');
     });
 
     test('parseFormat should return correct enum values', () {

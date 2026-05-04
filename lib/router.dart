@@ -10,6 +10,7 @@ import 'package:myapp/features/auth/presentation/pages/home_page.dart';
 import 'package:myapp/features/auth/presentation/pages/login_page.dart';
 import 'package:myapp/features/auth/presentation/pages/export_data_page.dart';
 import 'package:myapp/features/auth/presentation/pages/profile_page.dart';
+import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/presentation/pages/create_skill_offer_page.dart';
 import 'package:myapp/features/auth/presentation/pages/register_page.dart';
 import 'package:myapp/features/auth/presentation/pages/splash_page.dart';
@@ -84,6 +85,10 @@ class AppRouter {
       GoRoute(
         path: '/skills/create',
         builder: (context, state) => const CreateSkillOfferPage(),
+      ),
+      GoRoute(
+        path: '/skills/create-request',
+        builder: (context, state) => const CreateSkillOfferPage(type: SkillType.request),
       ),
       GoRoute(
         path: '/account-recovery',

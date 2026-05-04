@@ -47,6 +47,33 @@ void main() {
         'title': 'Flutter',
         'description': 'Test',
         'category': 'Tech',
+        'type': 'offer',
+        'level': 'beginner',
+        'format': 'online',
+        'tags': ['mobile'],
+      })).called(1);
+      expect(result.isRight(), true);
+    });
+
+    test('should pass type as request when type is SkillType.request', () async {
+      when(() => mockRepository.createSkill(any()))
+          .thenAnswer((_) async => Right(tSkill));
+
+      final result = await useCase(CreateSkillOfferParams(
+        title: 'Flutter',
+        description: 'Test',
+        category: 'Tech',
+        type: SkillType.request,
+        level: SkillLevel.beginner,
+        format: SkillFormat.online,
+        tags: ['mobile'],
+      ));
+
+      verify(() => mockRepository.createSkill({
+        'title': 'Flutter',
+        'description': 'Test',
+        'category': 'Tech',
+        'type': 'request',
         'level': 'beginner',
         'format': 'online',
         'tags': ['mobile'],

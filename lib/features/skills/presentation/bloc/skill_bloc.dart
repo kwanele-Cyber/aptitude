@@ -22,6 +22,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
         title: event.title,
         description: event.description,
         category: event.category,
+        type: event.type,
         level: event.level,
         format: event.format,
         tags: event.tags,
