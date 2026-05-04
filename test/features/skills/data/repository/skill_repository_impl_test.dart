@@ -206,4 +206,48 @@ void main() {
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
+
+  group('archiveSkill', () {
+    test('should archive skill on success', () async {
+      when(() => mockRemote.archiveSkill(any()))
+          .thenAnswer((_) async {});
+
+      final result = await repository.archiveSkill('skill1');
+
+      expect(result.isRight(), true);
+      verify(() => mockRemote.archiveSkill('skill1')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.archiveSkill(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.archiveSkill('skill1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
+
+  group('restoreSkill', () {
+    test('should restore skill on success', () async {
+      when(() => mockRemote.restoreSkill(any()))
+          .thenAnswer((_) async {});
+
+      final result = await repository.restoreSkill('skill1');
+
+      expect(result.isRight(), true);
+      verify(() => mockRemote.restoreSkill('skill1')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.restoreSkill(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.restoreSkill('skill1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }

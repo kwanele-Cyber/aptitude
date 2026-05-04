@@ -3,10 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
+import 'package:myapp/features/skills/domain/usecases/archive_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/clone_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
@@ -25,6 +27,10 @@ class MockFetchUserSkillsUseCase extends Mock
 
 class MockCloneSkillUseCase extends Mock implements CloneSkillUseCase {}
 
+class MockArchiveSkillUseCase extends Mock implements ArchiveSkillUseCase {}
+
+class MockRestoreSkillUseCase extends Mock implements RestoreSkillUseCase {}
+
 final tSkill = SkillEntity(
   id: 'skill1',
   title: 'Flutter',
@@ -42,6 +48,8 @@ void main() {
   late MockDeleteSkillUseCase mockDeleteUseCase;
   late MockFetchUserSkillsUseCase mockFetchUseCase;
   late MockCloneSkillUseCase mockCloneUseCase;
+  late MockArchiveSkillUseCase mockArchiveUseCase;
+  late MockRestoreSkillUseCase mockRestoreUseCase;
 
   setUpAll(() {
     registerFallbackValue(CreateSkillOfferParams(
@@ -62,6 +70,8 @@ void main() {
     registerFallbackValue(DeleteSkillParams(id: ''));
     registerFallbackValue(FetchUserSkillsParams(uid: ''));
     registerFallbackValue(CloneSkillParams(skillId: ''));
+    registerFallbackValue(ArchiveSkillParams(id: ''));
+    registerFallbackValue(RestoreSkillParams(id: ''));
   });
 
   setUp(() {
@@ -70,12 +80,16 @@ void main() {
     mockDeleteUseCase = MockDeleteSkillUseCase();
     mockFetchUseCase = MockFetchUserSkillsUseCase();
     mockCloneUseCase = MockCloneSkillUseCase();
+    mockArchiveUseCase = MockArchiveSkillUseCase();
+    mockRestoreUseCase = MockRestoreSkillUseCase();
     bloc = SkillBloc(
       createSkillOfferUseCase: mockCreateUseCase,
       updateSkillUseCase: mockUpdateUseCase,
       deleteSkillUseCase: mockDeleteUseCase,
       fetchUserSkillsUseCase: mockFetchUseCase,
       cloneSkillUseCase: mockCloneUseCase,
+      archiveSkillUseCase: mockArchiveUseCase,
+      restoreSkillUseCase: mockRestoreUseCase,
     );
   });
 
@@ -275,6 +289,66 @@ void main() {
       expect: () => [
         SkillLoading(),
         SkillError(message: 'Failed to clone skill'),
+      ],
+    );
+  });
+
+  group('ArchiveSkillRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillArchived] on success',
+      build: () {
+        when(() => mockArchiveUseCase(any()))
+            .thenAnswer((_) async => Right(null));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(ArchiveSkillRequested(id: 'skill1')),
+      expect: () => [
+        SkillLoading(),
+        isA<SkillArchived>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockArchiveUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(ArchiveSkillRequested(id: 'skill1')),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to archive skill'),
+      ],
+    );
+  });
+
+  group('RestoreSkillRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillRestored] on success',
+      build: () {
+        when(() => mockRestoreUseCase(any()))
+            .thenAnswer((_) async => Right(null));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(RestoreSkillRequested(id: 'skill1')),
+      expect: () => [
+        SkillLoading(),
+        isA<SkillRestored>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockRestoreUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(RestoreSkillRequested(id: 'skill1')),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to restore skill'),
       ],
     );
   });

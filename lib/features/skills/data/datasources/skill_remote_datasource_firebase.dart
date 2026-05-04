@@ -100,6 +100,30 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
   }
 
   @override
+  Future<void> archiveSkill(String id) async {
+    try {
+      await _skillsRef.child(id).update({
+        'archivedAt': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> restoreSkill(String id) async {
+    try {
+      await _skillsRef.child(id).update({
+        'archivedAt': null,
+      });
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
   Future<List<SkillModel>> fetchUserSkills(String uid) async {
     try {
       final snapshot =

@@ -16,6 +16,7 @@ class SkillEntity {
   final List<String> tags;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? archivedAt;
 
   const SkillEntity({
     required this.id,
@@ -29,5 +30,6 @@ class SkillEntity {
     this.tags = const [],
     this.createdAt,
     this.updatedAt,
+    this.archivedAt,
   });
 }

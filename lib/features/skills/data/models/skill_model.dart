@@ -13,6 +13,7 @@ class SkillModel extends SkillEntity {
     super.tags,
     super.createdAt,
     super.updatedAt,
+    super.archivedAt,
   });
 
   factory SkillModel.fromJson(String id, Map<String, dynamic> json) {
@@ -32,6 +33,9 @@ class SkillModel extends SkillEntity {
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
+      archivedAt: json['archivedAt'] != null
+          ? DateTime.tryParse(json['archivedAt'] as String)
+          : null,
     );
   }
 
@@ -47,6 +51,7 @@ class SkillModel extends SkillEntity {
       'tags': tags,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'archivedAt': archivedAt?.toIso8601String(),
     };
   }
 
