@@ -19,6 +19,7 @@ import 'package:myapp/features/auth/domain/usecases/generate_recovery_codes_usec
 import 'package:myapp/features/auth/domain/usecases/recover_account_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/update_profile_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/verify_2fa_usecase.dart';
+import 'package:myapp/features/auth/domain/usecases/get_user_profile_usecase.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -361,6 +362,32 @@ void main() {
 
       expect(result.isLeft(), true);
       expect(result.fold((l) => l, (r) => null), isA<InvalidCredentialsFailure>());
+    });
+  });
+
+  group('GetUserProfileUseCase', () {
+    final params = GetUserProfileParams(uid: 'user123');
+
+    test('should call repository.getUserProfile with correct uid', () async {
+      when(() => mockRepository.getUserProfile(any()))
+          .thenAnswer((_) async => Right(tUser));
+
+      final useCase = GetUserProfileUseCase(repository: mockRepository);
+      final result = await useCase(params);
+
+      verify(() => mockRepository.getUserProfile('user123')).called(1);
+      expect(result.isRight(), true);
+    });
+
+    test('should return Failure when repository fails', () async {
+      when(() => mockRepository.getUserProfile(any()))
+          .thenAnswer((_) async => Left(ServerFailure()));
+
+      final useCase = GetUserProfileUseCase(repository: mockRepository);
+      final result = await useCase(params);
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
 }

@@ -168,6 +168,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserEntity>> getUserProfile(String uid) async {
+    try {
+      final user = await remoteDataSource.getUserProfile(uid);
+      return Right(user);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, List<String>>> generateRecoveryCodes() async {
     try {
       final codes = await remoteDataSource.generateRecoveryCodes();

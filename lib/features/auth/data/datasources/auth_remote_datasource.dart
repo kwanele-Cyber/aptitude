@@ -18,6 +18,7 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> updateProfile(Map<String, dynamic> data);
   Future<List<String>> generateRecoveryCodes();
   Future<void> recoverAccount(String email, String recoveryCode);
+  Future<UserModel> getUserProfile(String uid);
 }
 
 class AuthRemoteDataSourceMock implements AuthRemoteDataSource {
@@ -106,5 +107,16 @@ class AuthRemoteDataSourceMock implements AuthRemoteDataSource {
     if (recoveryCode != 'VALID_CODE') {
       throw InvalidCredentialsException();
     }
+  }
+
+  @override
+  Future<UserModel> getUserProfile(String uid) async {
+    Future.delayed(Duration(seconds: 1));
+    return UserModel(
+      id: uid,
+      firstName: 'Test',
+      lastName: 'User',
+      email: 'test@test.com',
+    );
   }
 }

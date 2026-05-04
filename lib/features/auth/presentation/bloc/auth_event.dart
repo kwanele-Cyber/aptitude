@@ -83,6 +83,15 @@ class AuthVerify2FARequested extends AuthEvent {
 
 class AuthGenerateRecoveryCodesRequested extends AuthEvent {}
 
+class AuthViewUserProfileRequested extends AuthEvent {
+  final String uid;
+
+  AuthViewUserProfileRequested({required this.uid});
+
+  @override
+  List<Object?> get props => [uid];
+}
+
 class AuthRecoverAccountRequested extends AuthEvent {
   final String email;
   final String recoveryCode;
