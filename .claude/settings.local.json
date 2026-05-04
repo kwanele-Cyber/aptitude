@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/cash1/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_core_web-3.6.0/lib//**)",
+      "Read(//c/Users/cash1/AppData/Local/Pub/Cache/hosted/pub.dev/firebase_core_web-3.6.0/lib/**)",
+      "Bash(taskkill /f /im edge.exe)",
+      "Bash(taskkill /f /im flutter.exe)"
+    ]
+  }
+}

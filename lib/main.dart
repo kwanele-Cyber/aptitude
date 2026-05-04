@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/core/routing/router.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/firebase_options.dart';
+import 'package:myapp/router.dart';
+
+import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const MyApp());
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await di.init();
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -16,9 +20,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      routerConfig: router,
-      title: 'Flutter MVVM',
+    return BlocProvider(
+      create: (_) => di.sl<AuthBloc>(),
+      child: Builder(
+        builder: (context) {
+          final authBloc = context.read<AuthBloc>();
+          final appRouter = AppRouter(authBloc: authBloc);
+
+          return MaterialApp.router(
+            title: 'Flutter Auth App',
+            theme: ThemeData(primarySwatch: Colors.blue),
+            routerConfig: appRouter.router,
+          );
+        },
+      ),
     );
   }
 }
