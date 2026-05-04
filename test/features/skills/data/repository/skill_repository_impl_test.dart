@@ -140,4 +140,38 @@ void main() {
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
+
+  group('fetchUserSkills', () {
+    final skillsList = [tSkillModel];
+
+    test('should fetch user skills on success', () async {
+      when(() => mockRemote.fetchUserSkills(any()))
+          .thenAnswer((_) async => skillsList);
+
+      final result = await repository.fetchUserSkills('user1');
+
+      expect(result.isRight(), true);
+      expect(result.getOrElse(() => []), isA<List<SkillEntity>>());
+      verify(() => mockRemote.fetchUserSkills('user1')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.fetchUserSkills(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.fetchUserSkills('user1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+
+    test('should return ServerFailure on generic exception', () async {
+      when(() => mockRemote.fetchUserSkills(any())).thenThrow(Exception());
+
+      final result = await repository.fetchUserSkills('user1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }

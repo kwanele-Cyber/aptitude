@@ -7,4 +7,5 @@ abstract class SkillRepository {
   Future<Either<Failure, SkillEntity>> updateSkill(
       String id, Map<String, dynamic> data);
   Future<Either<Failure, void>> deleteSkill(String id);
+  Future<Either<Failure, List<SkillEntity>>> fetchUserSkills(String uid);
 }

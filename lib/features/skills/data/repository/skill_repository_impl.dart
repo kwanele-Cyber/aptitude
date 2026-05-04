@@ -47,4 +47,17 @@ class SkillRepositoryImpl implements SkillRepository {
       return Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, List<SkillEntity>>> fetchUserSkills(
+      String uid) async {
+    try {
+      final skills = await remoteDataSource.fetchUserSkills(uid);
+      return Right(skills);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
 }
