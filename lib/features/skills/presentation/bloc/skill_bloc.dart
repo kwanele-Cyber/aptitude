@@ -42,6 +42,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<RestoreSkillRequested>(_onRestoreSkillRequested);
     on<SearchSkillsRequested>(_onSearchSkillsRequested);
     on<FilterSkillsRequested>(_onFilterSkillsRequested);
+    on<BrowseSkillsFeedRequested>(_onBrowseSkillsFeedRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -239,6 +240,25 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
           format: event.format,
           type: event.type,
         ));
+      },
+    );
+  }
+
+  Future _onBrowseSkillsFeedRequested(
+    BrowseSkillsFeedRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await filterSkillsUseCase(
+      const FilterSkillsParams(),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to load skills feed'));
+      },
+      (right) async {
+        emit(SkillsFeedLoaded(skills: right));
       },
     );
   }
