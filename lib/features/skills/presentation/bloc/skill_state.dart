@@ -46,6 +46,15 @@ class UserSkillsFetched extends SkillState {
   List<Object?> get props => [skills];
 }
 
+class SkillCloned extends SkillState {
+  final SkillEntity skill;
+
+  SkillCloned({required this.skill});
+
+  @override
+  List<Object?> get props => [skill];
+}
+
 class SkillError extends SkillState {
   final String message;
 

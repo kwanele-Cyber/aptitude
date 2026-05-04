@@ -1,10 +1,12 @@
 import 'package:myapp/features/skills/data/models/skill_model.dart';
+import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 
 abstract class SkillRemoteDataSource {
   Future<SkillModel> createSkill(Map<String, dynamic> data);
   Future<SkillModel> updateSkill(String id, Map<String, dynamic> data);
   Future<void> deleteSkill(String id);
   Future<List<SkillModel>> fetchUserSkills(String uid);
+  Future<SkillModel> getSkillById(String id);
 }
 
 class SkillRemoteDataSourceMock implements SkillRemoteDataSource {
@@ -49,5 +51,19 @@ class SkillRemoteDataSourceMock implements SkillRemoteDataSource {
   Future<List<SkillModel>> fetchUserSkills(String uid) async {
     await Future.delayed(const Duration(seconds: 1));
     return [];
+  }
+
+  @override
+  Future<SkillModel> getSkillById(String id) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return SkillModel(
+      id: id,
+      title: 'Cloned Skill',
+      description: 'Description',
+      category: 'Tech',
+      level: SkillLevel.beginner,
+      format: SkillFormat.online,
+      userId: 'user1',
+    );
   }
 }

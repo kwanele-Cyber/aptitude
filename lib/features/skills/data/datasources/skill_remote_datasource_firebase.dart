@@ -84,6 +84,22 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
   }
 
   @override
+  Future<SkillModel> getSkillById(String id) async {
+    try {
+      final snapshot = await _skillsRef.child(id).get();
+      if (!snapshot.exists) throw ServerException();
+
+      return SkillModel.fromJson(
+        snapshot.key ?? '',
+        snapshot.value as Map<String, dynamic>,
+      );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
   Future<List<SkillModel>> fetchUserSkills(String uid) async {
     try {
       final snapshot =

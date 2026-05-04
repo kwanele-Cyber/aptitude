@@ -73,3 +73,12 @@ class FetchUserSkillsRequested extends SkillEvent {
   @override
   List<Object?> get props => [uid];
 }
+
+class CloneSkillRequested extends SkillEvent {
+  final String skillId;
+
+  CloneSkillRequested({required this.skillId});
+
+  @override
+  List<Object?> get props => [skillId];
+}

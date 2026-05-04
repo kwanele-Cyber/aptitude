@@ -174,4 +174,36 @@ void main() {
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
+
+  group('getSkillById', () {
+    test('should get skill by id on success', () async {
+      when(() => mockRemote.getSkillById(any()))
+          .thenAnswer((_) async => tSkillModel);
+
+      final result = await repository.getSkillById('skill1');
+
+      expect(result.isRight(), true);
+      expect(result.getOrElse(() => tSkillModel), isA<SkillEntity>());
+      verify(() => mockRemote.getSkillById('skill1')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.getSkillById(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.getSkillById('skill1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+
+    test('should return ServerFailure on generic exception', () async {
+      when(() => mockRemote.getSkillById(any())).thenThrow(Exception());
+
+      final result = await repository.getSkillById('skill1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }
