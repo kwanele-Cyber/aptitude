@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/features/auth/domain/entity/user_entity.dart';
 
 abstract class AuthState extends Equatable {
@@ -30,3 +29,22 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class AuthPasswordResetEmailSent extends AuthState {}
+
+class AuthPasswordUpdated extends AuthState {}
+
+class AuthVerificationEmailSent extends AuthState {}
+
+class Auth2FAVerified extends AuthState {}
+
+class AuthRecoveryCodesGenerated extends AuthState {
+  final List<String> codes;
+
+  AuthRecoveryCodesGenerated({required this.codes});
+
+  @override
+  List<Object?> get props => codes;
+}
+
+class AuthAccountRecovered extends AuthState {}
