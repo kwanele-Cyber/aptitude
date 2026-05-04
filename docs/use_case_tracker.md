@@ -27,6 +27,7 @@ description:
 | F09 | ❌ Todo | Account Recovery | Recovery codes for account restoration |
 | F10 | ✅ Done | Two-Factor Authentication | Optional 2FA for high-trust accounts |
 
+
 ### User Core System
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
@@ -121,6 +122,7 @@ description:
 | C06 | ❌ Todo | Typing Indicator | Real-time typing status |
 | C07 | ❌ Todo | Block User | Block communication from specific user |
 | C08 | ❌ Todo | Report Message | Report inappropriate message content |
+
 
 ### Agreement System
 | ID | Status | Use Case | Description |
@@ -249,6 +251,8 @@ description:
 | A08 | ❌ Todo | Handle Reports | Review and action user complaints |
 | A09 | ❌ Todo | Bulk Actions | Batch moderation operations |
 | A10 | ❌ Todo | Content Flagging Queue | Prioritized moderation queue |
+
+|A10.2| ❌ Todo | Show Matrics Based on price range (Select your own date range e.g 2022 - 2023)| - |
 
 ## Enforcement System (5 use cases)
 

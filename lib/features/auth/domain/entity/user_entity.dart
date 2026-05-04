@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:myapp/features/auth/domain/entity/location_entity.dart';
+import 'package:myapp/features/auth/domain/entity/user_role.dart';
 
 class UserEntity extends Equatable {
   final String id;
@@ -23,6 +24,8 @@ class UserEntity extends Equatable {
   final DateTime? createdAt;
 
   String get name => '$firstName $lastName';
+  UserRole get userRole => UserRole.fromString(role);
+  bool get isAdmin => userRole == UserRole.admin;
 
   const UserEntity({
     required this.id,
