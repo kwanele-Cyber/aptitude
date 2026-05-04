@@ -19,6 +19,7 @@ abstract class AuthRemoteDataSource {
   Future<List<String>> generateRecoveryCodes();
   Future<void> recoverAccount(String email, String recoveryCode);
   Future<UserModel> getUserProfile(String uid);
+  Future<Map<String, dynamic>> exportUserData();
 }
 
 class AuthRemoteDataSourceMock implements AuthRemoteDataSource {
@@ -118,5 +119,18 @@ class AuthRemoteDataSourceMock implements AuthRemoteDataSource {
       lastName: 'User',
       email: 'test@test.com',
     );
+  }
+
+  @override
+  Future<Map<String, dynamic>> exportUserData() async {
+    Future.delayed(Duration(seconds: 1));
+    return {
+      'id': '1',
+      'firstName': 'Test',
+      'lastName': 'User',
+      'email': 'test@test.com',
+      'role': 'member',
+      'createdAt': DateTime.now().toIso8601String(),
+    };
   }
 }

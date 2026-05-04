@@ -18,6 +18,7 @@ import 'package:myapp/features/auth/domain/usecases/generate_recovery_codes_usec
 import 'package:myapp/features/auth/domain/usecases/recover_account_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/verify_2fa_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/get_user_profile_usecase.dart';
+import 'package:myapp/features/auth/domain/usecases/export_user_data_usecase.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
@@ -41,6 +42,8 @@ class MockRecoverAccountUseCase extends Mock
     implements RecoverAccountUseCase {}
 class MockGetUserProfileUseCase extends Mock
     implements GetUserProfileUseCase {}
+class MockExportUserDataUseCase extends Mock
+    implements ExportUserDataUseCase {}
 
 final tUser = UserEntity(id: '', firstName: '', lastName: '', email: '');
 
@@ -60,6 +63,7 @@ void main() {
   late MockGenerateRecoveryCodesUseCase mockGenerateRecoveryCodes;
   late MockRecoverAccountUseCase mockRecoverAccount;
   late MockGetUserProfileUseCase mockGetUserProfile;
+  late MockExportUserDataUseCase mockExportUserData;
 
   setUpAll(() {
     registerFallbackValue(LoginParams(email: '', password: ''));
@@ -94,6 +98,7 @@ void main() {
     mockGenerateRecoveryCodes = MockGenerateRecoveryCodesUseCase();
     mockRecoverAccount = MockRecoverAccountUseCase();
     mockGetUserProfile = MockGetUserProfileUseCase();
+    mockExportUserData = MockExportUserDataUseCase();
 
     bloc = AuthBloc(
       loginUseCase: mockLogin,
@@ -110,6 +115,7 @@ void main() {
       generateRecoveryCodesUseCase: mockGenerateRecoveryCodes,
       recoverAccountUseCase: mockRecoverAccount,
       getUserProfileUseCase: mockGetUserProfile,
+      exportUserDataUseCase: mockExportUserData,
     );
   });
 
@@ -556,6 +562,36 @@ void main() {
       expect: () => [
         AuthLoading(),
         AuthError(message: 'Failed to load user profile'),
+      ],
+    );
+  });
+
+  group('AuthExportUserDataRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [AuthLoading, AuthUserDataExported] on success',
+      build: () {
+        when(() => mockExportUserData(any()))
+            .thenAnswer((_) async => const Right('{"key":"value"}'));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(AuthExportUserDataRequested()),
+      expect: () => [
+        AuthLoading(),
+        AuthUserDataExported(data: '{"key":"value"}'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [AuthLoading, AuthError] on failure',
+      build: () {
+        when(() => mockExportUserData(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(AuthExportUserDataRequested()),
+      expect: () => [
+        AuthLoading(),
+        AuthError(message: 'Failed to export user data'),
       ],
     );
   });

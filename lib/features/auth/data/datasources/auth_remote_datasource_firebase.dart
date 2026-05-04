@@ -223,4 +223,17 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
       throw ServerException();
     }
   }
+
+  @override
+  Future<Map<String, dynamic>> exportUserData() async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) throw ServerException();
+      final snapshot = await _userRef(uid).get();
+      if (!snapshot.exists) throw ServerException();
+      return snapshot.value as Map<String, dynamic>;
+    } catch (e) {
+      throw ServerException();
+    }
+  }
 }

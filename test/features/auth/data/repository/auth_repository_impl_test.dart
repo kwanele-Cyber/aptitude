@@ -440,4 +440,29 @@ void main() {
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
+
+  group('exportUserData', () {
+    test('should return JSON string on success', () async {
+      when(() => mockRemote.exportUserData())
+          .thenAnswer((_) async => {'key': 'value'});
+
+      final result = await repository.exportUserData();
+
+      expect(result.isRight(), true);
+      final data = result.getOrElse(() => '');
+      expect(data, contains('"key"'));
+      expect(data, contains('"value"'));
+      verify(() => mockRemote.exportUserData()).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.exportUserData())
+          .thenThrow(ServerException());
+
+      final result = await repository.exportUserData();
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }

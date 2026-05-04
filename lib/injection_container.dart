@@ -7,6 +7,7 @@ import 'package:myapp/features/auth/domain/repository/auth_repository.dart';
 import 'package:myapp/features/auth/domain/usecases/change_password_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/check_auth_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/delete_account_usecase.dart';
+import 'package:myapp/features/auth/domain/usecases/export_user_data_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/login_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/logout_usecase.dart';
@@ -42,6 +43,7 @@ Future init() async {
       generateRecoveryCodesUseCase: sl(),
       recoverAccountUseCase: sl(),
       getUserProfileUseCase: sl(),
+      exportUserDataUseCase: sl(),
     ),
   );
 
@@ -62,6 +64,7 @@ Future init() async {
   );
   sl.registerLazySingleton(() => RecoverAccountUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetUserProfileUseCase(repository: sl()));
+  sl.registerLazySingleton(() => ExportUserDataUseCase(repository: sl()));
 
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(localDataSource: sl(), remoteDataSource: sl()),
