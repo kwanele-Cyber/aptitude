@@ -55,3 +55,12 @@ class UpdateSkillRequested extends SkillEvent {
   List<Object?> get props =>
       [id, title, description, category, type, level, format, tags];
 }
+
+class DeleteSkillRequested extends SkillEvent {
+  final String id;
+
+  DeleteSkillRequested({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}

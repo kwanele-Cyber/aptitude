@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
@@ -14,6 +15,8 @@ class MockCreateSkillOfferUseCase extends Mock
     implements CreateSkillOfferUseCase {}
 
 class MockUpdateSkillUseCase extends Mock implements UpdateSkillUseCase {}
+
+class MockDeleteSkillUseCase extends Mock implements DeleteSkillUseCase {}
 
 final tSkill = SkillEntity(
   id: 'skill1',
@@ -29,6 +32,7 @@ void main() {
   late SkillBloc bloc;
   late MockCreateSkillOfferUseCase mockCreateUseCase;
   late MockUpdateSkillUseCase mockUpdateUseCase;
+  late MockDeleteSkillUseCase mockDeleteUseCase;
 
   setUpAll(() {
     registerFallbackValue(CreateSkillOfferParams(
@@ -46,14 +50,17 @@ void main() {
       level: SkillLevel.beginner,
       format: SkillFormat.online,
     ));
+    registerFallbackValue(DeleteSkillParams(id: ''));
   });
 
   setUp(() {
     mockCreateUseCase = MockCreateSkillOfferUseCase();
     mockUpdateUseCase = MockUpdateSkillUseCase();
+    mockDeleteUseCase = MockDeleteSkillUseCase();
     bloc = SkillBloc(
       createSkillOfferUseCase: mockCreateUseCase,
       updateSkillUseCase: mockUpdateUseCase,
+      deleteSkillUseCase: mockDeleteUseCase,
     );
   });
 
@@ -161,6 +168,36 @@ void main() {
       expect: () => [
         SkillLoading(),
         SkillError(message: 'Failed to update skill'),
+      ],
+    );
+  });
+
+  group('DeleteSkillRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillDeleted] on success',
+      build: () {
+        when(() => mockDeleteUseCase(any()))
+            .thenAnswer((_) async => Right(null));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(DeleteSkillRequested(id: 'skill1')),
+      expect: () => [
+        SkillLoading(),
+        isA<SkillDeleted>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockDeleteUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(DeleteSkillRequested(id: 'skill1')),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to delete skill'),
       ],
     );
   });

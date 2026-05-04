@@ -109,4 +109,35 @@ void main() {
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
+
+  group('deleteSkill', () {
+    test('should delete skill on success', () async {
+      when(() => mockRemote.deleteSkill(any()))
+          .thenAnswer((_) async {});
+
+      final result = await repository.deleteSkill('skill1');
+
+      expect(result.isRight(), true);
+      verify(() => mockRemote.deleteSkill('skill1')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.deleteSkill(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.deleteSkill('skill1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+
+    test('should return ServerFailure on generic exception', () async {
+      when(() => mockRemote.deleteSkill(any())).thenThrow(Exception());
+
+      final result = await repository.deleteSkill('skill1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }

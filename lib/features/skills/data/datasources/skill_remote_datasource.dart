@@ -3,6 +3,7 @@ import 'package:myapp/features/skills/data/models/skill_model.dart';
 abstract class SkillRemoteDataSource {
   Future<SkillModel> createSkill(Map<String, dynamic> data);
   Future<SkillModel> updateSkill(String id, Map<String, dynamic> data);
+  Future<void> deleteSkill(String id);
 }
 
 class SkillRemoteDataSourceMock implements SkillRemoteDataSource {
@@ -36,5 +37,10 @@ class SkillRemoteDataSourceMock implements SkillRemoteDataSource {
       userId: data['userId'] as String? ?? '',
       tags: (data['tags'] as List?)?.cast<String>() ?? [],
     );
+  }
+
+  @override
+  Future<void> deleteSkill(String id) async {
+    await Future.delayed(const Duration(seconds: 1));
   }
 }

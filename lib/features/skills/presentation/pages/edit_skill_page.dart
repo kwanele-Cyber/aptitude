@@ -69,6 +69,34 @@ class _EditSkillPageState extends State<EditSkillPage> {
         );
   }
 
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Skill'),
+        content: const Text(
+          'Are you sure you want to delete this skill? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<SkillBloc>().add(
+                    DeleteSkillRequested(id: widget.skill.id),
+                  );
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,6 +111,17 @@ class _EditSkillPageState extends State<EditSkillPage> {
               ),
             );
             Navigator.pop(context);
+          }
+          if (state is SkillDeleted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Skill deleted successfully!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.of(context).popUntil(
+              (route) => route.settings.name == '/home',
+            );
           }
           if (state is SkillError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -218,6 +257,17 @@ class _EditSkillPageState extends State<EditSkillPage> {
                                   CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text('Save Changes'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: isLoading ? null : _confirmDelete,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Delete Skill'),
                     ),
                   ],
                 ),
