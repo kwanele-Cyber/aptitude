@@ -82,3 +82,21 @@ class CloneSkillRequested extends SkillEvent {
   @override
   List<Object?> get props => [skillId];
 }
+
+class ArchiveSkillRequested extends SkillEvent {
+  final String id;
+
+  ArchiveSkillRequested({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class RestoreSkillRequested extends SkillEvent {
+  final String id;
+
+  RestoreSkillRequested({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}

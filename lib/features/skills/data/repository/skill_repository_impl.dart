@@ -72,4 +72,28 @@ class SkillRepositoryImpl implements SkillRepository {
       return Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, void>> archiveSkill(String id) async {
+    try {
+      await remoteDataSource.archiveSkill(id);
+      return const Right(null);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> restoreSkill(String id) async {
+    try {
+      await remoteDataSource.restoreSkill(id);
+      return const Right(null);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
 }

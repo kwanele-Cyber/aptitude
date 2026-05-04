@@ -55,6 +55,24 @@ class SkillCloned extends SkillState {
   List<Object?> get props => [skill];
 }
 
+class SkillArchived extends SkillState {
+  final String id;
+
+  SkillArchived({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class SkillRestored extends SkillState {
+  final String id;
+
+  SkillRestored({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}
+
 class SkillError extends SkillState {
   final String message;
 

@@ -1,8 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:myapp/features/skills/domain/usecases/archive_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/clone_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
@@ -13,6 +15,8 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
   final DeleteSkillUseCase deleteSkillUseCase;
   final FetchUserSkillsUseCase fetchUserSkillsUseCase;
   final CloneSkillUseCase cloneSkillUseCase;
+  final ArchiveSkillUseCase archiveSkillUseCase;
+  final RestoreSkillUseCase restoreSkillUseCase;
 
   SkillBloc({
     required this.createSkillOfferUseCase,
@@ -20,12 +24,16 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     required this.deleteSkillUseCase,
     required this.fetchUserSkillsUseCase,
     required this.cloneSkillUseCase,
+    required this.archiveSkillUseCase,
+    required this.restoreSkillUseCase,
   }) : super(SkillInitial()) {
     on<CreateSkillOfferRequested>(_onCreateSkillOfferRequested);
     on<UpdateSkillRequested>(_onUpdateSkillRequested);
     on<DeleteSkillRequested>(_onDeleteSkillRequested);
     on<FetchUserSkillsRequested>(_onFetchUserSkillsRequested);
     on<CloneSkillRequested>(_onCloneSkillRequested);
+    on<ArchiveSkillRequested>(_onArchiveSkillRequested);
+    on<RestoreSkillRequested>(_onRestoreSkillRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -136,6 +144,44 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
       },
       (right) async {
         emit(SkillCloned(skill: right));
+      },
+    );
+  }
+
+  Future _onArchiveSkillRequested(
+    ArchiveSkillRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await archiveSkillUseCase(
+      ArchiveSkillParams(id: event.id),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to archive skill'));
+      },
+      (right) async {
+        emit(SkillArchived(id: event.id));
+      },
+    );
+  }
+
+  Future _onRestoreSkillRequested(
+    RestoreSkillRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await restoreSkillUseCase(
+      RestoreSkillParams(id: event.id),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to restore skill'));
+      },
+      (right) async {
+        emit(SkillRestored(id: event.id));
       },
     );
   }
