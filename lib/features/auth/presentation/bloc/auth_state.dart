@@ -48,3 +48,12 @@ class AuthRecoveryCodesGenerated extends AuthState {
 }
 
 class AuthAccountRecovered extends AuthState {}
+
+class AuthUserProfileLoaded extends AuthState {
+  final UserEntity user;
+
+  AuthUserProfileLoaded({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}

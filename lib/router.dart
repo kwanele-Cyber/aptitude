@@ -15,6 +15,7 @@ import 'package:myapp/features/auth/presentation/pages/two_factor_setup_page.dar
 import 'package:myapp/features/auth/presentation/pages/account_recovery_page.dart';
 import 'package:myapp/features/auth/presentation/pages/recovery_codes_page.dart';
 import 'package:myapp/features/auth/presentation/pages/two_factor_verification_page.dart';
+import 'package:myapp/features/auth/presentation/pages/user_profile_page.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -56,6 +57,12 @@ class AppRouter {
       GoRoute(path: '/forgot-password', builder: (context, state) => ForgotPasswordPage()),
       GoRoute(path: '/home', builder: (context, state) => HomePage()),
       GoRoute(path: '/profile', builder: (context, state) => ProfilePage()),
+      GoRoute(
+        path: '/profile/:uid',
+        builder: (context, state) => UserProfilePage(
+          uid: state.pathParameters['uid'] ?? '',
+        ),
+      ),
       GoRoute(path: '/change-password', builder: (context, state) => ChangePasswordPage()),
       GoRoute(path: '/2fa-setup', builder: (context, state) => TwoFactorSetupPage()),
       GoRoute(

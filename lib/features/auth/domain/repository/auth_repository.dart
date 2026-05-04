@@ -25,4 +25,5 @@ abstract class AuthRepository {
   Future<Either<Failure, UserEntity>> updateProfile(Map<String, dynamic> data);
   Future<Either<Failure, List<String>>> generateRecoveryCodes();
   Future<Either<Failure, void>> recoverAccount(String email, String recoveryCode);
+  Future<Either<Failure, UserEntity>> getUserProfile(String uid);
 }

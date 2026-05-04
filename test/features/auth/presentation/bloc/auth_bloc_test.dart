@@ -17,6 +17,7 @@ import 'package:myapp/features/auth/domain/usecases/update_password_usecase.dart
 import 'package:myapp/features/auth/domain/usecases/generate_recovery_codes_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/recover_account_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/verify_2fa_usecase.dart';
+import 'package:myapp/features/auth/domain/usecases/get_user_profile_usecase.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
@@ -38,6 +39,8 @@ class MockGenerateRecoveryCodesUseCase extends Mock
     implements GenerateRecoveryCodesUseCase {}
 class MockRecoverAccountUseCase extends Mock
     implements RecoverAccountUseCase {}
+class MockGetUserProfileUseCase extends Mock
+    implements GetUserProfileUseCase {}
 
 final tUser = UserEntity(id: '', firstName: '', lastName: '', email: '');
 
@@ -56,6 +59,7 @@ void main() {
   late MockVerify2FAUseCase mockVerify2FA;
   late MockGenerateRecoveryCodesUseCase mockGenerateRecoveryCodes;
   late MockRecoverAccountUseCase mockRecoverAccount;
+  late MockGetUserProfileUseCase mockGetUserProfile;
 
   setUpAll(() {
     registerFallbackValue(LoginParams(email: '', password: ''));
@@ -72,6 +76,7 @@ void main() {
     registerFallbackValue(RecoverAccountParams(
       email: '', recoveryCode: '',
     ));
+    registerFallbackValue(GetUserProfileParams(uid: ''));
   });
 
   setUp(() {
@@ -88,6 +93,7 @@ void main() {
     mockVerify2FA = MockVerify2FAUseCase();
     mockGenerateRecoveryCodes = MockGenerateRecoveryCodesUseCase();
     mockRecoverAccount = MockRecoverAccountUseCase();
+    mockGetUserProfile = MockGetUserProfileUseCase();
 
     bloc = AuthBloc(
       loginUseCase: mockLogin,
@@ -103,6 +109,7 @@ void main() {
       verify2FAUseCase: mockVerify2FA,
       generateRecoveryCodesUseCase: mockGenerateRecoveryCodes,
       recoverAccountUseCase: mockRecoverAccount,
+      getUserProfileUseCase: mockGetUserProfile,
     );
   });
 
@@ -517,6 +524,38 @@ void main() {
       expect: () => [
         AuthLoading(),
         AuthError(message: 'Server error, please try again later'),
+      ],
+    );
+  });
+
+  group('AuthViewUserProfileRequested', () {
+    final event = AuthViewUserProfileRequested(uid: 'user123');
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [AuthLoading, AuthUserProfileLoaded] on success',
+      build: () {
+        when(() => mockGetUserProfile(any()))
+            .thenAnswer((_) async => Right(tUser));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(event),
+      expect: () => [
+        AuthLoading(),
+        AuthUserProfileLoaded(user: tUser),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [AuthLoading, AuthError] on failure',
+      build: () {
+        when(() => mockGetUserProfile(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(event),
+      expect: () => [
+        AuthLoading(),
+        AuthError(message: 'Failed to load user profile'),
       ],
     );
   });

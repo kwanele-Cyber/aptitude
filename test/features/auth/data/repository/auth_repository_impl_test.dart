@@ -417,4 +417,27 @@ void main() {
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
+
+  group('getUserProfile', () {
+    test('should return user when remote call succeeds', () async {
+      when(() => mockRemote.getUserProfile(any()))
+          .thenAnswer((_) async => tUserModel);
+
+      final result = await repository.getUserProfile('user123');
+
+      expect(result.isRight(), true);
+      expect(result.getOrElse(() => tUserModel), isA<UserEntity>());
+      verify(() => mockRemote.getUserProfile('user123')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.getUserProfile(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.getUserProfile('user123');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }

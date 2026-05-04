@@ -7,6 +7,7 @@ import 'package:myapp/features/auth/domain/usecases/check_auth_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/delete_account_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/generate_recovery_codes_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'package:myapp/features/auth/domain/usecases/get_user_profile_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/login_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:myapp/features/auth/domain/usecases/recover_account_usecase.dart';
@@ -33,6 +34,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final Verify2FAUseCase verify2FAUseCase;
   final GenerateRecoveryCodesUseCase generateRecoveryCodesUseCase;
   final RecoverAccountUseCase recoverAccountUseCase;
+  final GetUserProfileUseCase getUserProfileUseCase;
 
   AuthBloc({
     required this.loginUseCase,
@@ -48,6 +50,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.verify2FAUseCase,
     required this.generateRecoveryCodesUseCase,
     required this.recoverAccountUseCase,
+    required this.getUserProfileUseCase,
   }) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onAuthLoginRequested);
@@ -61,6 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthVerify2FARequested>(_onAuthVerify2FARequested);
     on<AuthGenerateRecoveryCodesRequested>(_onAuthGenerateRecoveryCodesRequested);
     on<AuthRecoverAccountRequested>(_onAuthRecoverAccountRequested);
+    on<AuthViewUserProfileRequested>(_onAuthViewUserProfileRequested);
   }
 
   Future _onAuthCheckRequested(
@@ -327,6 +331,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (right) async {
         emit(AuthAccountRecovered());
+      },
+    );
+  }
+
+  Future _onAuthViewUserProfileRequested(
+    AuthViewUserProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await getUserProfileUseCase(
+      GetUserProfileParams(uid: event.uid),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(AuthError(message: 'Failed to load user profile'));
+      },
+      (right) async {
+        emit(AuthUserProfileLoaded(user: right));
       },
     );
   }
