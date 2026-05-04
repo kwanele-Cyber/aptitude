@@ -19,6 +19,15 @@ class SkillOfferCreated extends SkillState {
   List<Object?> get props => [skill];
 }
 
+class SkillUpdated extends SkillState {
+  final SkillEntity skill;
+
+  SkillUpdated({required this.skill});
+
+  @override
+  List<Object?> get props => [skill];
+}
+
 class SkillError extends SkillState {
   final String message;
 

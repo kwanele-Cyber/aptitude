@@ -26,6 +26,7 @@ import 'package:myapp/features/skills/data/datasources/skill_remote_datasource_f
 import 'package:myapp/features/skills/data/repository/skill_repository_impl.dart';
 import 'package:myapp/features/skills/domain/repository/skill_repository.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -85,9 +86,11 @@ Future init() async {
   // Skill ecosystem
   sl.registerFactory(() => SkillBloc(
         createSkillOfferUseCase: sl(),
+        updateSkillUseCase: sl(),
       ));
 
   sl.registerLazySingleton(() => CreateSkillOfferUseCase(repository: sl()));
+  sl.registerLazySingleton(() => UpdateSkillUseCase(repository: sl()));
 
   sl.registerLazySingleton<SkillRepository>(
     () => SkillRepositoryImpl(remoteDataSource: sl()),

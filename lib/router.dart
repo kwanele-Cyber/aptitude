@@ -19,6 +19,7 @@ import 'package:myapp/features/auth/presentation/pages/account_recovery_page.dar
 import 'package:myapp/features/auth/presentation/pages/recovery_codes_page.dart';
 import 'package:myapp/features/auth/presentation/pages/two_factor_verification_page.dart';
 import 'package:myapp/features/auth/presentation/pages/user_profile_page.dart';
+import 'package:myapp/features/skills/presentation/pages/edit_skill_page.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -89,6 +90,12 @@ class AppRouter {
       GoRoute(
         path: '/skills/create-request',
         builder: (context, state) => const CreateSkillOfferPage(type: SkillType.request),
+      ),
+      GoRoute(
+        path: '/skills/edit',
+        builder: (context, state) => EditSkillPage(
+          skill: state.extra as SkillEntity,
+        ),
       ),
       GoRoute(
         path: '/account-recovery',
