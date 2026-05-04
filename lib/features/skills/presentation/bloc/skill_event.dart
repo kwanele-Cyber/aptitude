@@ -165,3 +165,13 @@ class FilterSkillsRequested extends SkillEvent {
   @override
   List<Object?> get props => [category, level, format, type];
 }
+
+class SuggestCategoryRequested extends SkillEvent {
+  final String title;
+  final String description;
+
+  SuggestCategoryRequested({required this.title, required this.description});
+
+  @override
+  List<Object?> get props => [title, description];
+}

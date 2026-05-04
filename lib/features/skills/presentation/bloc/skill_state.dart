@@ -148,6 +148,15 @@ class SkillsFiltered extends SkillState {
   List<Object?> get props => [skills, category, level, format, type];
 }
 
+class CategoriesSuggested extends SkillState {
+  final List<String> suggestions;
+
+  CategoriesSuggested({required this.suggestions});
+
+  @override
+  List<Object?> get props => [suggestions];
+}
+
 class SkillError extends SkillState {
   final String message;
 

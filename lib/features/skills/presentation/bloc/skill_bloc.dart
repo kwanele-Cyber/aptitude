@@ -11,6 +11,7 @@ import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart
 import 'package:myapp/features/skills/domain/usecases/get_skill_by_id_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/suggest_skill_category_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
@@ -29,6 +30,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
   final SaveSearchUseCase saveSearchUseCase;
   final FetchSavedSearchesUseCase fetchSavedSearchesUseCase;
   final DeleteSavedSearchUseCase deleteSavedSearchUseCase;
+  final SuggestSkillCategoryUseCase suggestSkillCategoryUseCase;
 
   SkillBloc({
     required this.createSkillOfferUseCase,
@@ -44,6 +46,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     required this.saveSearchUseCase,
     required this.fetchSavedSearchesUseCase,
     required this.deleteSavedSearchUseCase,
+    required this.suggestSkillCategoryUseCase,
   }) : super(SkillInitial()) {
     on<CreateSkillOfferRequested>(_onCreateSkillOfferRequested);
     on<UpdateSkillRequested>(_onUpdateSkillRequested);
@@ -59,6 +62,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<SaveSearchRequested>(_onSaveSearchRequested);
     on<FetchSavedSearchesRequested>(_onFetchSavedSearchesRequested);
     on<DeleteSavedSearchRequested>(_onDeleteSavedSearchRequested);
+    on<SuggestCategoryRequested>(_onSuggestCategoryRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -356,5 +360,18 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
         emit(SavedSearchDeleted(id: event.id));
       },
     );
+  }
+
+  void _onSuggestCategoryRequested(
+    SuggestCategoryRequested event,
+    Emitter<SkillState> emit,
+  ) {
+    final suggestions = suggestSkillCategoryUseCase(
+      SuggestSkillCategoryParams(
+        title: event.title,
+        description: event.description,
+      ),
+    );
+    emit(CategoriesSuggested(suggestions: suggestions));
   }
 }
