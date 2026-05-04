@@ -157,6 +157,15 @@ class CategoriesSuggested extends SkillState {
   List<Object?> get props => [suggestions];
 }
 
+class VerificationSubmitted extends SkillState {
+  final SkillEntity skill;
+
+  VerificationSubmitted({required this.skill});
+
+  @override
+  List<Object?> get props => [skill];
+}
+
 class SkillError extends SkillState {
   final String message;
 

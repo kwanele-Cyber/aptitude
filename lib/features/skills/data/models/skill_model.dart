@@ -14,6 +14,8 @@ class SkillModel extends SkillEntity {
     super.createdAt,
     super.updatedAt,
     super.archivedAt,
+    super.isVerified,
+    super.portfolioUrls,
   });
 
   factory SkillModel.fromJson(String id, Map<String, dynamic> json) {
@@ -36,6 +38,11 @@ class SkillModel extends SkillEntity {
       archivedAt: json['archivedAt'] != null
           ? DateTime.tryParse(json['archivedAt'] as String)
           : null,
+      isVerified: json['isVerified'] as bool? ?? false,
+      portfolioUrls: (json['portfolioUrls'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 
@@ -52,6 +59,8 @@ class SkillModel extends SkillEntity {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'archivedAt': archivedAt?.toIso8601String(),
+      'isVerified': isVerified,
+      'portfolioUrls': portfolioUrls,
     };
   }
 

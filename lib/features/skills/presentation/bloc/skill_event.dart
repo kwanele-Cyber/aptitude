@@ -175,3 +175,16 @@ class SuggestCategoryRequested extends SkillEvent {
   @override
   List<Object?> get props => [title, description];
 }
+
+class SubmitVerificationRequested extends SkillEvent {
+  final String skillId;
+  final List<String> portfolioUrls;
+
+  SubmitVerificationRequested({
+    required this.skillId,
+    this.portfolioUrls = const [],
+  });
+
+  @override
+  List<Object?> get props => [skillId, portfolioUrls];
+}

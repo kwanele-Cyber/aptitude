@@ -11,6 +11,7 @@ import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart
 import 'package:myapp/features/skills/domain/usecases/get_skill_by_id_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/submit_skill_verification_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/suggest_skill_category_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
@@ -31,6 +32,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
   final FetchSavedSearchesUseCase fetchSavedSearchesUseCase;
   final DeleteSavedSearchUseCase deleteSavedSearchUseCase;
   final SuggestSkillCategoryUseCase suggestSkillCategoryUseCase;
+  final SubmitSkillVerificationUseCase submitSkillVerificationUseCase;
 
   SkillBloc({
     required this.createSkillOfferUseCase,
@@ -47,6 +49,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     required this.fetchSavedSearchesUseCase,
     required this.deleteSavedSearchUseCase,
     required this.suggestSkillCategoryUseCase,
+    required this.submitSkillVerificationUseCase,
   }) : super(SkillInitial()) {
     on<CreateSkillOfferRequested>(_onCreateSkillOfferRequested);
     on<UpdateSkillRequested>(_onUpdateSkillRequested);
@@ -63,6 +66,7 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<FetchSavedSearchesRequested>(_onFetchSavedSearchesRequested);
     on<DeleteSavedSearchRequested>(_onDeleteSavedSearchRequested);
     on<SuggestCategoryRequested>(_onSuggestCategoryRequested);
+    on<SubmitVerificationRequested>(_onSubmitVerificationRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -373,5 +377,27 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
       ),
     );
     emit(CategoriesSuggested(suggestions: suggestions));
+  }
+
+  Future _onSubmitVerificationRequested(
+    SubmitVerificationRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await submitSkillVerificationUseCase(
+      SubmitSkillVerificationParams(
+        skillId: event.skillId,
+        portfolioUrls: event.portfolioUrls,
+      ),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to submit verification'));
+      },
+      (right) async {
+        emit(VerificationSubmitted(skill: right));
+      },
+    );
   }
 }
