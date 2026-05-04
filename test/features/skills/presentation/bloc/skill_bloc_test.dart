@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
@@ -11,6 +12,8 @@ import 'package:bloc_test/bloc_test.dart';
 
 class MockCreateSkillOfferUseCase extends Mock
     implements CreateSkillOfferUseCase {}
+
+class MockUpdateSkillUseCase extends Mock implements UpdateSkillUseCase {}
 
 final tSkill = SkillEntity(
   id: 'skill1',
@@ -24,7 +27,8 @@ final tSkill = SkillEntity(
 
 void main() {
   late SkillBloc bloc;
-  late MockCreateSkillOfferUseCase mockUseCase;
+  late MockCreateSkillOfferUseCase mockCreateUseCase;
+  late MockUpdateSkillUseCase mockUpdateUseCase;
 
   setUpAll(() {
     registerFallbackValue(CreateSkillOfferParams(
@@ -34,11 +38,23 @@ void main() {
       level: SkillLevel.beginner,
       format: SkillFormat.online,
     ));
+    registerFallbackValue(UpdateSkillParams(
+      id: '',
+      title: '',
+      description: '',
+      category: '',
+      level: SkillLevel.beginner,
+      format: SkillFormat.online,
+    ));
   });
 
   setUp(() {
-    mockUseCase = MockCreateSkillOfferUseCase();
-    bloc = SkillBloc(createSkillOfferUseCase: mockUseCase);
+    mockCreateUseCase = MockCreateSkillOfferUseCase();
+    mockUpdateUseCase = MockUpdateSkillUseCase();
+    bloc = SkillBloc(
+      createSkillOfferUseCase: mockCreateUseCase,
+      updateSkillUseCase: mockUpdateUseCase,
+    );
   });
 
   tearDown(() {
@@ -58,7 +74,7 @@ void main() {
     blocTest<SkillBloc, SkillState>(
       'emits [SkillLoading, SkillOfferCreated] on success',
       build: () {
-        when(() => mockUseCase(any()))
+        when(() => mockCreateUseCase(any()))
             .thenAnswer((_) async => Right(tSkill));
         return bloc;
       },
@@ -72,7 +88,7 @@ void main() {
     blocTest<SkillBloc, SkillState>(
       'emits [SkillLoading, SkillError] on failure',
       build: () {
-        when(() => mockUseCase(any()))
+        when(() => mockCreateUseCase(any()))
             .thenAnswer((_) async => Left(ServerFailure()));
         return bloc;
       },
@@ -86,7 +102,7 @@ void main() {
     blocTest<SkillBloc, SkillState>(
       'handles SkillType.request correctly',
       build: () {
-        when(() => mockUseCase(any()))
+        when(() => mockCreateUseCase(any()))
             .thenAnswer((_) async => Right(tSkill));
         return bloc;
       },
@@ -104,8 +120,48 @@ void main() {
         isA<SkillOfferCreated>(),
       ],
       verify: (_) {
-        verify(() => mockUseCase(any())).called(1);
+        verify(() => mockCreateUseCase(any())).called(1);
       },
+    );
+  });
+
+  group('UpdateSkillRequested', () {
+    final updateEvent = UpdateSkillRequested(
+      id: 'skill1',
+      title: 'Flutter Updated',
+      description: 'Updated desc',
+      category: 'Tech',
+      level: SkillLevel.intermediate,
+      format: SkillFormat.both,
+      tags: ['mobile', 'updated'],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillUpdated] on success',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => Right(tSkill));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(updateEvent),
+      expect: () => [
+        SkillLoading(),
+        isA<SkillUpdated>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockUpdateUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(updateEvent),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to update skill'),
+      ],
     );
   });
 }

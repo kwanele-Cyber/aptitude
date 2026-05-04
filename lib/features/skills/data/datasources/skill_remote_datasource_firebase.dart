@@ -43,4 +43,30 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
       throw ServerException();
     }
   }
+
+  @override
+  Future<SkillModel> updateSkill(String id, Map<String, dynamic> data) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) throw ServerException();
+
+      final skillRef = _skillsRef.child(id);
+      final updateData = {
+        ...data,
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      await skillRef.update(updateData);
+      final snapshot = await skillRef.get();
+      if (!snapshot.exists) throw ServerException();
+
+      return SkillModel.fromJson(
+        skillRef.key ?? '',
+        snapshot.value as Map<String, dynamic>,
+      );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
 }

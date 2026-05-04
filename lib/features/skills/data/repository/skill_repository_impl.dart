@@ -22,4 +22,17 @@ class SkillRepositoryImpl implements SkillRepository {
       return Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, SkillEntity>> updateSkill(
+      String id, Map<String, dynamic> data) async {
+    try {
+      final skill = await remoteDataSource.updateSkill(id, data);
+      return Right(skill);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
 }

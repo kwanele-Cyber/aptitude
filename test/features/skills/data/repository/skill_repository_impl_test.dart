@@ -69,4 +69,44 @@ void main() {
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
+
+  group('updateSkill', () {
+    const updateData = {
+      'title': 'Flutter Updated',
+      'description': 'Updated desc',
+      'category': 'Tech',
+      'level': 'intermediate',
+      'format': 'both',
+    };
+
+    test('should update skill on success', () async {
+      when(() => mockRemote.updateSkill(any(), any()))
+          .thenAnswer((_) async => tSkillModel);
+
+      final result = await repository.updateSkill('skill1', updateData);
+
+      expect(result.isRight(), true);
+      expect(result.getOrElse(() => tSkillModel), isA<SkillEntity>());
+      verify(() => mockRemote.updateSkill('skill1', updateData)).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.updateSkill(any(), any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.updateSkill('skill1', updateData);
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+
+    test('should return ServerFailure on generic exception', () async {
+      when(() => mockRemote.updateSkill(any(), any())).thenThrow(Exception());
+
+      final result = await repository.updateSkill('skill1', updateData);
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }
