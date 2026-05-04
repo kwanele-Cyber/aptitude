@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:myapp/core/error/failures.dart';
+import 'package:myapp/features/skills/domain/entity/saved_search_entity.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 
 abstract class SkillRepository {
@@ -13,4 +14,8 @@ abstract class SkillRepository {
   Future<Either<Failure, void>> restoreSkill(String id);
   Future<Either<Failure, List<SkillEntity>>> searchSkills(String query);
   Future<Either<Failure, List<SkillEntity>>> fetchAllSkills();
+  Future<Either<Failure, void>> saveSearch(Map<String, dynamic> data);
+  Future<Either<Failure, List<SavedSearchEntity>>> fetchSavedSearches(
+      String uid);
+  Future<Either<Failure, void>> deleteSavedSearch(String id);
 }

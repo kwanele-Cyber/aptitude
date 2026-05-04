@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:myapp/core/error/exceptions.dart';
 import 'package:myapp/features/skills/data/datasources/skill_remote_datasource.dart';
+import 'package:myapp/features/skills/data/models/saved_search_model.dart';
 import 'package:myapp/features/skills/data/models/skill_model.dart';
 
 class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
@@ -201,6 +202,52 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
         skills.add(SkillModel.fromJson(key, data));
       });
       return skills;
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  DatabaseReference get _savedSearchesRef => _database.ref('savedSearches');
+
+  @override
+  Future<void> saveSearch(Map<String, dynamic> data) async {
+    try {
+      final searchRef = _savedSearchesRef.push();
+      await searchRef.set(data);
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<List<SavedSearchModel>> fetchSavedSearches(String uid) async {
+    try {
+      final snapshot =
+          await _savedSearchesRef.orderByChild('userId').equalTo(uid).get();
+      if (!snapshot.exists) return [];
+
+      final map = snapshot.value as Map<String, dynamic>?;
+      if (map == null) return [];
+
+      final searches = <SavedSearchModel>[];
+      map.forEach((key, value) {
+        searches.add(SavedSearchModel.fromJson(
+            key, value as Map<String, dynamic>));
+      });
+      searches.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return searches;
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> deleteSavedSearch(String id) async {
+    try {
+      await _savedSearchesRef.child(id).remove();
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException();

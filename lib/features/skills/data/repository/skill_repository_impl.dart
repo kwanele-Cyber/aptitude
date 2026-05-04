@@ -3,6 +3,7 @@ import 'package:myapp/core/error/exceptions.dart';
 import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/skills/data/datasources/skill_remote_datasource.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
+import 'package:myapp/features/skills/domain/entity/saved_search_entity.dart';
 import 'package:myapp/features/skills/domain/repository/skill_repository.dart';
 
 class SkillRepositoryImpl implements SkillRepository {
@@ -89,6 +90,43 @@ class SkillRepositoryImpl implements SkillRepository {
   Future<Either<Failure, void>> restoreSkill(String id) async {
     try {
       await remoteDataSource.restoreSkill(id);
+      return const Right(null);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveSearch(Map<String, dynamic> data) async {
+    try {
+      await remoteDataSource.saveSearch(data);
+      return const Right(null);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<SavedSearchEntity>>> fetchSavedSearches(
+      String uid) async {
+    try {
+      final searches = await remoteDataSource.fetchSavedSearches(uid);
+      return Right(searches);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteSavedSearch(String id) async {
+    try {
+      await remoteDataSource.deleteSavedSearch(id);
       return const Right(null);
     } on ServerException {
       return Left(ServerFailure());

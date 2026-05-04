@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:myapp/core/error/exceptions.dart';
 import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/skills/data/datasources/skill_remote_datasource.dart';
+import 'package:myapp/features/skills/data/models/saved_search_model.dart';
 import 'package:myapp/features/skills/data/models/skill_model.dart';
 import 'package:myapp/features/skills/data/repository/skill_repository_impl.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
@@ -313,6 +314,108 @@ void main() {
       when(() => mockRemote.fetchAllSkills()).thenThrow(Exception());
 
       final result = await repository.fetchAllSkills();
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
+
+  group('saveSearch', () {
+    final data = {
+      'userId': 'user1',
+      'query': 'flutter',
+    };
+
+    test('should save search on success', () async {
+      when(() => mockRemote.saveSearch(any()))
+          .thenAnswer((_) async {});
+
+      final result = await repository.saveSearch(data);
+
+      expect(result.isRight(), true);
+      verify(() => mockRemote.saveSearch(data)).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.saveSearch(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.saveSearch(data);
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+
+    test('should return ServerFailure on generic exception', () async {
+      when(() => mockRemote.saveSearch(any())).thenThrow(Exception());
+
+      final result = await repository.saveSearch(data);
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
+
+  group('fetchSavedSearches', () {
+    final tSearches = <SavedSearchModel>[];
+
+    test('should fetch saved searches on success', () async {
+      when(() => mockRemote.fetchSavedSearches(any()))
+          .thenAnswer((_) async => tSearches);
+
+      final result = await repository.fetchSavedSearches('user1');
+
+      expect(result.isRight(), true);
+      verify(() => mockRemote.fetchSavedSearches('user1')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.fetchSavedSearches(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.fetchSavedSearches('user1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+
+    test('should return ServerFailure on generic exception', () async {
+      when(() => mockRemote.fetchSavedSearches(any()))
+          .thenThrow(Exception());
+
+      final result = await repository.fetchSavedSearches('user1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
+
+  group('deleteSavedSearch', () {
+    test('should delete saved search on success', () async {
+      when(() => mockRemote.deleteSavedSearch(any()))
+          .thenAnswer((_) async {});
+
+      final result = await repository.deleteSavedSearch('search1');
+
+      expect(result.isRight(), true);
+      verify(() => mockRemote.deleteSavedSearch('search1')).called(1);
+    });
+
+    test('should return ServerFailure when remote throws', () async {
+      when(() => mockRemote.deleteSavedSearch(any()))
+          .thenThrow(ServerException());
+
+      final result = await repository.deleteSavedSearch('search1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+
+    test('should return ServerFailure on generic exception', () async {
+      when(() => mockRemote.deleteSavedSearch(any()))
+          .thenThrow(Exception());
+
+      final result = await repository.deleteSavedSearch('search1');
 
       expect(result.isLeft(), true);
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());

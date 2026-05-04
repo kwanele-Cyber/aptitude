@@ -24,6 +24,7 @@ import 'package:myapp/features/skills/presentation/pages/browse_skills_feed_page
 import 'package:myapp/features/skills/presentation/pages/search_skills_page.dart';
 import 'package:myapp/features/skills/presentation/pages/skill_details_page.dart';
 import 'package:myapp/features/skills/presentation/pages/filter_skills_page.dart';
+import 'package:myapp/features/skills/presentation/pages/saved_searches_page.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -118,6 +119,12 @@ class AppRouter {
       GoRoute(
         path: '/skills/filter',
         builder: (context, state) => const FilterSkillsPage(),
+      ),
+      GoRoute(
+        path: '/skills/saved-searches/:uid',
+        builder: (context, state) => SavedSearchesPage(
+          uid: state.pathParameters['uid'] ?? '',
+        ),
       ),
       GoRoute(
         path: '/account-recovery',
