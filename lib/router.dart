@@ -24,6 +24,8 @@ import 'package:myapp/features/skills/presentation/pages/browse_skills_feed_page
 import 'package:myapp/features/skills/presentation/pages/search_skills_page.dart';
 import 'package:myapp/features/skills/presentation/pages/skill_details_page.dart';
 import 'package:myapp/features/skills/presentation/pages/filter_skills_page.dart';
+import 'package:myapp/features/matchmaking/presentation/pages/match_history_page.dart';
+import 'package:myapp/features/matchmaking/presentation/pages/matchmaking_page.dart';
 import 'package:myapp/features/skills/presentation/pages/saved_searches_page.dart';
 
 class AppRouter {
@@ -124,6 +126,16 @@ class AppRouter {
         path: '/skills/saved-searches/:uid',
         builder: (context, state) => SavedSearchesPage(
           uid: state.pathParameters['uid'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: '/matches',
+        builder: (context, state) => const MatchmakingPage(),
+      ),
+      GoRoute(
+        path: '/matches/history/:uid',
+        builder: (context, state) => MatchHistoryPage(
+          userId: state.pathParameters['uid'] ?? '',
         ),
       ),
       GoRoute(
