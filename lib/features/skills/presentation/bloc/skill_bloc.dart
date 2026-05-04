@@ -2,7 +2,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myapp/features/skills/domain/usecases/archive_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/clone_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/save_search_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/delete_saved_search_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/fetch_saved_searches_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/get_skill_by_id_usecase.dart';
@@ -23,6 +26,9 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
   final SearchSkillsUseCase searchSkillsUseCase;
   final FilterSkillsUseCase filterSkillsUseCase;
   final GetSkillByIdUseCase getSkillByIdUseCase;
+  final SaveSearchUseCase saveSearchUseCase;
+  final FetchSavedSearchesUseCase fetchSavedSearchesUseCase;
+  final DeleteSavedSearchUseCase deleteSavedSearchUseCase;
 
   SkillBloc({
     required this.createSkillOfferUseCase,
@@ -35,6 +41,9 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     required this.searchSkillsUseCase,
     required this.filterSkillsUseCase,
     required this.getSkillByIdUseCase,
+    required this.saveSearchUseCase,
+    required this.fetchSavedSearchesUseCase,
+    required this.deleteSavedSearchUseCase,
   }) : super(SkillInitial()) {
     on<CreateSkillOfferRequested>(_onCreateSkillOfferRequested);
     on<UpdateSkillRequested>(_onUpdateSkillRequested);
@@ -47,6 +56,9 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
     on<FilterSkillsRequested>(_onFilterSkillsRequested);
     on<BrowseSkillsFeedRequested>(_onBrowseSkillsFeedRequested);
     on<ViewSkillDetailsRequested>(_onViewSkillDetailsRequested);
+    on<SaveSearchRequested>(_onSaveSearchRequested);
+    on<FetchSavedSearchesRequested>(_onFetchSavedSearchesRequested);
+    on<DeleteSavedSearchRequested>(_onDeleteSavedSearchRequested);
   }
 
   Future _onCreateSkillOfferRequested(
@@ -282,6 +294,66 @@ class SkillBloc extends Bloc<SkillEvent, SkillState> {
       },
       (right) async {
         emit(SkillDetailsLoaded(skill: right));
+      },
+    );
+  }
+
+  Future _onSaveSearchRequested(
+    SaveSearchRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await saveSearchUseCase(
+      SaveSearchParams(
+        userId: event.userId,
+        query: event.query,
+      ),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to save search'));
+      },
+      (right) async {
+        emit(SearchSaved(query: event.query));
+      },
+    );
+  }
+
+  Future _onFetchSavedSearchesRequested(
+    FetchSavedSearchesRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await fetchSavedSearchesUseCase(
+      FetchSavedSearchesParams(uid: event.uid),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to fetch saved searches'));
+      },
+      (right) async {
+        emit(SavedSearchesFetched(searches: right));
+      },
+    );
+  }
+
+  Future _onDeleteSavedSearchRequested(
+    DeleteSavedSearchRequested event,
+    Emitter<SkillState> emit,
+  ) async {
+    emit(SkillLoading());
+    final result = await deleteSavedSearchUseCase(
+      DeleteSavedSearchParams(id: event.id),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(SkillError(message: 'Failed to delete saved search'));
+      },
+      (right) async {
+        emit(SavedSearchDeleted(id: event.id));
       },
     );
   }

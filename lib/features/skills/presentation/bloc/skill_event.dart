@@ -121,6 +121,34 @@ class ViewSkillDetailsRequested extends SkillEvent {
   List<Object?> get props => [id];
 }
 
+class SaveSearchRequested extends SkillEvent {
+  final String userId;
+  final String query;
+
+  SaveSearchRequested({required this.userId, required this.query});
+
+  @override
+  List<Object?> get props => [userId, query];
+}
+
+class FetchSavedSearchesRequested extends SkillEvent {
+  final String uid;
+
+  FetchSavedSearchesRequested({required this.uid});
+
+  @override
+  List<Object?> get props => [uid];
+}
+
+class DeleteSavedSearchRequested extends SkillEvent {
+  final String id;
+
+  DeleteSavedSearchRequested({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}
+
 class FilterSkillsRequested extends SkillEvent {
   final String? category;
   final SkillLevel? level;

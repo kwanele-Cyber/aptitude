@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:myapp/features/skills/domain/entity/saved_search_entity.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 
 abstract class SkillState extends Equatable {
@@ -99,6 +100,33 @@ class SkillDetailsLoaded extends SkillState {
 
   @override
   List<Object?> get props => [skill];
+}
+
+class SearchSaved extends SkillState {
+  final String query;
+
+  SearchSaved({required this.query});
+
+  @override
+  List<Object?> get props => [query];
+}
+
+class SavedSearchesFetched extends SkillState {
+  final List<SavedSearchEntity> searches;
+
+  SavedSearchesFetched({required this.searches});
+
+  @override
+  List<Object?> get props => [searches];
+}
+
+class SavedSearchDeleted extends SkillState {
+  final String id;
+
+  SavedSearchDeleted({required this.id});
+
+  @override
+  List<Object?> get props => [id];
 }
 
 class SkillsFiltered extends SkillState {

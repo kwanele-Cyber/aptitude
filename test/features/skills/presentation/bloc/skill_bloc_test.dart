@@ -13,6 +13,9 @@ import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart
 import 'package:myapp/features/skills/domain/usecases/get_skill_by_id_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/save_search_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/fetch_saved_searches_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/delete_saved_search_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
@@ -40,6 +43,14 @@ class MockFilterSkillsUseCase extends Mock implements FilterSkillsUseCase {}
 
 class MockGetSkillByIdUseCase extends Mock implements GetSkillByIdUseCase {}
 
+class MockSaveSearchUseCase extends Mock implements SaveSearchUseCase {}
+
+class MockFetchSavedSearchesUseCase extends Mock
+    implements FetchSavedSearchesUseCase {}
+
+class MockDeleteSavedSearchUseCase extends Mock
+    implements DeleteSavedSearchUseCase {}
+
 final tSkill = SkillEntity(
   id: 'skill1',
   title: 'Flutter',
@@ -62,6 +73,9 @@ void main() {
   late MockSearchSkillsUseCase mockSearchUseCase;
   late MockFilterSkillsUseCase mockFilterUseCase;
   late MockGetSkillByIdUseCase mockGetByIdUseCase;
+  late MockSaveSearchUseCase mockSaveSearchUseCase;
+  late MockFetchSavedSearchesUseCase mockFetchSavedSearchesUseCase;
+  late MockDeleteSavedSearchUseCase mockDeleteSavedSearchUseCase;
 
   setUpAll(() {
     registerFallbackValue(CreateSkillOfferParams(
@@ -87,6 +101,9 @@ void main() {
     registerFallbackValue(SearchSkillsParams(query: ''));
     registerFallbackValue(FilterSkillsParams());
     registerFallbackValue(GetSkillByIdParams(id: ''));
+    registerFallbackValue(SaveSearchParams(userId: '', query: ''));
+    registerFallbackValue(FetchSavedSearchesParams(uid: ''));
+    registerFallbackValue(DeleteSavedSearchParams(id: ''));
   });
 
   setUp(() {
@@ -100,6 +117,9 @@ void main() {
     mockSearchUseCase = MockSearchSkillsUseCase();
     mockFilterUseCase = MockFilterSkillsUseCase();
     mockGetByIdUseCase = MockGetSkillByIdUseCase();
+    mockSaveSearchUseCase = MockSaveSearchUseCase();
+    mockFetchSavedSearchesUseCase = MockFetchSavedSearchesUseCase();
+    mockDeleteSavedSearchUseCase = MockDeleteSavedSearchUseCase();
     bloc = SkillBloc(
       createSkillOfferUseCase: mockCreateUseCase,
       updateSkillUseCase: mockUpdateUseCase,
@@ -111,6 +131,9 @@ void main() {
       searchSkillsUseCase: mockSearchUseCase,
       filterSkillsUseCase: mockFilterUseCase,
       getSkillByIdUseCase: mockGetByIdUseCase,
+      saveSearchUseCase: mockSaveSearchUseCase,
+      fetchSavedSearchesUseCase: mockFetchSavedSearchesUseCase,
+      deleteSavedSearchUseCase: mockDeleteSavedSearchUseCase,
     );
   });
 
@@ -496,6 +519,100 @@ void main() {
       expect: () => [
         SkillLoading(),
         SkillError(message: 'Failed to load skill details'),
+      ],
+    );
+  });
+
+  group('SaveSearchRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SearchSaved] on success',
+      build: () {
+        when(() => mockSaveSearchUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(
+        SaveSearchRequested(userId: 'user1', query: 'flutter'),
+      ),
+      expect: () => [
+        SkillLoading(),
+        isA<SearchSaved>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockSaveSearchUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(
+        SaveSearchRequested(userId: 'user1', query: 'flutter'),
+      ),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to save search'),
+      ],
+    );
+  });
+
+  group('FetchSavedSearchesRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SavedSearchesFetched] on success',
+      build: () {
+        when(() => mockFetchSavedSearchesUseCase(any()))
+            .thenAnswer((_) async => Right([]));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(FetchSavedSearchesRequested(uid: 'user1')),
+      expect: () => [
+        SkillLoading(),
+        isA<SavedSearchesFetched>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockFetchSavedSearchesUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(FetchSavedSearchesRequested(uid: 'user1')),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to fetch saved searches'),
+      ],
+    );
+  });
+
+  group('DeleteSavedSearchRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SavedSearchDeleted] on success',
+      build: () {
+        when(() => mockDeleteSavedSearchUseCase(any()))
+            .thenAnswer((_) async => const Right(null));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(DeleteSavedSearchRequested(id: 'search1')),
+      expect: () => [
+        SkillLoading(),
+        isA<SavedSearchDeleted>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockDeleteSavedSearchUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(DeleteSavedSearchRequested(id: 'search1')),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to delete saved search'),
       ],
     );
   });
