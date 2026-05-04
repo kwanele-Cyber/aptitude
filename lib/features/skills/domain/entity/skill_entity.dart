@@ -17,6 +17,8 @@ class SkillEntity {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? archivedAt;
+  final bool isVerified;
+  final List<String> portfolioUrls;
 
   const SkillEntity({
     required this.id,
@@ -31,5 +33,7 @@ class SkillEntity {
     this.createdAt,
     this.updatedAt,
     this.archivedAt,
+    this.isVerified = false,
+    this.portfolioUrls = const [],
   });
 }

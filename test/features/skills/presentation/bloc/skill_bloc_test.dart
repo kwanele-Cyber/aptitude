@@ -12,6 +12,7 @@ import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/get_skill_by_id_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/submit_skill_verification_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/suggest_skill_category_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/save_search_usecase.dart';
@@ -55,6 +56,9 @@ class MockDeleteSavedSearchUseCase extends Mock
 class MockSuggestSkillCategoryUseCase extends Mock
     implements SuggestSkillCategoryUseCase {}
 
+class MockSubmitSkillVerificationUseCase extends Mock
+    implements SubmitSkillVerificationUseCase {}
+
 final tSkill = SkillEntity(
   id: 'skill1',
   title: 'Flutter',
@@ -81,6 +85,7 @@ void main() {
   late MockFetchSavedSearchesUseCase mockFetchSavedSearchesUseCase;
   late MockDeleteSavedSearchUseCase mockDeleteSavedSearchUseCase;
   late MockSuggestSkillCategoryUseCase mockSuggestSkillCategoryUseCase;
+  late MockSubmitSkillVerificationUseCase mockSubmitSkillVerificationUseCase;
 
   setUpAll(() {
     registerFallbackValue(CreateSkillOfferParams(
@@ -113,6 +118,9 @@ void main() {
       title: '',
       description: '',
     ));
+    registerFallbackValue(SubmitSkillVerificationParams(
+      skillId: '',
+    ));
   });
 
   setUp(() {
@@ -130,6 +138,7 @@ void main() {
     mockFetchSavedSearchesUseCase = MockFetchSavedSearchesUseCase();
     mockDeleteSavedSearchUseCase = MockDeleteSavedSearchUseCase();
     mockSuggestSkillCategoryUseCase = MockSuggestSkillCategoryUseCase();
+    mockSubmitSkillVerificationUseCase = MockSubmitSkillVerificationUseCase();
     bloc = SkillBloc(
       createSkillOfferUseCase: mockCreateUseCase,
       updateSkillUseCase: mockUpdateUseCase,
@@ -145,6 +154,7 @@ void main() {
       fetchSavedSearchesUseCase: mockFetchSavedSearchesUseCase,
       deleteSavedSearchUseCase: mockDeleteSavedSearchUseCase,
       suggestSkillCategoryUseCase: mockSuggestSkillCategoryUseCase,
+      submitSkillVerificationUseCase: mockSubmitSkillVerificationUseCase,
     );
   });
 
@@ -662,6 +672,43 @@ void main() {
       ),
       expect: () => [
         CategoriesSuggested(suggestions: []),
+      ],
+    );
+  });
+
+  group('SubmitVerificationRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, VerificationSubmitted] on success',
+      build: () {
+        when(() => mockSubmitSkillVerificationUseCase(any()))
+            .thenAnswer((_) async => Right(tSkill));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(
+        SubmitVerificationRequested(
+          skillId: 'skill1',
+          portfolioUrls: ['https://example.com/portfolio'],
+        ),
+      ),
+      expect: () => [
+        SkillLoading(),
+        isA<VerificationSubmitted>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockSubmitSkillVerificationUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(
+        SubmitVerificationRequested(skillId: 'skill1'),
+      ),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to submit verification'),
       ],
     );
   });
