@@ -1,5 +1,14 @@
 import 'package:get_it/get_it.dart';
 import 'package:myapp/features/auth/data/datasources/auth_local_datasource.dart';
+import 'package:myapp/features/matchmaking/data/datasources/match_remote_datasource.dart';
+import 'package:myapp/features/matchmaking/data/datasources/match_remote_datasource_firebase.dart';
+import 'package:myapp/features/matchmaking/data/repository/match_repository_impl.dart';
+import 'package:myapp/features/matchmaking/domain/repository/match_repository.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/fetch_match_history_usecase.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/generate_matches_usecase.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/update_match_status_usecase.dart';
+import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:myapp/features/auth/data/datasources/auth_remote_datasource_firebase.dart';
 import 'package:myapp/features/auth/data/repository/auth_repository_impl.dart';
@@ -141,6 +150,29 @@ Future init() async {
   );
   sl.registerLazySingleton<SkillRemoteDataSource>(
     () => SkillRemoteDataSourceFirebase(),
+  );
+
+  // Matchmaking
+  sl.registerFactory(() => MatchBloc(
+        generateMatchesUseCase: sl(),
+        updateMatchStatusUseCase: sl(),
+        saveMatchUseCase: sl(),
+        fetchMatchHistoryUseCase: sl(),
+      ));
+
+  sl.registerLazySingleton(
+      () => GenerateMatchesUseCase(repository: sl()));
+  sl.registerLazySingleton(
+      () => UpdateMatchStatusUseCase(repository: sl()));
+  sl.registerLazySingleton(() => SaveMatchUseCase(repository: sl()));
+  sl.registerLazySingleton(
+      () => FetchMatchHistoryUseCase(repository: sl()));
+
+  sl.registerLazySingleton<MatchRepository>(
+    () => MatchRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<MatchRemoteDataSource>(
+    () => MatchRemoteDataSourceFirebase(),
   );
 
   final sharedPreferences = await SharedPreferences.getInstance();
