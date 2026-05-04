@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
+import 'package:myapp/features/skills/domain/usecases/clone_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
@@ -22,6 +23,8 @@ class MockDeleteSkillUseCase extends Mock implements DeleteSkillUseCase {}
 class MockFetchUserSkillsUseCase extends Mock
     implements FetchUserSkillsUseCase {}
 
+class MockCloneSkillUseCase extends Mock implements CloneSkillUseCase {}
+
 final tSkill = SkillEntity(
   id: 'skill1',
   title: 'Flutter',
@@ -38,6 +41,7 @@ void main() {
   late MockUpdateSkillUseCase mockUpdateUseCase;
   late MockDeleteSkillUseCase mockDeleteUseCase;
   late MockFetchUserSkillsUseCase mockFetchUseCase;
+  late MockCloneSkillUseCase mockCloneUseCase;
 
   setUpAll(() {
     registerFallbackValue(CreateSkillOfferParams(
@@ -57,6 +61,7 @@ void main() {
     ));
     registerFallbackValue(DeleteSkillParams(id: ''));
     registerFallbackValue(FetchUserSkillsParams(uid: ''));
+    registerFallbackValue(CloneSkillParams(skillId: ''));
   });
 
   setUp(() {
@@ -64,11 +69,13 @@ void main() {
     mockUpdateUseCase = MockUpdateSkillUseCase();
     mockDeleteUseCase = MockDeleteSkillUseCase();
     mockFetchUseCase = MockFetchUserSkillsUseCase();
+    mockCloneUseCase = MockCloneSkillUseCase();
     bloc = SkillBloc(
       createSkillOfferUseCase: mockCreateUseCase,
       updateSkillUseCase: mockUpdateUseCase,
       deleteSkillUseCase: mockDeleteUseCase,
       fetchUserSkillsUseCase: mockFetchUseCase,
+      cloneSkillUseCase: mockCloneUseCase,
     );
   });
 
@@ -238,6 +245,36 @@ void main() {
       expect: () => [
         SkillLoading(),
         SkillError(message: 'Failed to fetch skills'),
+      ],
+    );
+  });
+
+  group('CloneSkillRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillCloned] on success',
+      build: () {
+        when(() => mockCloneUseCase(any()))
+            .thenAnswer((_) async => Right(tSkill));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(CloneSkillRequested(skillId: 'skill1')),
+      expect: () => [
+        SkillLoading(),
+        isA<SkillCloned>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockCloneUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(CloneSkillRequested(skillId: 'skill1')),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to clone skill'),
       ],
     );
   });
