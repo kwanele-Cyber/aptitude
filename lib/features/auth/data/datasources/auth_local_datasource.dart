@@ -25,7 +25,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
   @override
   Future<void> cacheUser(UserModel user) async {
-    await sharedPreferences.setString(cachedUser, user.toJson().toString());
+    await sharedPreferences.setString(cachedUser, json.encode(user.toJson()));
   }
 
   @override
