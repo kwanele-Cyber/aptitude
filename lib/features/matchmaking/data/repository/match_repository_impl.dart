@@ -65,4 +65,21 @@ class MatchRepositoryImpl implements MatchRepository {
       return Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, void>> submitFeedback(
+      String matchId, int rating, String? comment) async {
+    try {
+      await remoteDataSource.saveFeedback(matchId, {
+        'rating': rating,
+        'comment': comment ?? '',
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+      return const Right(null);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
 }

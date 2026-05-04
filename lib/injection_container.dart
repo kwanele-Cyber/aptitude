@@ -7,6 +7,7 @@ import 'package:myapp/features/matchmaking/domain/repository/match_repository.da
 import 'package:myapp/features/matchmaking/domain/usecases/fetch_match_history_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/generate_matches_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/submit_match_feedback_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/update_match_status_usecase.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -157,16 +158,20 @@ Future init() async {
         generateMatchesUseCase: sl(),
         updateMatchStatusUseCase: sl(),
         saveMatchUseCase: sl(),
-        fetchMatchHistoryUseCase: sl(),
+        fetchMatchHistoryUseCase: sl(), 
+        submitMatchFeedbackUseCase: sl(),
       ));
 
   sl.registerLazySingleton(
       () => GenerateMatchesUseCase(repository: sl()));
   sl.registerLazySingleton(
       () => UpdateMatchStatusUseCase(repository: sl()));
-  sl.registerLazySingleton(() => SaveMatchUseCase(repository: sl()));
+  sl.registerLazySingleton(
+    () => SaveMatchUseCase(repository: sl()));
   sl.registerLazySingleton(
       () => FetchMatchHistoryUseCase(repository: sl()));
+  sl.registerLazySingleton(
+      () => SubmitMatchFeedbackUseCase(repository: sl()));
 
   sl.registerLazySingleton<MatchRepository>(
     () => MatchRepositoryImpl(remoteDataSource: sl()),

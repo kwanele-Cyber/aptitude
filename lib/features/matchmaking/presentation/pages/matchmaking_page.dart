@@ -15,6 +15,10 @@ class MatchmakingPage extends StatefulWidget {
 
 class _MatchmakingPageState extends State<MatchmakingPage> {
   String? _userId;
+  double _minScore = 0;
+  double _minTrustScore = 0;
+  double _maxDistance = double.infinity;
+  bool _verifiedOnly = false;
 
   @override
   void initState() {
@@ -28,10 +32,115 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
     }
   }
 
+  List<dynamic> _applyFilters(List<dynamic> matches) {
+    return matches.where((m) {
+      if (m.score < _minScore) return false;
+      if (m.targetTrustScore < _minTrustScore) return false;
+      if (_verifiedOnly && !m.targetIsVerified) return false;
+      if (_maxDistance.isFinite &&
+          m.distance != null &&
+          m.distance > _maxDistance) return false;
+      return true;
+    }).toList();
+  }
+
+  Future<void> _showFilterDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Filter Matches'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _FilterSlider(
+                  label: 'Min Match Score',
+                  value: _minScore,
+                  onChanged: (v) => setDialogState(() => _minScore = v),
+                ),
+                const SizedBox(height: 8),
+                _FilterSlider(
+                  label: 'Min Trust Score',
+                  value: _minTrustScore,
+                  onChanged: (v) => setDialogState(() => _minTrustScore = v),
+                ),
+                const SizedBox(height: 8),
+                _FilterSlider(
+                  label: 'Max Distance (km)',
+                  value: _maxDistance.isFinite ? _maxDistance : 200,
+                  max: 200,
+                  onChanged: (v) => setDialogState(() {
+                    _maxDistance = v >= 200 ? double.infinity : v;
+                  }),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Text('Verified Only'),
+                    const Spacer(),
+                    Switch(
+                      value: _verifiedOnly,
+                      onChanged: (v) =>
+                          setDialogState(() => _verifiedOnly = v),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setDialogState(() {
+                  _minScore = 0;
+                  _minTrustScore = 0;
+                  _maxDistance = double.infinity;
+                  _verifiedOnly = false;
+                });
+              },
+              child: const Text('Reset'),
+            ),
+            FilledButton(
+              onPressed: () {
+                setState(() {});
+                Navigator.of(context).pop();
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showFeedbackDialog(BuildContext context, String matchId) async {
+    final rating = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rate this match'),
+        content: _RatingSelector(),
+      ),
+    );
+    if (rating != null && mounted) {
+      context
+          .read<MatchBloc>()
+          .add(SubmitFeedbackRequested(matchId: matchId, rating: rating));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Discover Matches')),
+      appBar: AppBar(
+        title: const Text('Discover Matches'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+          ),
+        ],
+      ),
       body: BlocBuilder<MatchBloc, MatchState>(
         builder: (context, state) {
           if (state is MatchLoading) {
@@ -39,8 +148,8 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
           }
 
           if (state is MatchesLoaded) {
-            final matches = state.matches;
-            if (matches.isEmpty) {
+            final filtered = _applyFilters(state.matches);
+            if (filtered.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -48,13 +157,15 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
                     const Icon(Icons.search_off, size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
                     const Text(
-                      'No matches found yet',
+                      'No matches found',
                       style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Create more skill listings to get matches',
-                      style: TextStyle(color: Colors.grey),
+                    Text(
+                      state.matches.isEmpty
+                          ? 'Create more skill listings to get matches'
+                          : 'Try adjusting your filters',
+                      style: const TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
@@ -73,16 +184,18 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
               );
             }
             return _MatchCardStack(
-              matches: matches,
+              matches: filtered,
               onAccept: (matchId) {
                 context
                     .read<MatchBloc>()
                     .add(AcceptMatchRequested(matchId: matchId));
+                _showFeedbackDialog(context, matchId);
               },
               onReject: (matchId) {
                 context
                     .read<MatchBloc>()
                     .add(RejectMatchRequested(matchId: matchId));
+                _showFeedbackDialog(context, matchId);
               },
               onIgnore: (matchId) {
                 context
@@ -117,6 +230,39 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
           return const Center(child: Text('Ready to find matches'));
         },
       ),
+    );
+  }
+}
+
+class _FilterSlider extends StatelessWidget {
+  final String label;
+  final double value;
+  final double max;
+  final ValueChanged<double> onChanged;
+
+  const _FilterSlider({
+    required this.label,
+    required this.value,
+    this.max = 100,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label: ${max > 100 ? value.toStringAsFixed(0) : value.toStringAsFixed(0)}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        Slider(
+          value: value.clamp(0, max),
+          max: max,
+          divisions: max > 100 ? 40 : 20,
+          onChanged: onChanged,
+        ),
+      ],
     );
   }
 }
@@ -186,7 +332,7 @@ class _MatchCardStack extends StatelessWidget {
                 Text(match.targetSkillCategory,
                     style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 4),
-                Text('${match.targetSkillLevel.name} · ${match.targetSkillFormat.name}'),
+                Text('${match.targetSkillLevel.name} · ${match.targetSkillFormat.name}${match.distance != null ? ' · ${match.distance!.toStringAsFixed(1)} km' : ''}'),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -220,6 +366,48 @@ class _MatchCardStack extends StatelessWidget {
     if (score >= 70) return Colors.green;
     if (score >= 40) return Colors.orange;
     return Colors.grey;
+  }
+}
+
+class _RatingSelector extends StatefulWidget {
+  @override
+  State<_RatingSelector> createState() => _RatingSelectorState();
+}
+
+class _RatingSelectorState extends State<_RatingSelector> {
+  int _selected = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text('How was this match?',
+            style: TextStyle(fontSize: 16)),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(5, (i) {
+            final star = i + 1;
+            return IconButton(
+              icon: Icon(
+                star <= _selected ? Icons.star : Icons.star_border,
+                color: Colors.amber,
+                size: 36,
+              ),
+              onPressed: () => setState(() => _selected = star),
+            );
+          }),
+        ),
+        const SizedBox(height: 16),
+        FilledButton(
+          onPressed: _selected > 0
+              ? () => Navigator.of(context).pop(_selected)
+              : null,
+          child: const Text('Submit'),
+        ),
+      ],
+    );
   }
 }
 

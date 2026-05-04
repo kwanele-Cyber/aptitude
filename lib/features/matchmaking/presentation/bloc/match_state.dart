@@ -38,6 +38,15 @@ class MatchHistoryLoaded extends MatchState {
   List<Object?> get props => [matches];
 }
 
+class FeedbackSubmitted extends MatchState {
+  final String matchId;
+
+  FeedbackSubmitted({required this.matchId});
+
+  @override
+  List<Object?> get props => [matchId];
+}
+
 class MatchError extends MatchState {
   final String message;
 

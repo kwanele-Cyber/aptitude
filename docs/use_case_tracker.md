@@ -83,28 +83,28 @@ description:
 ### Matching Engine
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| M01 | ❌ Todo | Generate Matches | AI-powered matching algorithm |
-| M02 | ❌ Todo | Rank Matches | Score-based prioritization (0-100) |
-| M03 | ❌ Todo | Fetch Matches | Retrieve daily match suggestions |
-| M04 | ❌ Todo | Geo-Proximity Scoring | Haversine-based distance ranking |
-| M05 | ❌ Todo | Availability Matching | Match based on time slot compatibility |
-| M06 | ❌ Todo | Skill Level Matching | Balance expert/beginner matches with scoring bonus |
+| M01 | ✅ Done | Generate Matches | AI-powered matching algorithm |
+| M02 | ✅ Done | Rank Matches | Score-based prioritization (0-100) |
+| M03 | ✅ Done | Fetch Matches | Retrieve daily match suggestions |
+| M04 | ✅ Done | Geo-Proximity Scoring | Haversine-based distance ranking |
+| M05 | ✅ Done | Availability Matching | Match based on time slot compatibility |
+| M06 | ✅ Done | Skill Level Matching | Balance expert/beginner matches with scoring bonus |
 
 ### Match Interaction
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| M07 | ❌ Todo | Accept Match | User accepts match suggestion |
-| M08 | ❌ Todo | Reject Match | User declines with reason (optional) |
-| M09 | ❌ Todo | Ignore Match | Passive dismissal (no notification) |
-| M10 | ❌ Todo | Match Filtering | Filter by trust score, location, verified status |
-| M11 | ❌ Todo | Save Match | Bookmark match for later review |
-| M12 | ❌ Todo | Match History | View past accepted/rejected matches |
+| M07 | ✅ Done | Accept Match | User accepts match suggestion |
+| M08 | ✅ Done | Reject Match | User declines with reason (optional) |
+| M09 | ✅ Done | Ignore Match | Passive dismissal (no notification) |
+| M10 | ✅ Done | Match Filtering | Filter by trust score, location, verified status |
+| M11 | ✅ Done | Save Match | Bookmark match for later review |
+| M12 | ✅ Done | Match History | View past accepted/rejected matches |
 
 ### Match Optimization
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| M13 | ❌ Todo | Feedback on Matches | Rate match quality to improve algorithm |
-| M14 | ❌ Todo | Refresh Matches | Request new match suggestions (RefreshIndicator) |
+| M13 | ✅ Done | Feedback on Matches | Rate match quality to improve algorithm |
+| M14 | ✅ Done | Refresh Matches | Request new match suggestions (RefreshIndicator) |
 
 ---
 

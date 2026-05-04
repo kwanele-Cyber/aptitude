@@ -58,3 +58,18 @@ class FetchMatchHistoryRequested extends MatchEvent {
   @override
   List<Object?> get props => [userId];
 }
+
+class SubmitFeedbackRequested extends MatchEvent {
+  final String matchId;
+  final int rating;
+  final String? comment;
+
+  SubmitFeedbackRequested({
+    required this.matchId,
+    required this.rating,
+    this.comment,
+  });
+
+  @override
+  List<Object?> get props => [matchId, rating, comment];
+}

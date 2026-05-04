@@ -17,6 +17,8 @@ class MatchModel extends MatchEntity {
     required super.targetSkillFormat,
     super.targetTrustScore,
     super.targetIsVerified,
+    super.distance,
+    super.targetAvailability,
   });
 
   factory MatchModel.fromJson(String key, Map<String, dynamic> json) {
@@ -36,6 +38,11 @@ class MatchModel extends MatchEntity {
       targetSkillFormat: _parseFormat(json['targetSkillFormat'] as String?),
       targetTrustScore: (json['targetTrustScore'] as num?)?.toDouble() ?? 0,
       targetIsVerified: json['targetIsVerified'] as bool? ?? false,
+      distance: (json['distance'] as num?)?.toDouble(),
+      targetAvailability: (json['targetAvailability'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 
@@ -54,6 +61,8 @@ class MatchModel extends MatchEntity {
       'targetSkillFormat': targetSkillFormat.name,
       'targetTrustScore': targetTrustScore,
       'targetIsVerified': targetIsVerified,
+      'distance': distance,
+      'targetAvailability': targetAvailability,
     };
   }
 
