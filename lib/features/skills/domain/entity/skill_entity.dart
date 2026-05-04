@@ -1,3 +1,5 @@
+enum SkillType { offer, request }
+
 enum SkillLevel { beginner, intermediate, advanced }
 
 enum SkillFormat { online, inPerson, both }
@@ -7,6 +9,7 @@ class SkillEntity {
   final String title;
   final String description;
   final String category;
+  final SkillType type;
   final SkillLevel level;
   final SkillFormat format;
   final String userId;
@@ -19,6 +22,7 @@ class SkillEntity {
     required this.title,
     required this.description,
     required this.category,
+    this.type = SkillType.offer,
     required this.level,
     required this.format,
     required this.userId,

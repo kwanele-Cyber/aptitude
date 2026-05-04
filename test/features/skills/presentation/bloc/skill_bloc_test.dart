@@ -46,7 +46,7 @@ void main() {
   });
 
   group('CreateSkillOfferRequested', () {
-    final event = CreateSkillOfferRequested(
+    final offerEvent = CreateSkillOfferRequested(
       title: 'Flutter',
       description: 'Test',
       category: 'Tech',
@@ -62,7 +62,7 @@ void main() {
             .thenAnswer((_) async => Right(tSkill));
         return bloc;
       },
-      act: (bloc) => bloc.add(event),
+      act: (bloc) => bloc.add(offerEvent),
       expect: () => [
         SkillLoading(),
         isA<SkillOfferCreated>(),
@@ -76,11 +76,36 @@ void main() {
             .thenAnswer((_) async => Left(ServerFailure()));
         return bloc;
       },
-      act: (bloc) => bloc.add(event),
+      act: (bloc) => bloc.add(offerEvent),
       expect: () => [
         SkillLoading(),
         SkillError(message: 'Failed to create skill offer'),
       ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'handles SkillType.request correctly',
+      build: () {
+        when(() => mockUseCase(any()))
+            .thenAnswer((_) async => Right(tSkill));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(CreateSkillOfferRequested(
+        title: 'Guitar Lessons',
+        description: 'Test',
+        category: 'Music',
+        type: SkillType.request,
+        level: SkillLevel.beginner,
+        format: SkillFormat.online,
+        tags: ['music'],
+      )),
+      expect: () => [
+        SkillLoading(),
+        isA<SkillOfferCreated>(),
+      ],
+      verify: (_) {
+        verify(() => mockUseCase(any())).called(1);
+      },
     );
   });
 }

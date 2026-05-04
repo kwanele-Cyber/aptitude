@@ -6,6 +6,7 @@ class SkillModel extends SkillEntity {
     required super.title,
     required super.description,
     required super.category,
+    super.type,
     required super.level,
     required super.format,
     required super.userId,
@@ -20,6 +21,7 @@ class SkillModel extends SkillEntity {
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       category: json['category'] as String? ?? '',
+      type: parseType(json['type'] as String?),
       level: parseLevel(json['level'] as String?),
       format: parseFormat(json['format'] as String?),
       userId: json['userId'] as String? ?? '',
@@ -38,6 +40,7 @@ class SkillModel extends SkillEntity {
       'title': title,
       'description': description,
       'category': category,
+      'type': type.name,
       'level': level.name,
       'format': format.name,
       'userId': userId,
@@ -45,6 +48,15 @@ class SkillModel extends SkillEntity {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
+  }
+
+  static SkillType parseType(String? type) {
+    switch (type) {
+      case 'request':
+        return SkillType.request;
+      default:
+        return SkillType.offer;
+    }
   }
 
   static SkillLevel parseLevel(String? level) {

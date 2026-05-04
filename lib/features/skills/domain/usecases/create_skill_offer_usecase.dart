@@ -17,6 +17,7 @@ class CreateSkillOfferUseCase
       'title': params.title,
       'description': params.description,
       'category': params.category,
+      'type': params.type.name,
       'level': params.level.name,
       'format': params.format.name,
       'tags': params.tags,
@@ -28,6 +29,7 @@ class CreateSkillOfferParams {
   final String title;
   final String description;
   final String category;
+  final SkillType type;
   final SkillLevel level;
   final SkillFormat format;
   final List<String> tags;
@@ -36,6 +38,7 @@ class CreateSkillOfferParams {
     required this.title,
     required this.description,
     required this.category,
+    this.type = SkillType.offer,
     required this.level,
     required this.format,
     this.tags = const [],

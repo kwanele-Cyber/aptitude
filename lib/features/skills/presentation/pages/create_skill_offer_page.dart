@@ -7,7 +7,9 @@ import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
 
 class CreateSkillOfferPage extends StatefulWidget {
-  const CreateSkillOfferPage({super.key});
+  final SkillType type;
+
+  const CreateSkillOfferPage({super.key, this.type = SkillType.offer});
 
   @override
   State<CreateSkillOfferPage> createState() => _CreateSkillOfferPageState();
@@ -45,6 +47,7 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
             category: _categoryController.text.trim(),
+            type: widget.type,
             level: _level,
             format: _format,
             tags: tags,
@@ -52,10 +55,13 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
         );
   }
 
+  String get _title =>
+      widget.type == SkillType.offer ? 'Create Skill Offer' : 'Create Skill Request';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Skill Offer')),
+      appBar: AppBar(title: Text(_title)),
       body: BlocListener<SkillBloc, SkillState>(
         listener: (context, state) {
           if (state is SkillOfferCreated) {
