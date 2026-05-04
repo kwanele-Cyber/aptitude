@@ -8,6 +8,7 @@ import 'package:myapp/features/skills/domain/usecases/clone_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
@@ -34,6 +35,8 @@ class MockRestoreSkillUseCase extends Mock implements RestoreSkillUseCase {}
 
 class MockSearchSkillsUseCase extends Mock implements SearchSkillsUseCase {}
 
+class MockFilterSkillsUseCase extends Mock implements FilterSkillsUseCase {}
+
 final tSkill = SkillEntity(
   id: 'skill1',
   title: 'Flutter',
@@ -54,6 +57,7 @@ void main() {
   late MockArchiveSkillUseCase mockArchiveUseCase;
   late MockRestoreSkillUseCase mockRestoreUseCase;
   late MockSearchSkillsUseCase mockSearchUseCase;
+  late MockFilterSkillsUseCase mockFilterUseCase;
 
   setUpAll(() {
     registerFallbackValue(CreateSkillOfferParams(
@@ -77,6 +81,7 @@ void main() {
     registerFallbackValue(ArchiveSkillParams(id: ''));
     registerFallbackValue(RestoreSkillParams(id: ''));
     registerFallbackValue(SearchSkillsParams(query: ''));
+    registerFallbackValue(FilterSkillsParams());
   });
 
   setUp(() {
@@ -88,6 +93,7 @@ void main() {
     mockArchiveUseCase = MockArchiveSkillUseCase();
     mockRestoreUseCase = MockRestoreSkillUseCase();
     mockSearchUseCase = MockSearchSkillsUseCase();
+    mockFilterUseCase = MockFilterSkillsUseCase();
     bloc = SkillBloc(
       createSkillOfferUseCase: mockCreateUseCase,
       updateSkillUseCase: mockUpdateUseCase,
@@ -97,6 +103,7 @@ void main() {
       archiveSkillUseCase: mockArchiveUseCase,
       restoreSkillUseCase: mockRestoreUseCase,
       searchSkillsUseCase: mockSearchUseCase,
+      filterSkillsUseCase: mockFilterUseCase,
     );
   });
 
@@ -388,6 +395,38 @@ void main() {
       expect: () => [
         SkillLoading(),
         SkillError(message: 'Failed to search skills'),
+      ],
+    );
+  });
+
+  group('FilterSkillsRequested', () {
+    final tSkills = [tSkill];
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillsFiltered] on success',
+      build: () {
+        when(() => mockFilterUseCase(any()))
+            .thenAnswer((_) async => Right(tSkills));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(FilterSkillsRequested(category: 'Tech')),
+      expect: () => [
+        SkillLoading(),
+        isA<SkillsFiltered>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [SkillLoading, SkillError] on failure',
+      build: () {
+        when(() => mockFilterUseCase(any()))
+            .thenAnswer((_) async => Left(ServerFailure()));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(FilterSkillsRequested(category: 'Tech')),
+      expect: () => [
+        SkillLoading(),
+        SkillError(message: 'Failed to filter skills'),
       ],
     );
   });

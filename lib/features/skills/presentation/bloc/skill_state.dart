@@ -83,6 +83,25 @@ class SkillsSearchCompleted extends SkillState {
   List<Object?> get props => [query, skills];
 }
 
+class SkillsFiltered extends SkillState {
+  final List<SkillEntity> skills;
+  final String? category;
+  final SkillLevel? level;
+  final SkillFormat? format;
+  final SkillType? type;
+
+  SkillsFiltered({
+    required this.skills,
+    this.category,
+    this.level,
+    this.format,
+    this.type,
+  });
+
+  @override
+  List<Object?> get props => [skills, category, level, format, type];
+}
+
 class SkillError extends SkillState {
   final String message;
 

@@ -10,6 +10,7 @@ abstract class SkillRemoteDataSource {
   Future<void> archiveSkill(String id);
   Future<void> restoreSkill(String id);
   Future<List<SkillModel>> searchSkills(String query);
+  Future<List<SkillModel>> fetchAllSkills();
 }
 
 class SkillRemoteDataSourceMock implements SkillRemoteDataSource {
@@ -82,6 +83,12 @@ class SkillRemoteDataSourceMock implements SkillRemoteDataSource {
 
   @override
   Future<List<SkillModel>> searchSkills(String query) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return [];
+  }
+
+  @override
+  Future<List<SkillModel>> fetchAllSkills() async {
     await Future.delayed(const Duration(seconds: 1));
     return [];
   }
