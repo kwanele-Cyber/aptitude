@@ -12,6 +12,7 @@ import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/get_skill_by_id_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/suggest_skill_category_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/save_search_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_saved_searches_usecase.dart';
@@ -51,6 +52,9 @@ class MockFetchSavedSearchesUseCase extends Mock
 class MockDeleteSavedSearchUseCase extends Mock
     implements DeleteSavedSearchUseCase {}
 
+class MockSuggestSkillCategoryUseCase extends Mock
+    implements SuggestSkillCategoryUseCase {}
+
 final tSkill = SkillEntity(
   id: 'skill1',
   title: 'Flutter',
@@ -76,6 +80,7 @@ void main() {
   late MockSaveSearchUseCase mockSaveSearchUseCase;
   late MockFetchSavedSearchesUseCase mockFetchSavedSearchesUseCase;
   late MockDeleteSavedSearchUseCase mockDeleteSavedSearchUseCase;
+  late MockSuggestSkillCategoryUseCase mockSuggestSkillCategoryUseCase;
 
   setUpAll(() {
     registerFallbackValue(CreateSkillOfferParams(
@@ -104,6 +109,10 @@ void main() {
     registerFallbackValue(SaveSearchParams(userId: '', query: ''));
     registerFallbackValue(FetchSavedSearchesParams(uid: ''));
     registerFallbackValue(DeleteSavedSearchParams(id: ''));
+    registerFallbackValue(SuggestSkillCategoryParams(
+      title: '',
+      description: '',
+    ));
   });
 
   setUp(() {
@@ -120,6 +129,7 @@ void main() {
     mockSaveSearchUseCase = MockSaveSearchUseCase();
     mockFetchSavedSearchesUseCase = MockFetchSavedSearchesUseCase();
     mockDeleteSavedSearchUseCase = MockDeleteSavedSearchUseCase();
+    mockSuggestSkillCategoryUseCase = MockSuggestSkillCategoryUseCase();
     bloc = SkillBloc(
       createSkillOfferUseCase: mockCreateUseCase,
       updateSkillUseCase: mockUpdateUseCase,
@@ -134,6 +144,7 @@ void main() {
       saveSearchUseCase: mockSaveSearchUseCase,
       fetchSavedSearchesUseCase: mockFetchSavedSearchesUseCase,
       deleteSavedSearchUseCase: mockDeleteSavedSearchUseCase,
+      suggestSkillCategoryUseCase: mockSuggestSkillCategoryUseCase,
     );
   });
 
@@ -613,6 +624,44 @@ void main() {
       expect: () => [
         SkillLoading(),
         SkillError(message: 'Failed to delete saved search'),
+      ],
+    );
+  });
+
+  group('SuggestCategoryRequested', () {
+    blocTest<SkillBloc, SkillState>(
+      'emits [CategoriesSuggested] with suggestions on match',
+      build: () {
+        when(() => mockSuggestSkillCategoryUseCase(any()))
+            .thenReturn(['Technology', 'Music']);
+        return bloc;
+      },
+      act: (bloc) => bloc.add(
+        SuggestCategoryRequested(
+          title: 'Flutter App',
+          description: 'Mobile development',
+        ),
+      ),
+      expect: () => [
+        isA<CategoriesSuggested>(),
+      ],
+    );
+
+    blocTest<SkillBloc, SkillState>(
+      'emits [CategoriesSuggested] with empty list on no match',
+      build: () {
+        when(() => mockSuggestSkillCategoryUseCase(any()))
+            .thenReturn(<String>[]);
+        return bloc;
+      },
+      act: (bloc) => bloc.add(
+        SuggestCategoryRequested(
+          title: 'Xyzabc',
+          description: 'Qwerty',
+        ),
+      ),
+      expect: () => [
+        CategoriesSuggested(suggestions: []),
       ],
     );
   });

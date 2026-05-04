@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myapp/core/validators/validators.dart';
@@ -23,6 +25,7 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
   SkillLevel _level = SkillLevel.beginner;
   SkillFormat _format = SkillFormat.online;
   final _tagsController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void dispose() {
@@ -30,7 +33,23 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
     _descriptionController.dispose();
     _categoryController.dispose();
     _tagsController.dispose();
+    _debounce?.cancel();
     super.dispose();
+  }
+
+  void _onFieldChanged() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final title = _titleController.text.trim();
+      final description = _descriptionController.text.trim();
+      if (title.isEmpty && description.isEmpty) return;
+      context.read<SkillBloc>().add(
+            SuggestCategoryRequested(
+              title: title,
+              description: description,
+            ),
+          );
+    });
   }
 
   void _submit() {
@@ -102,6 +121,7 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
                       ),
                       validator: (v) =>
                           Validators.nonEmpty(v, fieldName: 'Title'),
+                      onChanged: (_) => _onFieldChanged(),
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: 16),
@@ -115,6 +135,7 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
                       maxLines: 4,
                       validator: (v) =>
                           Validators.nonEmpty(v, fieldName: 'Description'),
+                      onChanged: (_) => _onFieldChanged(),
                       enabled: !isLoading,
                     ),
                     const SizedBox(height: 16),
@@ -129,6 +150,36 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
                           Validators.nonEmpty(v, fieldName: 'Category'),
                       enabled: !isLoading,
                     ),
+                    if (state is CategoriesSuggested) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: state
+                            .suggestions
+                            .map(
+                              (suggestion) => ActionChip(
+                                label: Text(
+                                  suggestion,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                onPressed: () {
+                                  _categoryController.text = suggestion;
+                                  context.read<SkillBloc>().add(
+                                        SuggestCategoryRequested(
+                                          title: '',
+                                          description: '',
+                                        ),
+                                      );
+                                },
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     DropdownButtonFormField<SkillLevel>(
                       value: _level,

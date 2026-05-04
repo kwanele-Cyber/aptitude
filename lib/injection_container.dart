@@ -34,6 +34,7 @@ import 'package:myapp/features/skills/domain/usecases/get_skill_by_id_usecase.da
 import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/restore_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/search_skills_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/suggest_skill_category_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/save_search_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/fetch_saved_searches_usecase.dart';
@@ -109,6 +110,7 @@ Future init() async {
         saveSearchUseCase: sl(),
         fetchSavedSearchesUseCase: sl(),
         deleteSavedSearchUseCase: sl(),
+        suggestSkillCategoryUseCase: sl(),
       ));
 
   sl.registerLazySingleton(() => CreateSkillOfferUseCase(repository: sl()));
@@ -127,6 +129,8 @@ Future init() async {
       () => FetchSavedSearchesUseCase(repository: sl()));
   sl.registerLazySingleton(
       () => DeleteSavedSearchUseCase(repository: sl()));
+  sl.registerLazySingleton(
+      () => SuggestSkillCategoryUseCase());
 
   sl.registerLazySingleton<SkillRepository>(
     () => SkillRepositoryImpl(remoteDataSource: sl()),
