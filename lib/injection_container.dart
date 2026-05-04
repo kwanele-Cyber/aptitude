@@ -27,6 +27,7 @@ import 'package:myapp/features/skills/data/repository/skill_repository_impl.dart
 import 'package:myapp/features/skills/domain/repository/skill_repository.dart';
 import 'package:myapp/features/skills/domain/usecases/create_skill_offer_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/delete_skill_usecase.dart';
+import 'package:myapp/features/skills/domain/usecases/fetch_user_skills_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,11 +90,14 @@ Future init() async {
         createSkillOfferUseCase: sl(),
         updateSkillUseCase: sl(),
         deleteSkillUseCase: sl(),
+        fetchUserSkillsUseCase: sl(),
       ));
 
   sl.registerLazySingleton(() => CreateSkillOfferUseCase(repository: sl()));
   sl.registerLazySingleton(() => UpdateSkillUseCase(repository: sl()));
   sl.registerLazySingleton(() => DeleteSkillUseCase(repository: sl()));
+  sl.registerLazySingleton(
+      () => FetchUserSkillsUseCase(repository: sl()));
 
   sl.registerLazySingleton<SkillRepository>(
     () => SkillRepositoryImpl(remoteDataSource: sl()),

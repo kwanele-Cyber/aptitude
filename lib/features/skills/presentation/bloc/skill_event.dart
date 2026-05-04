@@ -64,3 +64,12 @@ class DeleteSkillRequested extends SkillEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class FetchUserSkillsRequested extends SkillEvent {
+  final String uid;
+
+  FetchUserSkillsRequested({required this.uid});
+
+  @override
+  List<Object?> get props => [uid];
+}

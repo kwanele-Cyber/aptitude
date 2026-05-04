@@ -37,6 +37,15 @@ class SkillDeleted extends SkillState {
   List<Object?> get props => [id];
 }
 
+class UserSkillsFetched extends SkillState {
+  final List<SkillEntity> skills;
+
+  UserSkillsFetched({required this.skills});
+
+  @override
+  List<Object?> get props => [skills];
+}
+
 class SkillError extends SkillState {
   final String message;
 

@@ -4,6 +4,7 @@ abstract class SkillRemoteDataSource {
   Future<SkillModel> createSkill(Map<String, dynamic> data);
   Future<SkillModel> updateSkill(String id, Map<String, dynamic> data);
   Future<void> deleteSkill(String id);
+  Future<List<SkillModel>> fetchUserSkills(String uid);
 }
 
 class SkillRemoteDataSourceMock implements SkillRemoteDataSource {
@@ -42,5 +43,11 @@ class SkillRemoteDataSourceMock implements SkillRemoteDataSource {
   @override
   Future<void> deleteSkill(String id) async {
     await Future.delayed(const Duration(seconds: 1));
+  }
+
+  @override
+  Future<List<SkillModel>> fetchUserSkills(String uid) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return [];
   }
 }
