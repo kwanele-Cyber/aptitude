@@ -82,6 +82,7 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
         password: password,
       );
       final uid = credential.user!.uid;
+      await credential.user!.sendEmailVerification();
       final user = UserModel(
         id: uid,
         firstName: firstName,

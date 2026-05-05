@@ -46,8 +46,13 @@ class _AccountRecoveryPageState extends State<AccountRecoveryPage> {
           }
         },
         builder: (context, state) {
-          return Padding(
-            padding: const EdgeInsets.all(24),
+          return SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
             child: Form(
               key: _formKey,
               child: Column(

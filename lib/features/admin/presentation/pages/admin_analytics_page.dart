@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -29,14 +30,14 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       appBar: AdminAppBar(title: 'Analytics'),
-      drawer: isWide ? null : _buildDrawer(context),
+      drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
-          if (isWide) const AdminSidebar(),
+          if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
           Expanded(child: _buildContent(theme)),
         ],
@@ -109,38 +110,49 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
       _MetricData('Avg Rating', '4.6', '+2.1%', Colors.purple, Icons.star),
     ];
 
+    if (ResponsiveUtils.isMobile(context)) {
+      return Column(
+        children: metrics.map((m) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _metricCard(theme, m),
+        )).toList(),
+      );
+    }
+
     return Row(
-      children: metrics.map((m) => Expanded(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      children: metrics.map((m) => Expanded(child: _metricCard(theme, m))).toList(),
+    );
+  }
+
+  Widget _metricCard(ThemeData theme, _MetricData m) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(m.icon, size: 18, color: m.color),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                    child: Text(m.change, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green)),
-                  ),
-                ],
+              Icon(m.icon, size: 18, color: m.color),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                child: Text(m.change, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green)),
               ),
-              const SizedBox(height: 12),
-              Text(m.value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
-              const SizedBox(height: 4),
-              Text(m.label, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
             ],
           ),
-        ),
-      )).toList(),
+          const SizedBox(height: 12),
+          Text(m.value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+          const SizedBox(height: 4),
+          Text(m.label, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+        ],
+      ),
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -29,14 +30,14 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       appBar: AdminAppBar(title: 'Role Management'),
-      drawer: isWide ? null : _buildDrawer(context),
+      drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
-          if (isWide) const AdminSidebar(),
+          if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
           Expanded(child: _buildContent(theme)),
         ],
@@ -64,15 +65,27 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
             ],
           ),
           const SizedBox(height: 20),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 2, child: _buildRoleList(theme)),
-              const SizedBox(width: 24),
-              if (_editingRoleIndex != null)
-                Expanded(flex: 3, child: _buildEditPanel(theme, _mockRoles[_editingRoleIndex!])),
-            ],
-          ),
+          ResponsiveUtils.isDesktop(context) || _editingRoleIndex == null
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: _buildRoleList(theme)),
+                  if (_editingRoleIndex != null) ...[
+                    const SizedBox(width: 24),
+                    Expanded(flex: 3, child: _buildEditPanel(theme, _mockRoles[_editingRoleIndex!])),
+                  ],
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildRoleList(theme),
+                  if (_editingRoleIndex != null) ...[
+                    const SizedBox(height: 24),
+                    _buildEditPanel(theme, _mockRoles[_editingRoleIndex!]),
+                  ],
+                ],
+              ),
         ],
       ),
     );

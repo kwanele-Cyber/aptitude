@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -37,14 +38,14 @@ class _AdminAuditLogPageState extends State<AdminAuditLogPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       appBar: AdminAppBar(title: 'Audit Log'),
-      drawer: isWide ? null : _buildDrawer(context),
+      drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
-          if (isWide) const AdminSidebar(),
+          if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
           Expanded(child: _buildContent(theme)),
         ],
@@ -77,34 +78,64 @@ class _AdminAuditLogPageState extends State<AdminAuditLogPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              SizedBox(
-                width: 320,
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search log entries...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    isDense: true,
+          if (ResponsiveUtils.isMobile(context))
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search log entries...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => setState(() {}),
                   ),
-                  onChanged: (_) => setState(() {}),
                 ),
-              ),
-              const SizedBox(width: 12),
-              _dropdownFilter(theme, _adminFilter, ['All Admins', 'Admin_A', 'Admin_B', 'Admin_C', 'System'], (v) => setState(() => _adminFilter = v)),
-              const SizedBox(width: 8),
-              _dropdownFilter(theme, _actionFilter, ['All Actions', 'Login', 'User Management', 'Content Moderation', 'Dispute Resolution', 'System Config', 'Broadcast'], (v) => setState(() => _actionFilter = v)),
-              const Spacer(),
-              FilledButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.download, size: 16),
-                label: const Text('Export'),
-              ),
-            ],
-          ),
+                _dropdownFilter(theme, _adminFilter, ['All Admins', 'Admin_A', 'Admin_B', 'Admin_C', 'System'], (v) => setState(() => _adminFilter = v)),
+                _dropdownFilter(theme, _actionFilter, ['All Actions', 'Login', 'User Management', 'Content Moderation', 'Dispute Resolution', 'System Config', 'Broadcast'], (v) => setState(() => _actionFilter = v)),
+                FilledButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.download, size: 16),
+                  label: const Text('Export'),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search log entries...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _dropdownFilter(theme, _adminFilter, ['All Admins', 'Admin_A', 'Admin_B', 'Admin_C', 'System'], (v) => setState(() => _adminFilter = v)),
+                const SizedBox(width: 8),
+                _dropdownFilter(theme, _actionFilter, ['All Actions', 'Login', 'User Management', 'Content Moderation', 'Dispute Resolution', 'System Config', 'Broadcast'], (v) => setState(() => _actionFilter = v)),
+                const Spacer(),
+                FilledButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.download, size: 16),
+                  label: const Text('Export'),
+                ),
+              ],
+            ),
           const SizedBox(height: 8),
           Row(
             children: [

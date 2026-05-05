@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
@@ -68,9 +69,7 @@ class _SearchSkillsPageState extends State<SearchSkillsPage> {
                   trailing: Chip(
                     label: Text(skill.level.name),
                   ),
-                  onTap: () {
-                    // Navigate to skill details in the future
-                  },
+                  onTap: () => context.push('/skills/details/${skill.id}'),
                 );
               },
             );

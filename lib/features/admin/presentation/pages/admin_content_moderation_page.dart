@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -39,14 +40,14 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       appBar: AdminAppBar(title: 'Content Moderation'),
-      drawer: isWide ? null : _buildDrawer(context),
+      drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
-          if (isWide) const AdminSidebar(),
+          if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
           Expanded(child: _buildContent(theme)),
         ],
@@ -116,30 +117,55 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
   Widget _buildSearchAndFilter(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 320,
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search flagged content...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                isDense: true,
-              ),
-              onChanged: (_) => setState(() {}),
+      child: ResponsiveUtils.isMobile(context)
+          ? Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search flagged content...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                _dropdownFilter(theme, _typeFilter, ['All Types', 'Messages', 'Reviews', 'Profiles', 'Notes', 'Images'], (v) => setState(() => _typeFilter = v)),
+                _dropdownFilter(theme, _statusFilter, ['Pending', 'Under Review', 'Resolved', 'Dismissed'], (v) => setState(() => _statusFilter = v)),
+                _dropdownFilter(theme, _priorityFilter, ['All', 'High', 'Medium', 'Low'], (v) => setState(() => _priorityFilter = v)),
+              ],
+            )
+          : Row(
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search flagged content...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _dropdownFilter(theme, _typeFilter, ['All Types', 'Messages', 'Reviews', 'Profiles', 'Notes', 'Images'], (v) => setState(() => _typeFilter = v)),
+                const SizedBox(width: 8),
+                _dropdownFilter(theme, _statusFilter, ['Pending', 'Under Review', 'Resolved', 'Dismissed'], (v) => setState(() => _statusFilter = v)),
+                const SizedBox(width: 8),
+                _dropdownFilter(theme, _priorityFilter, ['All', 'High', 'Medium', 'Low'], (v) => setState(() => _priorityFilter = v)),
+              ],
             ),
-          ),
-          const SizedBox(width: 12),
-          _dropdownFilter(theme, _typeFilter, ['All Types', 'Messages', 'Reviews', 'Profiles', 'Notes', 'Images'], (v) => setState(() => _typeFilter = v)),
-          const SizedBox(width: 8),
-          _dropdownFilter(theme, _statusFilter, ['Pending', 'Under Review', 'Resolved', 'Dismissed'], (v) => setState(() => _statusFilter = v)),
-          const SizedBox(width: 8),
-          _dropdownFilter(theme, _priorityFilter, ['All', 'High', 'Medium', 'Low'], (v) => setState(() => _priorityFilter = v)),
-        ],
-      ),
     );
   }
 

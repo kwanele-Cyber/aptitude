@@ -45,6 +45,7 @@ class AppRouter {
   AppRouter({required this.authBloc});
 
   static const _publicRoutes = <String>{
+    '/',
     '/login',
     '/register',
     '/forgot-password',
@@ -80,7 +81,17 @@ class AppRouter {
       final isPublicRoute = _publicRoutes.contains(location);
 
       if (authState is AuthUnauthenticated || authState is AuthError) {
+        //if on root route and not loggedin, redirect to login
+        if (location == '/') {
+          return '/login';
+        }
+        //default behavior for unauthenticated users: allow access to public routes, redirect to login for everything else
         return isPublicRoute ? null : '/login';
+      }
+
+      if (authState is AuthRequires2FA) {
+        final verifyPath = '/2fa-verify/${authState.uid}';
+        return location != verifyPath ? verifyPath : null;
       }
 
       if (authState is AuthAuthenticated) {
@@ -98,8 +109,12 @@ class AppRouter {
           return '/home';
         }
 
-        // Authenticated user on /login -> redirect to appropriate dashboard
-        if (location == '/login') {
+        // Authenticated user on login or 2FA verify -> redirect to dashboard
+        if (location == '/login' || location.startsWith('/2fa-verify')) {
+          return isAdmin ? '/admin' : '/home';
+        }
+
+        if (location == '/') {
           return isAdmin ? '/admin' : '/home';
         }
       }
