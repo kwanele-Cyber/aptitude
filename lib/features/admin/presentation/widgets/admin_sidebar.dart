@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -64,13 +65,25 @@ class AdminSidebar extends StatelessWidget {
           label: Text('Config'),
         ),
       ],
-      trailing: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: IconButton(
-          icon: const Icon(Icons.logout),
-          tooltip: 'Sign out',
-          onPressed: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
-        ),
+      trailing: Column(
+        children: [
+          if (kDebugMode)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: IconButton(
+                icon: const Icon(Icons.science_outlined),
+                tooltip: 'Seed Data',
+                isSelected: _selectedIndex(location) == 6,
+                selectedIcon: const Icon(Icons.science),
+                onPressed: () => context.go('/admin/seed'),
+              ),
+            ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sign out',
+            onPressed: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
+          ),
+        ],
       ),
     );
   }

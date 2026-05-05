@@ -37,7 +37,7 @@ class UserModel extends UserEntity {
           (json['interests'] as List?)?.map((e) => e.toString()).toList() ?? [],
       bio: json['bio'] as String? ?? '',
       location: json['location'] is Map
-          ? AddressModel.fromJson(json['location'] as Map<String, dynamic>)
+          ? AddressModel.fromJson(Map<String, dynamic>.from(json['location'] as Map))
           : const AddressModel.empty(),
       phone: json['phone'] as String?,
       profileComplete: json['profileComplete'] as bool? ?? false,

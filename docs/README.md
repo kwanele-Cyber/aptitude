@@ -184,3 +184,4 @@ Design documentation for every screen — existing and planned.
 ## Reference
 
 - [Use Case Tracker](../use_case_tracker.md)
+- [Data ERD](diagrams/data_erd.md) — complete entity-relationship diagram
