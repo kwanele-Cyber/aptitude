@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -28,14 +29,14 @@ class _AdminDatabasePageState extends State<AdminDatabasePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       appBar: AdminAppBar(title: 'Database Admin'),
-      drawer: isWide ? null : _buildDrawer(context),
+      drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
-          if (isWide) const AdminSidebar(),
+          if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
           Expanded(child: _buildContent(theme)),
         ],
@@ -71,37 +72,43 @@ class _AdminDatabasePageState extends State<AdminDatabasePage> {
       _DbStat('Last Backup', 'Today 06:45', Icons.backup, Colors.purple),
     ];
 
-    return Row(
-      children: cards.map((c) => Expanded(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(color: c.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: Icon(c.icon, color: c.color, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(c.value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface)),
-                    Text(c.label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: cards.map((c) => SizedBox(
+        width: ResponsiveUtils.isMobile(context) ? double.infinity : (ResponsiveUtils.isTablet(context) ? 200 : null),
+        child: _dbStatCard(theme, c),
       )).toList(),
+    );
+  }
+
+  Widget _dbStatCard(ThemeData theme, _DbStat c) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(color: c.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            child: Icon(c.icon, color: c.color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(c.value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface)),
+                Text(c.label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -251,36 +258,26 @@ class _AdminDatabasePageState extends State<AdminDatabasePage> {
   Widget _buildBackupTools(ThemeData theme) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.backup, size: 18),
-                label: const Text('Create Backup'),
-                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.restore, size: 18),
-                label: const Text('Restore from Backup'),
-                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.auto_fix_high, size: 18),
-                label: const Text('Run Maintenance'),
-                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-              ),
-            ),
-          ],
-        ),
+        if (ResponsiveUtils.isMobile(context))
+          Column(
+            children: [
+              _backupBtn(theme, Icons.backup, 'Create Backup'),
+              const SizedBox(height: 8),
+              _backupBtn(theme, Icons.restore, 'Restore from Backup'),
+              const SizedBox(height: 8),
+              _backupBtn(theme, Icons.auto_fix_high, 'Run Maintenance'),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(child: _backupBtn(theme, Icons.backup, 'Create Backup')),
+              const SizedBox(width: 12),
+              Expanded(child: _backupBtn(theme, Icons.restore, 'Restore from Backup')),
+              const SizedBox(width: 12),
+              Expanded(child: _backupBtn(theme, Icons.auto_fix_high, 'Run Maintenance')),
+            ],
+          ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(12),
@@ -294,6 +291,15 @@ class _AdminDatabasePageState extends State<AdminDatabasePage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _backupBtn(ThemeData theme, IconData icon, String label) {
+    return OutlinedButton.icon(
+      onPressed: () {},
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
     );
   }
 

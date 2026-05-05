@@ -36,6 +36,15 @@ class AuthPasswordUpdated extends AuthState {}
 
 class AuthVerificationEmailSent extends AuthState {}
 
+class AuthRequires2FA extends AuthState {
+  final String uid;
+
+  AuthRequires2FA({required this.uid});
+
+  @override
+  List<Object?> get props => [uid];
+}
+
 class Auth2FAVerified extends AuthState {}
 
 class AuthRecoveryCodesGenerated extends AuthState {

@@ -81,8 +81,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         builder: (context, state) {
           final isLoading = state is AuthLoading;
 
-          return Padding(
-            padding: const EdgeInsets.all(20),
+          return SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

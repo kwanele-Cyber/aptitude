@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -67,14 +68,14 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       appBar: AdminAppBar(title: 'System Configuration'),
-      drawer: isWide ? null : _buildDrawer(context),
+      drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
-          if (isWide) const AdminSidebar(),
+          if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
           Expanded(child: _buildContent(theme)),
         ],
@@ -237,25 +238,26 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
   Widget _sliderRow(ThemeData theme, String label, double value, double min, double max, ValueChanged<double> onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(width: 180, child: Text(label, style: const TextStyle(fontSize: 14))),
-          Expanded(
-            child: Slider(
-              value: value,
-              min: min,
-              max: max,
-              divisions: max == 100 ? 20 : (max as int).toInt(),
-              label: value.round().toString(),
-              onChanged: onChanged,
-            ),
+      child: ResponsiveUtils.isMobile(context)
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 14)),
+              Row(
+                children: [
+                  Expanded(child: Slider(value: value, min: min, max: max, divisions: max == 100 ? 20 : max.round(), label: value.round().toString(), onChanged: onChanged)),
+                  SizedBox(width: 40, child: Text(value.round().toString(), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.primary))),
+                ],
+              ),
+            ],
+          )
+        : Row(
+            children: [
+              SizedBox(width: 180, child: Text(label, style: const TextStyle(fontSize: 14))),
+              Expanded(child: Slider(value: value, min: min, max: max, divisions: max == 100 ? 20 : max.round(), label: value.round().toString(), onChanged: onChanged)),
+              SizedBox(width: 40, child: Text(value.round().toString(), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.primary))),
+            ],
           ),
-          SizedBox(
-            width: 40,
-            child: Text(value.round().toString(), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.primary)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -294,24 +296,42 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
   Widget _inputRow(ThemeData theme, String label, TextEditingController ctrl) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(width: 200, child: Text(label, style: const TextStyle(fontSize: 14))),
-          SizedBox(
-            width: 120,
-            child: TextField(
-              controller: ctrl,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: ResponsiveUtils.isMobile(context)
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 14)),
+              const SizedBox(height: 4),
+              TextField(
+                controller: ctrl,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (_) => _markChanged(),
               ),
-              keyboardType: TextInputType.number,
-              onChanged: (_) => _markChanged(),
-            ),
+            ],
+          )
+        : Row(
+            children: [
+              SizedBox(width: 200, child: Text(label, style: const TextStyle(fontSize: 14))),
+              SizedBox(
+                width: 120,
+                child: TextField(
+                  controller: ctrl,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => _markChanged(),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 

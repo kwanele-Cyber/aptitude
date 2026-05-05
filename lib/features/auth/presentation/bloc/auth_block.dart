@@ -91,7 +91,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             },
             (r) {
               if (r != null) {
-                emit(AuthAuthenticated(userEntity: r));
+                if (r.twoFactorEnabled) {
+                  emit(AuthRequires2FA(uid: r.id));
+                } else {
+                  emit(AuthAuthenticated(userEntity: r));
+                }
               } else {
                 emit(AuthUnauthenticated());
               }
@@ -126,7 +130,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError(message: message));
       },
       (right) async {
-        emit(AuthAuthenticated(userEntity: right));
+        if (right.twoFactorEnabled) {
+          emit(AuthRequires2FA(uid: right.id));
+        } else {
+          emit(AuthAuthenticated(userEntity: right));
+        }
       },
     );
   }
@@ -286,7 +294,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (right) async {
         if (right) {
-          emit(Auth2FAVerified());
+          final userResult = await getCurrentUserUsecase(NoParams());
+          await userResult.fold(
+            (l) async {
+              emit(AuthError(message: 'Failed to load user after verification'));
+            },
+            (r) async {
+              if (r != null) {
+                emit(AuthAuthenticated(userEntity: r));
+              } else {
+                emit(AuthError(message: 'User not found'));
+              }
+            },
+          );
         } else {
           emit(AuthError(message: 'Invalid 2FA PIN'));
         }

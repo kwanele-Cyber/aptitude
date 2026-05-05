@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
@@ -154,6 +155,7 @@ class _FilterSkillsPageState extends State<FilterSkillsPage> {
                         title: Text(skill.title),
                         subtitle: Text(
                             '${skill.level.name} - ${skill.format.name}'),
+                        onTap: () => context.push('/skills/details/${skill.id}'),
                       );
                     },
                   );
