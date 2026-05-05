@@ -37,7 +37,7 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
 
       return SkillModel.fromJson(
         skillRef.key ?? '',
-        snapshot.value as Map<String, dynamic>,
+        Map<String, dynamic>.from(snapshot.value as Map),
       );
     } catch (e) {
       if (e is ServerException) rethrow;
@@ -63,7 +63,7 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
 
       return SkillModel.fromJson(
         skillRef.key ?? '',
-        snapshot.value as Map<String, dynamic>,
+        Map<String, dynamic>.from(snapshot.value as Map),
       );
     } catch (e) {
       if (e is ServerException) rethrow;
@@ -92,7 +92,7 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
 
       return SkillModel.fromJson(
         snapshot.key ?? '',
-        snapshot.value as Map<String, dynamic>,
+        Map<String, dynamic>.from(snapshot.value as Map),
       );
     } catch (e) {
       if (e is ServerException) rethrow;
@@ -132,13 +132,13 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
       if (!snapshot.exists) return [];
 
       final skills = <SkillModel>[];
-      final map = snapshot.value as Map<String, dynamic>?;
+      final map = snapshot.value is Map ? Map<String, dynamic>.from(snapshot.value as Map) : null;
       if (map == null) return [];
 
       map.forEach((key, value) {
         skills.add(SkillModel.fromJson(
           key,
-          value as Map<String, dynamic>,
+          Map<String, dynamic>.from(value as Map),
         ));
       });
       return skills;
@@ -154,13 +154,13 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
       final snapshot = await _skillsRef.get();
       if (!snapshot.exists) return [];
 
-      final map = snapshot.value as Map<String, dynamic>?;
+      final map = snapshot.value is Map ? Map<String, dynamic>.from(snapshot.value as Map) : null;
       if (map == null) return [];
 
       final lowerQuery = query.toLowerCase();
       final skills = <SkillModel>[];
       map.forEach((key, value) {
-        final data = value as Map<String, dynamic>;
+        final data = Map<String, dynamic>.from(value as Map);
         final archivedAt = data['archivedAt'] as String?;
         if (archivedAt != null) return;
 
@@ -190,12 +190,12 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
       final snapshot = await _skillsRef.get();
       if (!snapshot.exists) return [];
 
-      final map = snapshot.value as Map<String, dynamic>?;
+      final map = snapshot.value is Map ? Map<String, dynamic>.from(snapshot.value as Map) : null;
       if (map == null) return [];
 
       final skills = <SkillModel>[];
       map.forEach((key, value) {
-        final data = value as Map<String, dynamic>;
+        final data = Map<String, dynamic>.from(value as Map);
         final archivedAt = data['archivedAt'] as String?;
         if (archivedAt != null) return;
 
@@ -228,13 +228,13 @@ class SkillRemoteDataSourceFirebase implements SkillRemoteDataSource {
           await _savedSearchesRef.orderByChild('userId').equalTo(uid).get();
       if (!snapshot.exists) return [];
 
-      final map = snapshot.value as Map<String, dynamic>?;
+      final map = snapshot.value is Map ? Map<String, dynamic>.from(snapshot.value as Map) : null;
       if (map == null) return [];
 
       final searches = <SavedSearchModel>[];
       map.forEach((key, value) {
         searches.add(SavedSearchModel.fromJson(
-            key, value as Map<String, dynamic>));
+            key, Map<String, dynamic>.from(value as Map)));
       });
       searches.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return searches;
