@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -159,6 +160,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _ActionTile(Icons.settings, 'System Config', () => context.go('/admin/config')),
       _ActionTile(Icons.campaign, 'Broadcast', () => context.go('/admin/broadcast')),
       _ActionTile(Icons.record_voice_over, 'Audit Log', () => context.go('/admin/audit')),
+      if (kDebugMode)
+        _ActionTile(Icons.science, 'Seed Data', () => context.go('/admin/seed')),
     ];
 
     return GridView.builder(

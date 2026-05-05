@@ -1,0 +1,9 @@
+name: aptitude_seeder
+description: Standalone CLI seeder for the Aptitude development database.
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  http: ^1.2.0

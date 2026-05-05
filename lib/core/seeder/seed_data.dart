@@ -1,0 +1,329 @@
+class SeedUser {
+  final String email;
+  final String password;
+  final String firstName;
+  final String lastName;
+  final String role;
+  final String title;
+  final String bio;
+  final List<String> skills;
+  final List<String> interests;
+  final double latitude;
+  final double longitude;
+  final String addressLabel;
+  final double trustScore;
+
+  const SeedUser({
+    required this.email,
+    required this.password,
+    required this.firstName,
+    required this.lastName,
+    this.role = 'member',
+    required this.title,
+    required this.bio,
+    required this.skills,
+    required this.interests,
+    required this.latitude,
+    required this.longitude,
+    required this.addressLabel,
+    this.trustScore = 70.0,
+  });
+}
+
+class SeedSkill {
+  final String ownerEmail;
+  final String title;
+  final String description;
+  final String category;
+  final String type;
+  final String level;
+  final String format;
+  final List<String> tags;
+  final List<String> availability;
+
+  const SeedSkill({
+    required this.ownerEmail,
+    required this.title,
+    required this.description,
+    required this.category,
+    required this.type,
+    required this.level,
+    required this.format,
+    required this.tags,
+    this.availability = const ['weekday_morning', 'weekday_afternoon'],
+  });
+}
+
+const List<SeedUser> seedUsers = [
+  SeedUser(
+    email: 'admin@aptitude.test',
+    password: 'SeedPassword123!',
+    firstName: 'Alex',
+    lastName: 'Admin',
+    role: 'admin',
+    title: 'Platform Administrator',
+    bio: 'Platform administrator and community manager.',
+    skills: ['System Architecture', 'Code Review', 'Team Leadership'],
+    interests: ['Technology', 'Mentorship', 'Open Source'],
+    latitude: 37.7749,
+    longitude: -122.4194,
+    addressLabel: 'San Francisco, CA',
+    trustScore: 85.0,
+  ),
+  SeedUser(
+    email: 'alice@aptitude.test',
+    password: 'SeedPassword123!',
+    firstName: 'Alice',
+    lastName: 'Chen',
+    title: 'Senior Flutter Developer',
+    bio: 'Full-stack developer passionate about teaching mobile development and helping others break into tech.',
+    skills: ['Flutter', 'Dart', 'Firebase', 'UI/UX Design'],
+    interests: ['Mobile Development', 'Teaching', 'Open Source'],
+    latitude: 37.7833,
+    longitude: -122.4167,
+    addressLabel: 'San Francisco, CA',
+    trustScore: 82.0,
+  ),
+  SeedUser(
+    email: 'bob@aptitude.test',
+    password: 'SeedPassword123!',
+    firstName: 'Bob',
+    lastName: 'Martinez',
+    title: 'Music Teacher & Developer',
+    bio: 'Musician and language enthusiast. I teach guitar and music theory, learning Python and data science.',
+    skills: ['Guitar', 'Music Theory', 'Spanish'],
+    interests: ['Music', 'Languages', 'Programming'],
+    latitude: 37.7849,
+    longitude: -122.4094,
+    addressLabel: 'San Francisco, CA',
+    trustScore: 65.0,
+  ),
+  SeedUser(
+    email: 'carol@aptitude.test',
+    password: 'SeedPassword123!',
+    firstName: 'Carol',
+    lastName: 'Williams',
+    title: 'Digital Artist & Yoga Instructor',
+    bio: 'Digital artist specializing in watercolor and illustration. Also a certified yoga instructor.',
+    skills: ['Watercolor', 'Digital Illustration', 'Yoga', 'UI Design'],
+    interests: ['Art', 'Design', 'Wellness', 'Yoga'],
+    latitude: 37.7719,
+    longitude: -122.4128,
+    addressLabel: 'San Francisco, CA',
+    trustScore: 78.0,
+  ),
+  SeedUser(
+    email: 'dave@aptitude.test',
+    password: 'SeedPassword123!',
+    firstName: 'Dave',
+    lastName: 'Kim',
+    title: 'Chef & Photographer',
+    bio: 'Professional chef exploring the world of food photography. Looking to learn Japanese.',
+    skills: ['Cooking', 'Food Photography', 'Knife Skills'],
+    interests: ['Cooking', 'Photography', 'Japanese Culture'],
+    latitude: 37.7694,
+    longitude: -122.4142,
+    addressLabel: 'San Francisco, CA',
+    trustScore: 60.0,
+  ),
+  SeedUser(
+    email: 'eve@aptitude.test',
+    password: 'SeedPassword123!',
+    firstName: 'Eve',
+    lastName: 'Johnson',
+    title: 'Business Strategist',
+    bio: 'Business strategist and wellness coach. Helping startups grow and people find balance.',
+    skills: ['Business Strategy', 'Growth Marketing', 'Mindfulness'],
+    interests: ['Business', 'Wellness', 'Data Analytics'],
+    latitude: 37.7765,
+    longitude: -122.4182,
+    addressLabel: 'San Francisco, CA',
+    trustScore: 72.0,
+  ),
+];
+
+const List<SeedSkill> seedSkills = [
+  // Alex - admin
+  SeedSkill(
+    ownerEmail: 'admin@aptitude.test',
+    title: 'System Architecture Consulting',
+    description: 'Learn how to design scalable system architectures for your projects.',
+    category: 'Technology',
+    type: 'offer',
+    level: 'advanced',
+    format: 'online',
+    tags: ['architecture', 'scalability', 'cloud', 'system-design'],
+  ),
+  SeedSkill(
+    ownerEmail: 'admin@aptitude.test',
+    title: 'Code Review Mentorship',
+    description: 'Get expert code review and learn best practices for clean code.',
+    category: 'Technology',
+    type: 'offer',
+    level: 'advanced',
+    format: 'online',
+    tags: ['code-review', 'clean-code', 'best-practices', 'mentorship'],
+  ),
+
+  // Alice
+  SeedSkill(
+    ownerEmail: 'alice@aptitude.test',
+    title: 'Flutter Development Workshop',
+    description: 'Learn Flutter from scratch or level up your existing skills with hands-on projects.',
+    category: 'Technology',
+    type: 'offer',
+    level: 'advanced',
+    format: 'both',
+    tags: ['flutter', 'dart', 'mobile', 'cross-platform'],
+    availability: ['weekday_evening', 'weekend_morning'],
+  ),
+  SeedSkill(
+    ownerEmail: 'alice@aptitude.test',
+    title: 'Spanish Conversation Practice',
+    description: 'Practice conversational Spanish with a native speaker. All levels welcome.',
+    category: 'Languages',
+    type: 'request',
+    level: 'intermediate',
+    format: 'inPerson',
+    tags: ['spanish', 'conversation', 'language'],
+    availability: ['weekday_evening', 'weekend_afternoon'],
+  ),
+
+  // Bob
+  SeedSkill(
+    ownerEmail: 'bob@aptitude.test',
+    title: 'Guitar for Beginners',
+    description: 'Learn guitar basics: chords, strumming patterns, and your first songs.',
+    category: 'Music',
+    type: 'offer',
+    level: 'beginner',
+    format: 'inPerson',
+    tags: ['guitar', 'music', 'beginner', 'acoustic'],
+    availability: ['weekday_evening', 'weekend_morning'],
+  ),
+  SeedSkill(
+    ownerEmail: 'bob@aptitude.test',
+    title: 'Music Theory 101',
+    description: 'Understand scales, chords, harmony, and rhythm. Perfect for aspiring musicians.',
+    category: 'Music',
+    type: 'offer',
+    level: 'intermediate',
+    format: 'online',
+    tags: ['music-theory', 'harmony', 'rhythm', 'composition'],
+  ),
+  SeedSkill(
+    ownerEmail: 'bob@aptitude.test',
+    title: 'Learn Python for Data Science',
+    description: 'Looking to learn Python for data analysis and machine learning.',
+    category: 'Technology',
+    type: 'request',
+    level: 'beginner',
+    format: 'both',
+    tags: ['python', 'data-science', 'machine-learning'],
+    availability: ['weekday_evening', 'weekend_afternoon'],
+  ),
+
+  // Carol
+  SeedSkill(
+    ownerEmail: 'carol@aptitude.test',
+    title: 'Watercolor Painting Fundamentals',
+    description: 'Master watercolor techniques from basic washes to advanced compositions.',
+    category: 'Art & Design',
+    type: 'offer',
+    level: 'intermediate',
+    format: 'both',
+    tags: ['watercolor', 'painting', 'art', 'creative'],
+    availability: ['weekday_morning', 'weekend_morning'],
+  ),
+  SeedSkill(
+    ownerEmail: 'carol@aptitude.test',
+    title: 'Morning Yoga Flow',
+    description: 'Start your day with a refreshing 30-minute yoga session for all levels.',
+    category: 'Sports & Fitness',
+    type: 'offer',
+    level: 'intermediate',
+    format: 'inPerson',
+    tags: ['yoga', 'fitness', 'wellness', 'morning-routine'],
+    availability: ['weekday_morning', 'weekend_morning'],
+  ),
+  SeedSkill(
+    ownerEmail: 'carol@aptitude.test',
+    title: 'Advanced Digital Illustration',
+    description: 'Looking to level up my digital illustration skills with Procreate and Photoshop.',
+    category: 'Art & Design',
+    type: 'request',
+    level: 'advanced',
+    format: 'online',
+    tags: ['digital-art', 'illustration', 'procreate', 'photoshop'],
+    availability: ['weekday_evening', 'weekend_afternoon'],
+  ),
+
+  // Dave
+  SeedSkill(
+    ownerEmail: 'dave@aptitude.test',
+    title: 'Home Cooking Techniques',
+    description: 'Learn professional cooking techniques you can use at home. From knife skills to sauces.',
+    category: 'Cooking',
+    type: 'offer',
+    level: 'intermediate',
+    format: 'inPerson',
+    tags: ['cooking', 'culinary', 'knife-skills', 'recipes'],
+    availability: ['weekend_morning', 'weekend_afternoon'],
+  ),
+  SeedSkill(
+    ownerEmail: 'dave@aptitude.test',
+    title: 'Photography Composition',
+    description: 'Looking to improve my photography composition for food and travel photography.',
+    category: 'Photography',
+    type: 'request',
+    level: 'beginner',
+    format: 'online',
+    tags: ['photography', 'composition', 'food-photography'],
+    availability: ['weekday_evening', 'weekend_morning'],
+  ),
+  SeedSkill(
+    ownerEmail: 'dave@aptitude.test',
+    title: 'Japanese Language Basics',
+    description: 'Want to learn basic Japanese for an upcoming trip. Looking for a patient teacher.',
+    category: 'Languages',
+    type: 'request',
+    level: 'beginner',
+    format: 'online',
+    tags: ['japanese', 'language', 'travel'],
+    availability: ['weekday_evening', 'weekend_afternoon'],
+  ),
+
+  // Eve
+  SeedSkill(
+    ownerEmail: 'eve@aptitude.test',
+    title: 'Startup Growth Strategy',
+    description: 'Learn proven growth strategies for early-stage startups and established businesses.',
+    category: 'Business',
+    type: 'offer',
+    level: 'advanced',
+    format: 'online',
+    tags: ['startup', 'growth', 'strategy', 'marketing'],
+  ),
+  SeedSkill(
+    ownerEmail: 'eve@aptitude.test',
+    title: 'Mindfulness Meditation',
+    description: 'Guided meditation sessions to reduce stress and improve focus.',
+    category: 'Health & Wellness',
+    type: 'offer',
+    level: 'intermediate',
+    format: 'both',
+    tags: ['meditation', 'mindfulness', 'wellness', 'stress-relief'],
+    availability: ['weekday_morning', 'weekday_evening'],
+  ),
+  SeedSkill(
+    ownerEmail: 'eve@aptitude.test',
+    title: 'Advanced Excel & Data Analytics',
+    description: 'Looking to level up my data analytics skills beyond Excel basics.',
+    category: 'Technology',
+    type: 'request',
+    level: 'intermediate',
+    format: 'online',
+    tags: ['excel', 'analytics', 'data', 'visualization'],
+    availability: ['weekday_evening', 'weekend_morning'],
+  ),
+];

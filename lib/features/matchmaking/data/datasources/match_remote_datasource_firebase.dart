@@ -55,13 +55,13 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
           .get();
       if (!snapshot.exists) return [];
 
-      final map = snapshot.value as Map<String, dynamic>?;
+      final map = snapshot.value is Map ? Map<String, dynamic>.from(snapshot.value as Map) : null;
       if (map == null) return [];
 
       final matches = <MatchModel>[];
       map.forEach((key, value) {
         matches.add(
-            MatchModel.fromJson(key, value as Map<String, dynamic>));
+            MatchModel.fromJson(key, Map<String, dynamic>.from(value as Map)));
       });
       matches.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return matches;
