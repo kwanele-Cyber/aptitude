@@ -4,6 +4,8 @@
 **Tech Stack**: Flutter + Firebase + BLoC
 **Total Use Cases**: 98 (72 User + 26 Admin)
 
+[ERD Diagram: ](diagrams/data_erd.md)
+
 ## UI Flow Diagrams
 
 Navigation flow diagrams showing how screens connect across the app.
