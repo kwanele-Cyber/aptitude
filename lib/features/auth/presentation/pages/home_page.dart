@@ -100,6 +100,7 @@ class _ExploreTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -113,8 +114,8 @@ class _ExploreTab extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.secondary,
+                      const Color(0xFF5F5CFF),
+                      const Color(0xFF3BB2FF),
                     ],
                   ),
                 ),
@@ -135,7 +136,7 @@ class _ExploreTab extends StatelessWidget {
                         Text(
                           'Learn, teach, and grow together',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                         const Spacer(),
@@ -145,20 +146,16 @@ class _ExploreTab extends StatelessWidget {
                           decoration: InputDecoration(
                             hintText: 'Search skills...',
                             hintStyle: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
-                            ),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: Colors.white.withValues(alpha: 0.7),
+                              color: Colors.white.withValues(alpha: 0.8),
                             ),
                             filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.15),
+                            fillColor: Colors.white.withValues(alpha: 0.2),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(25),
                               borderSide: BorderSide.none,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
+                              horizontal: 20,
                               vertical: 12,
                             ),
                           ),
@@ -174,89 +171,103 @@ class _ExploreTab extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _SectionHeader(
-                  title: 'Quick Actions',
-                  actionLabel: 'See all',
-                  onAction: () => context.push('/skills/feed'),
+                Text(
+                  'Quick Actions',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: _QuickActionCard(
-                        icon: Icons.add_circle_outline,
                         label: 'Offer Skill',
-                        subtitle: 'Teach something',
-                        color: theme.colorScheme.primary,
+                        subtitle: 'Share your knowledge',
+                        color: const Color(0xFFF0F4FF),
                         onTap: () => context.push('/skills/create'),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _QuickActionCard(
-                        icon: Icons.school_outlined,
                         label: 'Learn Skill',
-                        subtitle: 'Find a mentor',
-                        color: theme.colorScheme.secondary,
+                        subtitle: 'Explore opportunities',
+                        color: const Color(0xFFF4F0FF),
                         onTap: () => context.push('/skills/create-request'),
                       ),
                     ),
                   ],
                 ),
-                _SectionHeader(
-                  title: 'Browse Feed',
-                  actionLabel: 'View all',
-                  onAction: () => context.push('/skills/feed'),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Browse Feed',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/skills/feed'),
+                      child: const Text('View all'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 SizedBox(
-                  height: 190,
+                  height: 160,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: 4,
+                    itemCount: _feedItems.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 12),
                     itemBuilder: (context, index) {
-                      const items = [
-                        _FeedPreviewData(Icons.code, 'Programming', 'Learn to code\nwith mentors'),
-                        _FeedPreviewData(Icons.palette, 'Design', 'UI/UX, graphics\n& creative'),
-                        _FeedPreviewData(Icons.music_note, 'Music', 'Instruments,\nvocals & theory'),
-                        _FeedPreviewData(Icons.language, 'Languages', 'Speak, read &\nwrite fluently'),
-                      ];
-                      return _FeedPreviewCard(item: items[index]);
+                      return _FeedCard(item: _feedItems[index]);
                     },
                   ),
                 ),
-                const SizedBox(height: 28),
-                _SectionHeader(title: 'More'),
+                const SizedBox(height: 24),
+                Text(
+                  'More',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 12),
-                _MenuGridTile(
-                  icon: Icons.history,
-                  label: 'Match History',
-                  onTap: () {
-                    final state = context.read<AuthBloc>().state;
-                    if (state is AuthAuthenticated) {
-                      context.push('/matches/history/${state.userEntity.id}');
-                    }
-                  },
-                ),
-                const SizedBox(height: 8),
-                _MenuGridTile(
-                  icon: Icons.tune,
-                  label: 'Filter Skills',
-                  onTap: () => context.push('/skills/filter'),
-                ),
-                const SizedBox(height: 8),
-                _MenuGridTile(
-                  icon: Icons.bookmark_outline,
-                  label: 'Saved Searches',
-                  onTap: () {
-                    final state = context.read<AuthBloc>().state;
-                    if (state is AuthAuthenticated) {
-                      context.push(
-                        '/skills/saved-searches/${state.userEntity.id}',
-                      );
-                    }
-                  },
+                Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      _MenuItem(
+                        label: 'Match History',
+                        onTap: () {
+                          final state = context.read<AuthBloc>().state;
+                          if (state is AuthAuthenticated) {
+                            context.push('/matches/history/${state.userEntity.id}');
+                          }
+                        },
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.15)),
+                      _MenuItem(
+                        label: 'Filter Skills',
+                        onTap: () => context.push('/skills/filter'),
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.15)),
+                      _MenuItem(
+                        label: 'Saved Searches',
+                        onTap: () {
+                          final state = context.read<AuthBloc>().state;
+                          if (state is AuthAuthenticated) {
+                            context.push('/skills/saved-searches/${state.userEntity.id}');
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 32),
               ]),
@@ -266,6 +277,20 @@ class _ExploreTab extends StatelessWidget {
       ),
     );
   }
+}
+
+const _feedItems = [
+  _FeedData('Photography Basics', Color(0xFFE3F2FD)),
+  _FeedData('Flutter for Beginners', Color(0xFFF3E5F5)),
+  _FeedData('Watercolor Painting', Color(0xFFFFF3E0)),
+  _FeedData('Guitar Lessons', Color(0xFFE8F5E9)),
+  _FeedData('Cooking 101', Color(0xFFFFEBEE)),
+];
+
+class _FeedData {
+  final String title;
+  final Color color;
+  const _FeedData(this.title, this.color);
 }
 
 // --- Matches Tab ---
@@ -538,48 +563,13 @@ class _ProfileTab extends StatelessWidget {
 
 // --- Reusable Widgets ---
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  const _SectionHeader({
-    required this.title,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (actionLabel != null)
-          TextButton(
-            onPressed: onAction,
-            child: Text(actionLabel!),
-          ),
-      ],
-    );
-  }
-}
-
 class _QuickActionCard extends StatelessWidget {
-  final IconData icon;
   final String label;
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
 
   const _QuickActionCard({
-    required this.icon,
     required this.label,
     required this.subtitle,
     required this.color,
@@ -591,37 +581,25 @@ class _QuickActionCard extends StatelessWidget {
     final theme = Theme.of(context);
     return Card(
       elevation: 0,
+      color: color,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: color.withValues(alpha: 0.2),
-        ),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(15),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(15),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const SizedBox(height: 16),
               Text(
                 label,
                 style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 subtitle,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -636,13 +614,78 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
-class _MenuGridTile extends StatelessWidget {
-  final IconData icon;
+class _FeedCard extends StatelessWidget {
+  final _FeedData item;
+  const _FeedCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      width: 140,
+      child: Card(
+        elevation: 0,
+        color: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: InkWell(
+          onTap: () => context.push('/skills/feed'),
+          borderRadius: BorderRadius.circular(15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: item.color,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(15),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      item.title.split(' ').map((w) => w[0]).take(2).join(),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: item.color == const Color(0xFFE3F2FD)
+                            ? Colors.blue.shade300
+                            : item.color == const Color(0xFFF3E5F5)
+                                ? Colors.purple.shade300
+                                : item.color == const Color(0xFFFFF3E0)
+                                    ? Colors.orange.shade300
+                                    : item.color == const Color(0xFFE8F5E9)
+                                        ? Colors.green.shade300
+                                        : Colors.red.shade300,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  item.title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _MenuGridTile({
-    required this.icon,
+  const _MenuItem({
     required this.label,
     required this.onTap,
   });
@@ -650,24 +693,23 @@ class _MenuGridTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: theme.colorScheme.primary),
-        title: Text(label),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-        ),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.bodyMedium,
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+          ],
         ),
       ),
     );
@@ -739,74 +781,6 @@ class _StatBadge extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _FeedPreviewData {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  const _FeedPreviewData(this.icon, this.title, this.subtitle);
-}
-
-class _FeedPreviewCard extends StatelessWidget {
-  final _FeedPreviewData item;
-  const _FeedPreviewCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SizedBox(
-      width: 150,
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
-          ),
-        ),
-        child: InkWell(
-          onTap: () => context.push('/skills/feed'),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    item.icon,
-                    color: theme.colorScheme.onPrimaryContainer,
-                    size: 22,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  item.title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

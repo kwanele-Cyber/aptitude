@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_event.dart';
@@ -131,9 +132,11 @@ class _MatchHistoryCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      child: InkWell(
+        onTap: () => context.push('/profile/${match.targetUserId}'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -176,6 +179,7 @@ class _MatchHistoryCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

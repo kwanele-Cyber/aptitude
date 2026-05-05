@@ -21,7 +21,7 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
   Future<UserModel> _getUserFromDatabase(String uid) async {
     final snapshot = await _userRef(uid).get();
     if (snapshot.exists) {
-      return UserModel.fromJson(snapshot.value as Map<String, dynamic>);
+      return UserModel.fromJson(Map<String, dynamic>.from(snapshot.value as Map));
     }
     final firebaseUser = _auth.currentUser!;
     return UserModel(
@@ -43,12 +43,29 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
       );
       return _getUserFromDatabase(credential.user!.uid);
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'invalid-credential' ||
-          e.code == 'user-not-found' ||
-          e.code == 'wrong-password') {
-        throw InvalidCredentialsException();
+      switch (e.code) {
+        case 'invalid-credential':
+        case 'user-not-found':
+        case 'wrong-password':
+          throw InvalidCredentialsException();
+        case 'operation-not-allowed':
+          throw ServerException(
+            'Email/Password sign-in is not enabled. '
+            'Enable it in Firebase Console > Authentication > Sign-in method.',
+          );
+        case 'network-request-failed':
+          throw ServerException('Network error: unable to reach Firebase. Check your internet connection.');
+        case 'too-many-requests':
+          throw ServerException('Too many login attempts. Please try again later.');
+        case 'invalid-email':
+          throw ServerException('The email address is not valid.');
+        case 'user-disabled':
+          throw ServerException('This account has been disabled.');
+        default:
+          throw ServerException(e.message ?? 'Authentication failed: ${e.code}');
       }
-      throw ServerException();
+    } catch (e) {
+      throw ServerException('Login failed: $e');
     }
   }
 
@@ -65,6 +82,7 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
         password: password,
       );
       final uid = credential.user!.uid;
+      await credential.user!.sendEmailVerification();
       final user = UserModel(
         id: uid,
         firstName: firstName,
@@ -130,7 +148,7 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
     try {
       final snapshot = await _userRef(uid).get();
       if (snapshot.exists) {
-        final data = snapshot.value as Map<String, dynamic>?;
+        final data = snapshot.value is Map ? Map<String, dynamic>.from(snapshot.value as Map) : null;
         final storedPin = data?['twoFactorPin'] as String?;
         return storedPin == pin;
       }
@@ -218,7 +236,7 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
     try {
       final snapshot = await _userRef(uid).get();
       if (!snapshot.exists) throw ServerException();
-      return UserModel.fromJson(snapshot.value as Map<String, dynamic>);
+      return UserModel.fromJson(Map<String, dynamic>.from(snapshot.value as Map));
     } catch (e) {
       throw ServerException();
     }
@@ -231,7 +249,7 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
       if (uid == null) throw ServerException();
       final snapshot = await _userRef(uid).get();
       if (!snapshot.exists) throw ServerException();
-      return snapshot.value as Map<String, dynamic>;
+      return Map<String, dynamic>.from(snapshot.value as Map);
     } catch (e) {
       throw ServerException();
     }

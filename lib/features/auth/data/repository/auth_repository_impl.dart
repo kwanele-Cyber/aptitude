@@ -51,10 +51,10 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(user);
     } on InvalidCredentialsException {
       return Left(InvalidCredentialsFailure());
-    } on ServerException {
-      return Left(ServerFailure());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure('$e'));
     }
   }
 
@@ -76,10 +76,10 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.cacheUser(user);
 
       return Right(user);
-    } on ServerException {
-      return Left(ServerFailure());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure('$e'));
     }
   }
 

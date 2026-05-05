@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   State<StatefulWidget> createState() => _LoginPageState();
 }
@@ -52,8 +55,13 @@ class _LoginPageState extends State<LoginPage> {
           builder: (context, state) {
             final isLoading = state is AuthLoading;
 
-            return Padding(
-              padding: EdgeInsets.all(24),
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -80,7 +88,6 @@ class _LoginPageState extends State<LoginPage> {
                         return null;
                       },
                     ),
-
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
@@ -100,7 +107,6 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     SizedBox(height: 16),
-
                     ElevatedButton(
                       onPressed: isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
@@ -113,6 +119,15 @@ class _LoginPageState extends State<LoginPage> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text('Login'),
+                    ),
+                    SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => context.push('/register'),
+                      child: const Text("Don't have an account? Register"),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/forgot-password'),
+                      child: const Text('Forgot password?'),
                     ),
                   ],
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
@@ -297,11 +298,15 @@ class _MatchCardStack extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
-                      child: Text(
-                        match.targetSkillTitle.isNotEmpty
-                            ? match.targetSkillTitle[0]
-                            : '?',
+                    InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () => context.push('/profile/${match.targetUserId}'),
+                      child: CircleAvatar(
+                        child: Text(
+                          match.targetSkillTitle.isNotEmpty
+                              ? match.targetSkillTitle[0]
+                              : '?',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -309,9 +314,12 @@ class _MatchCardStack extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            match.targetSkillTitle,
-                            style: Theme.of(context).textTheme.titleMedium,
+                          InkWell(
+                            onTap: () => context.push('/skills/details/${match.targetSkillId}'),
+                            child: Text(
+                              match.targetSkillTitle,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                           ),
                           Text(
                             'Match Score: ${match.score.toStringAsFixed(0)}%',

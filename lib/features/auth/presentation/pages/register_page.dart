@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
 
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
   State<StatefulWidget> createState() => _RegisterPageState();
 }
@@ -34,7 +37,9 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!_formKey.currentState!.validate()) return;
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You must accept the terms and conditions')),
+        const SnackBar(
+          content: Text('You must accept the terms and conditions'),
+        ),
       );
       return;
     }
@@ -124,11 +129,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       labelText: 'Password',
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                     validator: (v) {
@@ -145,15 +153,18 @@ class _RegisterPageState extends State<RegisterPage> {
                       labelText: 'Confirm Password',
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscureConfirm
-                            ? Icons.visibility
-                            : Icons.visibility_off),
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
                         onPressed: () =>
                             setState(() => _obscureConfirm = !_obscureConfirm),
                       ),
                     ),
                     validator: (v) {
-                      if (v != _passwordController.text) return 'Passwords do not match';
+                      if (v != _passwordController.text)
+                        return 'Passwords do not match';
                       return null;
                     },
                   ),
@@ -162,7 +173,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     children: [
                       Checkbox(
                         value: _acceptTerms,
-                        onChanged: (v) => setState(() => _acceptTerms = v ?? false),
+                        onChanged: (v) =>
+                            setState(() => _acceptTerms = v ?? false),
                       ),
                       const Text('I agree to Terms & Conditions'),
                     ],
@@ -180,6 +192,11 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Text('Register'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => context.push('/login'),
+                    child: const Text('Already have an account? Login'),
                   ),
                 ],
               ),

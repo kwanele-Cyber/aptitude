@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
@@ -144,6 +145,21 @@ class _SkillDetailsPageState extends State<SkillDetailsPage> {
                       ),
                       if (skill.isVerified)
                         const _VerifiedBadge(),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.person_outline, size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text('ID: ${skill.userId}',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: () => context.push('/profile/${skill.userId}'),
+                        icon: const Icon(Icons.open_in_new, size: 16),
+                        label: const Text('View Profile'),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
