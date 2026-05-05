@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -39,14 +40,14 @@ class _AdminBroadcastPageState extends State<AdminBroadcastPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       appBar: AdminAppBar(title: 'Broadcast Center'),
-      drawer: isWide ? null : _buildDrawer(context),
+      drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
-          if (isWide) const AdminSidebar(),
+          if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
           Expanded(child: _buildContent(theme)),
         ],
@@ -59,14 +60,23 @@ class _AdminBroadcastPageState extends State<AdminBroadcastPage> {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(flex: 3, child: _buildComposer(theme)),
-          const SizedBox(width: 24),
-          Expanded(flex: 2, child: _buildHistory(theme)),
-        ],
-      ),
+      child: ResponsiveUtils.isMobile(context)
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildComposer(theme),
+              const SizedBox(height: 24),
+              _buildHistory(theme),
+            ],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: _buildComposer(theme)),
+              const SizedBox(width: 24),
+              Expanded(flex: 2, child: _buildHistory(theme)),
+            ],
+          ),
     );
   }
 

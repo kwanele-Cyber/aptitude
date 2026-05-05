@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
@@ -84,9 +85,12 @@ class _BrowseSkillsFeedPageState extends State<BrowseSkillsFeedPage> {
                         ],
                       ),
                       isThreeLine: true,
-                      onTap: () {
-                        // Navigate to skill details
-                      },
+                      onTap: () => context.push('/skills/details/${skill.id}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.person_outline, size: 20),
+                        tooltip: 'View profile',
+                        onPressed: () => context.push('/profile/${skill.userId}'),
+                      ),
                     ),
                   );
                 },

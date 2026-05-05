@@ -37,9 +37,6 @@ class _TwoFactorVerificationPageState extends State<TwoFactorVerificationPage> {
       appBar: AppBar(title: const Text('Security Check')),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is Auth2FAVerified) {
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-          }
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -52,8 +49,13 @@ class _TwoFactorVerificationPageState extends State<TwoFactorVerificationPage> {
         builder: (context, state) {
           final isLoading = state is AuthLoading;
 
-          return Padding(
-            padding: const EdgeInsets.all(32),
+          return SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 32,
+              right: 32,
+              top: 32,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

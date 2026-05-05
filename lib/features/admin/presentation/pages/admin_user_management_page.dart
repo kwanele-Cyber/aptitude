@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -38,14 +39,14 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       appBar: AdminAppBar(title: 'User Management'),
-      drawer: isWide ? null : _buildDrawer(context),
+      drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
-          if (isWide) const AdminSidebar(),
+          if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
           Expanded(child: _buildContent(theme)),
         ],
@@ -86,8 +87,8 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 400,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -111,45 +112,89 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildFilterChip(theme, 'Role', _roleFilter, ['All', 'User', 'Admin', 'Moderator', 'Support'], (v) {
-                setState(() => _roleFilter = v);
-              }),
-              const SizedBox(width: 8),
-              _buildFilterChip(theme, 'Status', _statusFilter, ['All', 'Active', 'Suspended', 'Deleted', 'Banned'], (v) {
-                setState(() => _statusFilter = v);
-              }),
-              if (_roleFilter != 'All' || _statusFilter != 'All') ...[
-                const SizedBox(width: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Active Filters',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onPrimaryContainer,
+          if (ResponsiveUtils.isMobile(context))
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _buildFilterChip(theme, 'Role', _roleFilter, ['All', 'User', 'Admin', 'Moderator', 'Support'], (v) {
+                  setState(() => _roleFilter = v);
+                }),
+                const SizedBox(width: 8),
+                _buildFilterChip(theme, 'Status', _statusFilter, ['All', 'Active', 'Suspended', 'Deleted', 'Banned'], (v) {
+                  setState(() => _statusFilter = v);
+                }),
+                if (_roleFilter != 'All' || _statusFilter != 'All') ...[
+                  const SizedBox(width: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Active Filters',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _roleFilter = 'All';
-                      _statusFilter = 'All';
-                    });
-                  },
-                  child: const Text('Clear All'),
-                ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _roleFilter = 'All';
+                        _statusFilter = 'All';
+                      });
+                    },
+                    child: const Text('Clear All'),
+                  ),
+                ],
               ],
-            ],
-          ),
+            )
+          else
+            Row(
+              children: [
+                _buildFilterChip(theme, 'Role', _roleFilter, ['All', 'User', 'Admin', 'Moderator', 'Support'], (v) {
+                  setState(() => _roleFilter = v);
+                }),
+                const SizedBox(width: 8),
+                _buildFilterChip(theme, 'Status', _statusFilter, ['All', 'Active', 'Suspended', 'Deleted', 'Banned'], (v) {
+                  setState(() => _statusFilter = v);
+                }),
+                if (_roleFilter != 'All' || _statusFilter != 'All') ...[
+                  const SizedBox(width: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Active Filters',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _roleFilter = 'All';
+                        _statusFilter = 'All';
+                      });
+                    },
+                    child: const Text('Clear All'),
+                  ),
+                ],
+              ],
+            ),
         ],
       ),
     );
@@ -220,47 +265,56 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
   Widget _buildTable(ThemeData theme) {
     final users = _mockUsers;
 
-    return ListView(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      children: [
-        // Table header
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: 32, child: Text('')),
-              const Expanded(flex: 2, child: Text('Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              const Expanded(flex: 2, child: Text('Email', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              const Expanded(child: Text('Role', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              const Expanded(child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              const Expanded(child: Text('Joined', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              const SizedBox(width: 120, child: Text('', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-            ],
-          ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: ResponsiveUtils.isMobile(context) ? 600 : MediaQuery.of(context).size.width - 48,
         ),
-        const SizedBox(height: 4),
-        // Table rows
-        ...users.map((user) => _buildUserRow(theme, user)),
-        if (users.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 48),
-            child: Center(
-              child: Column(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Table header
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
                 children: [
-                  Icon(Icons.people_outline, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
-                  const SizedBox(height: 16),
-                  Text('No users found', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text('Try adjusting your search or filters', style: theme.textTheme.bodySmall),
+                  const SizedBox(width: 32, child: Text('')),
+                  const Expanded(flex: 2, child: Text('Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  const Expanded(flex: 2, child: Text('Email', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  const Expanded(child: Text('Role', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  const Expanded(child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  const Expanded(child: Text('Joined', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  const SizedBox(width: 120, child: Text('', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
                 ],
               ),
             ),
-          ),
-      ],
+            const SizedBox(height: 4),
+            // Table rows
+            ...users.map((user) => _buildUserRow(theme, user)),
+            if (users.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 48),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.people_outline, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                      const SizedBox(height: 16),
+                      Text('No users found', style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 4),
+                      Text('Try adjusting your search or filters', style: theme.textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
