@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:myapp/core/error/exceptions.dart';
 import 'package:myapp/core/utils/geo_utils.dart';
@@ -9,12 +8,10 @@ import 'package:myapp/features/skills/data/models/skill_model.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 
 class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
-  final FirebaseAuth _auth;
   final FirebaseDatabase _database;
 
-  MatchRemoteDataSourceFirebase({FirebaseAuth? auth, FirebaseDatabase? database})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _database = database ?? FirebaseDatabase.instance;
+  MatchRemoteDataSourceFirebase({FirebaseDatabase? database})
+      : _database = database ?? FirebaseDatabase.instance;
 
   DatabaseReference get _matchesRef => _database.ref('matches');
 

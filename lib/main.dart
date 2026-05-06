@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
+import 'package:myapp/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/firebase_options.dart';
 import 'package:myapp/router.dart';
@@ -13,10 +15,26 @@ import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await di.init();
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+  };
 
-  runApp(MyApp());
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await di.init();
+    runApp(const MyApp());
+  } catch (error, stackTrace) {
+    if (kDebugMode) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'app bootstrap',
+        ),
+      );
+    }
+    runApp(StartupErrorApp(message: error.toString()));
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -34,6 +52,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<AdminBloc>()),
         BlocProvider(create: (_) => di.sl<MatchBloc>()),
         BlocProvider(create: (_) => di.sl<SkillBloc>()),
+        BlocProvider(create: (_) => di.sl<MessageBloc>()),
       ],
       child: Builder(
         builder: (context) {
@@ -73,6 +92,54 @@ class MyApp extends StatelessWidget {
             routerConfig: appRouter.router,
           );
         },
+      ),
+    );
+  }
+}
+
+class StartupErrorApp extends StatelessWidget {
+  final String message;
+
+  const StartupErrorApp({super.key, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.cloud_off_outlined,
+                    size: 56,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'App failed to start',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
