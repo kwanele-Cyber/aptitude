@@ -1,5 +1,4 @@
 import 'package:myapp/features/matchmaking/data/models/match_model.dart';
-import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
 import 'package:myapp/features/skills/data/models/skill_model.dart';
 
 abstract class MatchRemoteDataSource {

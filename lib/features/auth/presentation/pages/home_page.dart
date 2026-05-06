@@ -1,16 +1,24 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/core/error/failures.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
+import 'package:myapp/features/admin/domain/usecases/admin_usecases.dart';
+import 'package:myapp/features/auth/domain/entity/conversation_entity.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_event.dart';
 import 'package:myapp/features/matchmaking/presentation/pages/matchmaking_page.dart';
+import 'package:myapp/features/messages/presentation/pages/messages_inbox_tab.dart';
+import 'package:myapp/injection_container.dart';
 
 class HomePage extends StatefulWidget {
   @override
-  State<StatefulWidget> createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
@@ -35,7 +43,7 @@ class _HomePageState extends State<HomePage> {
         children: const [
           _ExploreTab(),
           _MatchesTab(),
-          _MessagesTab(),
+          MessagesInboxTab(),
           _ProfileTab(),
         ],
       ),
@@ -200,6 +208,8 @@ class _ExploreTab extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
+                const _PeopleSection(),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -293,6 +303,166 @@ class _FeedData {
   const _FeedData(this.title, this.color);
 }
 
+class _PeopleSection extends StatefulWidget {
+  const _PeopleSection();
+
+  @override
+  State<_PeopleSection> createState() => _PeopleSectionState();
+}
+
+class _PeopleSectionState extends State<_PeopleSection> {
+  late final Future<List<AdminUserEntity>> _usersFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _usersFuture = _loadUsers();
+  }
+
+  Future<List<AdminUserEntity>> _loadUsers() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      return [];
+    }
+
+    final currentUserId = authState.userEntity.id;
+    final result = await sl<GetUsersUseCase>().call();
+
+    return result.fold(
+      (failure) {
+        throw Exception(
+          failure is ServerFailure
+              ? failure.message ?? 'Unable to load users.'
+              : 'Unable to load users.',
+        );
+      },
+      (users) => users.where((user) => user.id != currentUserId).toList(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'People on Aptitude',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        FutureBuilder<List<AdminUserEntity>>(
+          future: _usersFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 144,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return SizedBox(
+                height: 144,
+                child: Center(
+                  child: Text(
+                    snapshot.error.toString(),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final users = snapshot.data ?? const <AdminUserEntity>[];
+            if (users.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'No other users are available yet.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              );
+            }
+
+            return SizedBox(
+              height: 150,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: users.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final user = users[index];
+                  return InkWell(
+                    onTap: () => context.push('/profile/${user.id}'),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      width: 180,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            foregroundColor: theme.colorScheme.onPrimaryContainer,
+                            child: Text(user.initials),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            user.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user.email,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
 // --- Matches Tab ---
 class _MatchesTab extends StatelessWidget {
   const _MatchesTab();
@@ -318,8 +488,50 @@ class _MatchesTab extends StatelessWidget {
 }
 
 // --- Messages Tab ---
-class _MessagesTab extends StatelessWidget {
+class _MessagesTab extends StatefulWidget {
   const _MessagesTab();
+
+  @override
+  State<_MessagesTab> createState() => _MessagesTabState();
+}
+
+class _MessagesTabState extends State<_MessagesTab> {
+  late final Future<List<AdminUserEntity>> _usersFuture;
+  bool _showAllUsers = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _usersFuture = _loadUsers();
+  }
+
+  Future<List<AdminUserEntity>> _loadUsers() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      return [];
+    }
+
+    final currentUserId = authState.userEntity.id;
+    final result = await sl<GetUsersUseCase>().call();
+
+    return result.fold(
+      (failure) => throw Exception(
+          failure is ServerFailure ? failure.message ?? 'Unable to load users.' : 'Unable to load users.'),
+      (users) => users.where((user) => user.id != currentUserId).toList(),
+    );
+  }
+
+  List<AdminUserEntity> _getFilteredUsers(List<AdminUserEntity> allUsers) {
+    if (_showAllUsers) {
+      return allUsers;
+    }
+
+    // Show only users with conversations
+    final conversations = ConversationService.getConversations();
+    final conversationUserIds = conversations.map((c) => c.userId).toSet();
+
+    return allUsers.where((user) => conversationUserIds.contains(user.id)).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -328,54 +540,159 @@ class _MessagesTab extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Messages'),
         centerTitle: true,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(40),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.chat_outlined,
-                  size: 48,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'No messages yet',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Match with someone to start a conversation',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () {
-                  // Navigate to matches tab
-                },
-                icon: const Icon(Icons.handshake),
-                label: const Text('Find Matches'),
-              ),
-            ],
+        actions: [
+          TextButton.icon(
+            onPressed: () => setState(() => _showAllUsers = !_showAllUsers),
+            icon: Icon(_showAllUsers ? Icons.chat : Icons.group_add),
+            label: Text(_showAllUsers ? 'Recent' : 'All Users'),
+            style: TextButton.styleFrom(
+              foregroundColor: theme.colorScheme.primary,
+            ),
           ),
-        ),
+        ],
+      ),
+      body: FutureBuilder<List<AdminUserEntity>>(
+        future: _usersFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Text(
+                  snapshot.error.toString(),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ),
+            );
+          }
+
+          final allUsers = snapshot.data ?? [];
+          final filteredUsers = _getFilteredUsers(allUsers);
+
+          if (filteredUsers.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _showAllUsers ? Icons.group_off : Icons.chat_outlined,
+                        size: 48,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      _showAllUsers ? 'No users found' : 'No conversations yet',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _showAllUsers
+                          ? 'There are no other users on the platform yet.'
+                          : 'Start a conversation by messaging someone from the skills section.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.65),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    if (!_showAllUsers)
+                      FilledButton.icon(
+                        onPressed: () => setState(() => _showAllUsers = true),
+                        icon: const Icon(Icons.group_add),
+                        label: const Text('Browse All Users'),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: filteredUsers.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final user = filteredUsers[index];
+              final conversationList = ConversationService.getConversations()
+                  .where((c) => c.userId == user.id)
+                  .toList();
+              final conversation = conversationList.isEmpty ? null : conversationList.first;
+
+              return Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: theme.colorScheme.primary.withOpacity(0.12),
+                    foregroundColor: theme.colorScheme.primary,
+                    child: Text(user.initials),
+                  ),
+                  title: Text(user.name),
+                  subtitle: conversation != null
+                      ? Text(
+                          conversation.lastMessage,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      : Text('${user.email} • ${user.role}'),
+                  trailing: conversation != null
+                      ? Text(
+                          _formatTime(conversation.lastMessageTime),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        )
+                      : const Icon(Icons.chat_bubble_outline),
+                  onTap: () {
+                    ConversationService.markAsRead(user.id);
+                    context.push('/messages/${user.id}', extra: user);
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m';
+    } else {
+      return 'now';
+    }
   }
 }
 

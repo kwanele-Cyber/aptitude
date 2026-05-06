@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:aptitude_seeder/firebase_client.dart';
-import 'package:aptitude_seeder/seeder.dart';
+import '../lib/firebase_client.dart';
+import '../lib/seeder.dart';
 
 void main(List<String> args) async {
   // Parse command-line args

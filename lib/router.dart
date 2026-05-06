@@ -21,7 +21,12 @@ import 'package:myapp/features/auth/presentation/pages/forgot_password_page.dart
 import 'package:myapp/features/auth/presentation/pages/home_page.dart';
 import 'package:myapp/features/auth/presentation/pages/login_page.dart';
 import 'package:myapp/features/auth/presentation/pages/export_data_page.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
+import 'package:myapp/features/messages/presentation/pages/chat_page.dart';
 import 'package:myapp/features/auth/presentation/pages/profile_page.dart';
+import 'package:myapp/features/auth/domain/entity/user_entity.dart';
+import 'package:myapp/features/messages/domain/entity/room_entity.dart';
+import 'package:myapp/features/messages/presentation/pages/room_chat_page.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/presentation/pages/create_skill_offer_page.dart';
 import 'package:myapp/features/auth/presentation/pages/register_page.dart';
@@ -134,6 +139,40 @@ class AppRouter {
         path: '/profile/:uid',
         builder: (context, state) =>
             UserProfilePage(uid: state.pathParameters['uid'] ?? ''),
+      ),
+      GoRoute(
+        path: '/messages/:uid',
+        builder: (context, state) {
+          final extra = state.extra;
+          final userName = extra is AdminUserEntity
+              ? extra.name
+              : extra is UserEntity
+                  ? extra.name
+                  : 'User';
+          return ChatPage(
+            userId: state.pathParameters['uid'] ?? '',
+            userName: userName,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/rooms/:roomId',
+        builder: (context, state) {
+          final extra = state.extra;
+          final roomArgs = extra is RoomChatArgs
+              ? extra
+              : RoomChatArgs(
+                  room: RoomEntity(
+                    id: state.pathParameters['roomId'] ?? '',
+                    name: 'Room',
+                    createdBy: '',
+                    memberIds: const [],
+                    createdAt: DateTime.now(),
+                  ),
+                  memberNames: const {},
+                );
+          return RoomChatPage(args: roomArgs);
+        },
       ),
       GoRoute(
         path: '/change-password',
@@ -268,4 +307,10 @@ class GoRouterRefreshStream extends ChangeNotifier {
   }
 
   late final StreamSubscription _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
