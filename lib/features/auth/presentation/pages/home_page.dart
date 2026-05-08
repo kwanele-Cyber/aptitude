@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -290,17 +288,21 @@ class _ExploreTab extends StatelessWidget {
 }
 
 const _feedItems = [
-  _FeedData('Photography Basics', Color(0xFFE3F2FD)),
-  _FeedData('Flutter for Beginners', Color(0xFFF3E5F5)),
-  _FeedData('Watercolor Painting', Color(0xFFFFF3E0)),
-  _FeedData('Guitar Lessons', Color(0xFFE8F5E9)),
-  _FeedData('Cooking 101', Color(0xFFFFEBEE)),
+  // example feed items now include the creator info so we can offer a "Chat" action
+  _FeedData('Photography Basics', Color(0xFFE3F2FD), creatorId: 'user_1', creatorName: 'Ava'),
+  _FeedData('Flutter for Beginners', Color(0xFFF3E5F5), creatorId: 'user_2', creatorName: 'Liam'),
+  _FeedData('Watercolor Painting', Color(0xFFFFF3E0), creatorId: 'user_3', creatorName: 'Maya'),
+  _FeedData('Guitar Lessons', Color(0xFFE8F5E9), /* no creator => no chat button */),
+  _FeedData('Cooking 101', Color(0xFFFFEBEE), creatorId: 'user_4', creatorName: 'Noah'),
 ];
 
 class _FeedData {
   final String title;
   final Color color;
-  const _FeedData(this.title, this.color);
+  final String? creatorId;
+  final String? creatorName;
+
+  const _FeedData(this.title, this.color, {this.creatorId, this.creatorName});
 }
 
 class _PeopleSection extends StatefulWidget {
@@ -990,6 +992,38 @@ class _FeedCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // Chat button row: shown only when a creator is available
+              if (item.creatorId != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.creatorName ?? 'Creator',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed: () {
+                          // navigate to messages for the creator
+                          context.push('/messages/${item.creatorId}');
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                        label: const Text('Chat'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          foregroundColor: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
