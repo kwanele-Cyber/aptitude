@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:myapp/core/backblaze_service.dart';
 import 'package:myapp/features/admin/di.dart';
+import 'package:myapp/features/agreement/di.dart';
 import 'package:myapp/features/auth/di.dart';
 import 'package:myapp/features/matchmaking/di.dart';
 import 'package:myapp/features/messages/di.dart';
@@ -25,5 +26,6 @@ Future init() async {
   MatchMakingDI(sl).Init();
   MessagesDI(sl).Init();
   SkillsDI(sl).Init();
+  AgreementDI(sl).Init();
 
 }
