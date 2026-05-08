@@ -1,7 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
+
+
+
+/// Generic file storage contract used across the app.
+abstract class FileStorageService {
+  /// Upload [file] to storage. Returns parsed response from provider.
+  Future<Map<String, dynamic>> uploadFile(File file, {String? bucketId, String? fileName});
+
+  /// Optional: get a download URL or file info.
+  Future<String?> getFileDownloadUrl(String fileName, {String? bucketId});
+}
+
 
 /// Minimal Backblaze B2 helper. Reads credentials from env:
 /// - B2_KEY_ID
@@ -11,12 +25,12 @@ import 'package:http/http.dart' as http;
 /// final svc = BackblazeService();
 /// await svc.authorizeAccount();
 /// await svc.uploadFile(File('path'), bucketId: '...'); // or pass bucketId env B2_BUCKET_ID
-class BackblazeService {
+class BackblazeB2Service implements FileStorageService {
   final String? keyId = '005a9a3e069ccb20000000001';
   final String? appKey = 'K0050OdCKvcmeVG+FOyJ0UEbfGt4RzI';
   final String? defaultBucketId = 'aptitude-files';
 
-  BackblazeService();
+  BackblazeB2Service();
 
   bool get _hasCredentials => keyId != null && appKey != null;
 
@@ -59,8 +73,10 @@ class BackblazeService {
     return json.decode(resp.body) as Map<String, dynamic>;
   }
 
-  /// Uploads a file to B2. If [bucketId] is omitted, uses env B2_BUCKET_ID.
-  /// Returns the parsed JSON response from B2 on success.
+
+/// Uploads a file to B2. If [bucketId] is omitted, uses defaultBucketId.
+  /// Returns parsed JSON response and an added `fileUrl` entry when possible.
+  @override
   Future<Map<String, dynamic>> uploadFile(
     File file, {
     String? bucketId,
@@ -77,6 +93,7 @@ class BackblazeService {
 
     final auth = await authorizeAccount();
     final apiUrl = auth['apiUrl'] as String;
+    final downloadUrl = auth['downloadUrl'] as String?;
     final authToken = auth['authorizationToken'] as String;
 
     final uploadInfo = await getUploadUrl(apiUrl: apiUrl, authToken: authToken, bucketId: bid);
@@ -103,6 +120,38 @@ class BackblazeService {
       throw HttpException('Upload failed: ${resp.statusCode} ${resp.body}');
     }
 
-    return json.decode(resp.body) as Map<String, dynamic>;
+    final parsed = json.decode(resp.body) as Map<String, dynamic>;
+
+    // If the account provided a downloadUrl and the bucket is public, construct a public URL.
+    if (downloadUrl != null) {
+      // downloadUrl usually looks like https://f001.backblazeb2.com
+      parsed['fileUrl'] = '$downloadUrl/$bid/$name';
+    }
+
+    return parsed;
+  }
+
+    /// Simple helper: build a download URL for a publicly accessible file name
+  /// (requires bucket configured for public access / or use b2_get_download_authorization
+  /// for private buckets).
+  @override
+  Future<String?> getFileDownloadUrl(String fileName, {String? bucketId}) async {
+    final auth = await authorizeAccount();
+    final apiUrl = auth['apiUrl'] as String;
+    // If bucket is public, you can construct URL directly:
+    // https://f002.backblazeb2.com/file/<bucketName>/<fileName>
+    // But here we return null by default — implement based on your bucket policy.
+    return null;
+  }
+
+    /// Convenience: upload bytes by creating a temp file and calling uploadFile.
+  Future<Map<String, dynamic>> uploadBytes(Uint8List bytes, {required String fileName, String? bucketId}) async {
+    final tmp = File('${Directory.systemTemp.path}/${Uuid().v4()}_$fileName');
+    await tmp.writeAsBytes(bytes);
+    try {
+      return await uploadFile(tmp, bucketId: bucketId, fileName: fileName);
+    } finally {
+      try { await tmp.delete(); } catch (_) {}
+    }
   }
 }

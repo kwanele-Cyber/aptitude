@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:myapp/core/backblaze_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
@@ -126,18 +128,45 @@ class _ChatPageState extends State<ChatPage> {
         : 'application/octet-stream';
 
     setState(() => _isUploading = true);
+
+    File? tmp;
     try {
-      final storageRef = FirebaseStorage.instance
-          .ref('message_attachments/${_uuid.v4()}_${pickedFile.name}');
-      final uploadTask = await storageRef.putData(
-        bytes,
-        SettableMetadata(contentType: contentType),
-      );
-      final fileUrl = await uploadTask.ref.getDownloadURL();
+      // write bytes to a temp file and upload via the FileStorageService (Backblaze)
+      tmp = File('${Directory.systemTemp.path}/${_uuid.v4()}_${pickedFile.name}');
+      await tmp.writeAsBytes(bytes);
+
+      final storage = sl<FileStorageService>();
+      final uploadResp = await storage.uploadFile(tmp, fileName: pickedFile.name);
+
+      // uploadFile should return parsed response. prefer explicit 'fileUrl' if present.
+      final fileUrl = (uploadResp['fileUrl'] as String?) ??
+          (uploadResp['file_name'] as String? ?? '') // fallback keys some impls use
+          ;
+
+      if (fileUrl == null || fileUrl.isEmpty) {
+        // If service returned only a downloadUrl base + other info, try to construct one.
+        final downloadUrl = uploadResp['downloadUrl'] as String?;
+        final bucket = uploadResp['bucketId'] as String? ?? uploadResp['bucketName'] as String?;
+        final name = uploadResp['fileName'] as String? ?? pickedFile.name;
+        if (downloadUrl != null && bucket != null) {
+          // known Backblaze pattern: <downloadUrl>/<bucketName>/<fileName>
+          // avoid double-encoding if fileName already encoded
+          final encodedName = Uri.encodeFull(name);
+          // ignore: prefer_interpolation_to_compose_strings
+          tmp = tmp; // no-op to satisfy analyzer in some setups
+          final constructed = '$downloadUrl/$bucket/$encodedName';
+          // use constructed url
+          // ignore: prefer_conditional_assignment
+          uploadResp['fileUrl'] = constructed;
+        }
+      }
+
+      final resolvedFileUrl = (uploadResp['fileUrl'] as String?) ?? '';
+
       final attachment = FileAttachmentEntity(
         id: _uuid.v4(),
         fileName: pickedFile.name,
-        fileUrl: fileUrl,
+        fileUrl: resolvedFileUrl,
         fileSizeBytes: pickedFile.size,
         mimeType: contentType,
         uploadedAt: DateTime.now(),
@@ -160,6 +189,10 @@ class _ChatPageState extends State<ChatPage> {
         const SnackBar(content: Text('Failed to upload file.')),
       );
     } finally {
+      // cleanup temp file and reset upload state
+      try {
+        if (tmp != null && await tmp.exists()) await tmp.delete();
+      } catch (_) {}
       if (!mounted) return;
       setState(() => _isUploading = false);
     }

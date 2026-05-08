@@ -22,4 +22,7 @@ Future init() async {
 
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerSingleton(sharedPreferences);
+
+    // Register Backblaze implementation for FileStorageService
+  sl.registerLazySingleton<FileStorageService>(() => BackblazeB2Service());
 }
