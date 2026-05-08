@@ -23,9 +23,9 @@ import 'package:myapp/features/auth/domain/usecases/verify_2fa_usecase.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 
 class AuthDI {
-  GetIt sl = GetIt.instance;
+  final GetIt sl;
 
-  AuthDI(GetIt sl);
+  AuthDI(this.sl);
 
   GetIt Init() {
     sl.registerFactory(

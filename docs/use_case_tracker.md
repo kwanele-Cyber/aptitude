@@ -114,12 +114,12 @@ description:
 ### Messaging System
 | ID | Status | Use Case | Description |
 |----|--------|----------|-------------|
-| C01 | ❌ Todo | Initiate Chat | Open conversation channel post-match |
-| C02 | ❌ Todo | Send Message | Text, image, location, file sharing |
-| C03 | ❌ Todo | Receive Message | Real-time push notifications (FCM) |
-| C04 | ❌ Todo | Message History | Load paginated conversation history |
+| C01 | ✅ Done  | Initiate Chat | Open conversation channel post-match |
+| C02 | ✅ Done  | Send Message | Text, image, location, file sharing |
+| C03 |✅ Done  | Receive Message | Real-time push notifications (FCM) |
+| C04 | ✅ Done  | Message History | Load paginated conversation history |
 | C05 | ❌ Todo | Read Receipts | Show message seen status (Single/Double Ticks) |
-| C06 | ❌ Todo | Typing Indicator | Real-time typing status |
+| C06 | ✅ Done | Typing Indicator | Real-time typing status |
 | C07 | ❌ Todo | Block User | Block communication from specific user |
 | C08 | ❌ Todo | Report Message | Report inappropriate message content |
 
@@ -132,7 +132,6 @@ description:
 | C11 | ❌ Todo | Modify Agreement | Request/approve term adjustments |
 | C12 | ❌ Todo | Cancel Agreement | Terminate agreement before sessions |
 | C13 | ❌ Todo | View Agreement | Access active/past agreements |
-
 ---
 
 ## P4 — SESSION EXECUTION SYSTEM (12 use cases)

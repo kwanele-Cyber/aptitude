@@ -14,8 +14,8 @@ import 'package:myapp/features/messages/domain/usecases/watch_typing_indicator_u
 import 'package:myapp/features/messages/presentation/bloc/message_bloc.dart';
 
 class MessagesDI{
-  GetIt sl = GetIt.instance;
-  MessagesDI(GetIt sl);
+  final GetIt sl;
+  MessagesDI(this.sl);
 
   GetIt Init(){
     

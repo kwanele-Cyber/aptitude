@@ -5,7 +5,8 @@ import 'package:myapp/features/matchmaking/data/repository/match_repository_impl
 import 'package:myapp/features/matchmaking/domain/repository/match_repository.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/fetch_match_history_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/generate_matches_usecase.dart';
-import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart' show SaveMatchUseCase;
+import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart'
+    show SaveMatchUseCase;
 import 'package:myapp/features/matchmaking/domain/usecases/submit_match_feedback_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/update_match_status_usecase.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
@@ -29,33 +30,36 @@ import 'package:myapp/features/skills/domain/usecases/submit_skill_verification_
 import 'package:myapp/features/skills/domain/usecases/suggest_skill_category_usecase.dart';
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 
-class MatchMakingDI{
-  GetIt sl = GetIt.instance;
-  MatchMakingDI(GetIt sl);
+class MatchMakingDI {
+  final GetIt sl;
+  MatchMakingDI(this.sl);
 
-  GetIt Init(){
-    
-  // Matchmaking
-  sl.registerFactory(() => MatchBloc(
+  GetIt Init() {
+    // Matchmaking
+    sl.registerFactory(
+      () => MatchBloc(
         generateMatchesUseCase: sl(),
         updateMatchStatusUseCase: sl(),
         saveMatchUseCase: sl(),
         fetchMatchHistoryUseCase: sl(),
         submitMatchFeedbackUseCase: sl(),
-      ));
+      ),
+    );
 
-  sl.registerLazySingleton(() => GenerateMatchesUseCase(repository: sl()));
-  sl.registerLazySingleton(() => UpdateMatchStatusUseCase(repository: sl()));
-  sl.registerLazySingleton(() => SaveMatchUseCase(repository: sl()));
-  sl.registerLazySingleton(() => FetchMatchHistoryUseCase(repository: sl()));
-  sl.registerLazySingleton(() => SubmitMatchFeedbackUseCase(repository: sl()));
+    sl.registerLazySingleton(() => GenerateMatchesUseCase(repository: sl()));
+    sl.registerLazySingleton(() => UpdateMatchStatusUseCase(repository: sl()));
+    sl.registerLazySingleton(() => SaveMatchUseCase(repository: sl()));
+    sl.registerLazySingleton(() => FetchMatchHistoryUseCase(repository: sl()));
+    sl.registerLazySingleton(
+      () => SubmitMatchFeedbackUseCase(repository: sl()),
+    );
 
-  sl.registerLazySingleton<MatchRepository>(
-    () => MatchRepositoryImpl(remoteDataSource: sl()),
-  );
-  sl.registerLazySingleton<MatchRemoteDataSource>(
-    () => MatchRemoteDataSourceFirebase(),
-  );
+    sl.registerLazySingleton<MatchRepository>(
+      () => MatchRepositoryImpl(remoteDataSource: sl()),
+    );
+    sl.registerLazySingleton<MatchRemoteDataSource>(
+      () => MatchRemoteDataSourceFirebase(),
+    );
     return sl;
   }
 }

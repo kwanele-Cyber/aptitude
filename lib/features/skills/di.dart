@@ -21,8 +21,8 @@ import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart'
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 
 class SkillsDI{
-  GetIt sl = GetIt.instance;
-  SkillsDI(GetIt sl);
+  final GetIt sl;
+  SkillsDI(this.sl);
 
   GetIt Init(){
     // Skill ecosystem

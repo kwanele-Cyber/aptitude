@@ -9,9 +9,9 @@ import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 
 class AdminDI {
-  GetIt sl = GetIt.instance;
+  final GetIt sl;
 
-  AdminDI(GetIt sl);
+  AdminDI(this.sl);
 
   GetIt Init() {
     sl.registerLazySingleton<AdminRemoteDataSource>(
