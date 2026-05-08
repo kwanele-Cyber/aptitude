@@ -205,6 +205,28 @@ class _ExploreTab extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _QuickActionCard(
+                        label: 'My Agreements',
+                        subtitle: 'Formalize exchanges',
+                        color: const Color(0xFFE8F5E9),
+                        onTap: () => context.push('/agreements'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _QuickActionCard(
+                        label: 'New Agreement',
+                        subtitle: 'Define exchange terms',
+                        color: const Color(0xFFFFF8E1),
+                        onTap: () => context.push('/agreements/create'),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 24),
                 const _PeopleSection(),
                 const SizedBox(height: 24),
@@ -251,6 +273,11 @@ class _ExploreTab extends StatelessWidget {
                   child: Column(
                     children: [
                       _MenuItem(
+                        label: 'My Agreements',
+                        onTap: () => context.push('/agreements'),
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.15)),
+                      _MenuItem(
                         label: 'Match History',
                         onTap: () {
                           final state = context.read<AuthBloc>().state;
@@ -273,6 +300,21 @@ class _ExploreTab extends StatelessWidget {
                             context.push('/skills/saved-searches/${state.userEntity.id}');
                           }
                         },
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.15)),
+                      _MenuItem(
+                        label: 'My Reviews',
+                        onTap: () {
+                          final state = context.read<AuthBloc>().state;
+                          if (state is AuthAuthenticated) {
+                            context.push('/profile/${state.userEntity.id}');
+                          }
+                        },
+                      ),
+                      Divider(height: 1, color: theme.colorScheme.outline.withValues(alpha: 0.15)),
+                      _MenuItem(
+                        label: 'AI Insights',
+                        onTap: () => context.push('/ai'),
                       ),
                     ],
                   ),
@@ -793,7 +835,12 @@ class _ProfileTab extends StatelessWidget {
                               const SizedBox(width: 24),
                               _StatBadge(label: 'Matches', value: '—'),
                               const SizedBox(width: 24),
-                              _StatBadge(label: 'Rating', value: '—'),
+                              _StatBadge(
+                                label: 'Trust',
+                                value: user.trustScore > 0
+                                    ? '${user.trustScore.toInt()}'
+                                    : '—',
+                              ),
                             ],
                           ),
                         ],
@@ -819,11 +866,53 @@ class _ProfileTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       _ProfileMenuItem(
+                        icon: Icons.handshake,
+                        label: 'My Agreements',
+                        onTap: () => context.push('/agreements'),
+                      ),
+                      const SizedBox(height: 8),
+                      _ProfileMenuItem(
+                        icon: Icons.event,
+                        label: 'My Sessions',
+                        onTap: () => context.push('/sessions/${user.id}'),
+                      ),
+                      const SizedBox(height: 8),
+                      _ProfileMenuItem(
                         icon: Icons.history,
                         label: 'Match History',
                         onTap: () => context.push(
                           '/matches/history/${user.id}',
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      _ProfileMenuItem(
+                        icon: Icons.verified_user_outlined,
+                        label: 'Trust Profile',
+                        onTap: () => context.push('/trust/${user.id}'),
+                      ),
+                      const SizedBox(height: 8),
+                      _ProfileMenuItem(
+                        icon: Icons.star_outline,
+                        label: 'Reviews',
+                        onTap: () => context.push('/profile/${user.id}'),
+                      ),
+                      const SizedBox(height: 8),
+                      _ProfileMenuItem(
+                        icon: Icons.report_outlined,
+                        label: 'My Reports',
+                        onTap: () => context.push('/disputes'),
+                      ),
+                      const SizedBox(height: 8),
+                      _ProfileMenuItem(
+                        icon: Icons.notifications_outlined,
+                        label: 'Notifications',
+                        onTap: () => context.push('/notifications'),
+                      ),
+                      const SizedBox(height: 8),
+                      _ProfileMenuItem(
+                        icon: Icons.settings_outlined,
+                        label: 'Notification Preferences',
+                        onTap: () => context.push('/notifications/preferences'),
                       ),
                       const SizedBox(height: 8),
                       _ProfileMenuItem(

@@ -21,7 +21,13 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
   Future<UserModel> _getUserFromDatabase(String uid) async {
     final snapshot = await _userRef(uid).get();
     if (snapshot.exists) {
-      return UserModel.fromJson(Map<String, dynamic>.from(snapshot.value as Map));
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      final firebaseUser = _auth.currentUser;
+      if (firebaseUser != null && data['isVerified'] != firebaseUser.emailVerified) {
+        data['isVerified'] = firebaseUser.emailVerified;
+        await _userRef(uid).child('isVerified').set(firebaseUser.emailVerified);
+      }
+      return UserModel.fromJson(data);
     }
     final firebaseUser = _auth.currentUser!;
     return UserModel(
@@ -117,6 +123,24 @@ class AuthRemoteDataSourceFirebase implements AuthRemoteDataSource {
     try {
       await _auth.currentUser?.updatePassword(newPassword);
     } on FirebaseAuthException {
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> changePassword(
+      String email, String oldPassword, String newPassword) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || email.isEmpty) throw ServerException();
+      final credential = EmailAuthProvider.credential(
+          email: email, password: oldPassword);
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw InvalidCredentialsException();
+      }
       throw ServerException();
     }
   }

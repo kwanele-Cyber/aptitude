@@ -11,6 +11,9 @@ import 'package:myapp/features/messages/domain/usecases/send_message_usecase.dar
 import 'package:myapp/features/messages/domain/usecases/send_room_message_usecase.dart';
 import 'package:myapp/features/messages/domain/usecases/watch_inbox_usecase.dart';
 import 'package:myapp/features/messages/domain/usecases/watch_typing_indicator_usecase.dart';
+import 'package:myapp/features/messages/domain/usecases/block_user_usecase.dart';
+import 'package:myapp/features/messages/domain/usecases/unblock_user_usecase.dart';
+import 'package:myapp/features/messages/domain/usecases/get_blocked_users_usecase.dart';
 import 'package:myapp/features/messages/presentation/bloc/message_bloc.dart';
 
 class MessagesDI{
@@ -35,6 +38,11 @@ class MessagesDI{
   sl.registerLazySingleton(() => CreateRoomUseCase(sl()));
   sl.registerLazySingleton(() => GetRoomMessagesUseCase(sl()));
   sl.registerLazySingleton(() => SendRoomMessageUseCase(sl()));
+
+  // Block user use cases
+  sl.registerLazySingleton(() => BlockUserUseCase(sl()));
+  sl.registerLazySingleton(() => UnblockUserUseCase(sl()));
+  sl.registerLazySingleton(() => GetBlockedUsersUseCase(sl()));
 
   sl.registerLazySingleton<MessageRepository>(
     () => MessageRepositoryImpl(remoteDataSource: sl()),

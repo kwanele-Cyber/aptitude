@@ -371,6 +371,41 @@ class MessageRemoteDataSourceFirebase implements MessageRemoteDataSource {
     final ids = [userId1, userId2]..sort();
     return '${ids[0]}_${ids[1]}';
   }
+
+  @override
+  Future<void> blockUser(
+      String currentUserId, String blockedUserId, String blockedUserName) async {
+    try {
+      await _database
+          .ref('blockedUsers/$currentUserId/$blockedUserId')
+          .set({
+        'blockedAt': DateTime.now().toIso8601String(),
+        'userName': blockedUserName,
+      });
+    } catch (e) {
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> unblockUser(String currentUserId, String blockedUserId) async {
+    try {
+      await _database
+          .ref('blockedUsers/$currentUserId/$blockedUserId')
+          .remove();
+    } catch (e) {
+      throw ServerException();
+    }
+  }
+
+  @override
+  Stream<List<String>> getBlockedUserIds(String userId) {
+    return _database.ref('blockedUsers/$userId').onValue.map((event) {
+      if (!event.snapshot.exists || event.snapshot.value == null) return [];
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      return data.keys.toList();
+    });
+  }
 }
 
 class _InboxAccumulator {

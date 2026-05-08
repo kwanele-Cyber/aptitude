@@ -55,6 +55,11 @@ class AdminSidebar extends StatelessWidget {
           label: Text('Penalties'),
         ),
         NavigationRailDestination(
+          icon: Icon(Icons.shield_outlined),
+          selectedIcon: Icon(Icons.shield),
+          label: Text('Disputes'),
+        ),
+        NavigationRailDestination(
           icon: Icon(Icons.analytics_outlined),
           selectedIcon: Icon(Icons.analytics),
           label: Text('Analytics'),
@@ -73,7 +78,7 @@ class AdminSidebar extends StatelessWidget {
               child: IconButton(
                 icon: const Icon(Icons.science_outlined),
                 tooltip: 'Seed Data',
-                isSelected: _selectedIndex(location) == 6,
+                isSelected: _selectedIndex(location) == 7,
                 selectedIcon: const Icon(Icons.science),
                 onPressed: () => context.go('/admin/seed'),
               ),
@@ -92,14 +97,15 @@ class AdminSidebar extends StatelessWidget {
     if (location.startsWith('/admin/users')) return 1;
     if (location.startsWith('/admin/moderation')) return 2;
     if (location.startsWith('/admin/penalties')) return 3;
-    if (location.startsWith('/admin/analytics')) return 4;
+    if (location.startsWith('/admin/disputes')) return 4;
+    if (location.startsWith('/admin/analytics')) return 5;
     if (location.startsWith('/admin/config') ||
         location.startsWith('/admin/categories') ||
         location.startsWith('/admin/broadcast') ||
         location.startsWith('/admin/database') ||
         location.startsWith('/admin/roles') ||
         location.startsWith('/admin/audit')) {
-      return 5;
+      return 6;
     }
     return 0;
   }
@@ -110,8 +116,9 @@ class AdminSidebar extends StatelessWidget {
       case 1: context.go('/admin/users'); break;
       case 2: context.go('/admin/moderation'); break;
       case 3: context.go('/admin/penalties'); break;
-      case 4: context.go('/admin/analytics'); break;
-      case 5: context.go('/admin/config'); break;
+      case 4: context.go('/admin/disputes'); break;
+      case 5: context.go('/admin/analytics'); break;
+      case 6: context.go('/admin/config'); break;
     }
   }
 }

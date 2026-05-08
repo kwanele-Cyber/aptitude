@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myapp/core/validators/validators.dart';
+import 'package:myapp/features/ai/domain/entities/skill_recommendation_entity.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_bloc.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_event.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_state.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
@@ -244,7 +248,9 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
                       ),
                       enabled: !isLoading,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+                    const _AiRecommendationsCard(),
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: isLoading ? null : _submit,
                       style: ElevatedButton.styleFrom(
@@ -266,6 +272,113 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _AiRecommendationsCard extends StatefulWidget {
+  const _AiRecommendationsCard();
+
+  @override
+  State<_AiRecommendationsCard> createState() =>
+      _AiRecommendationsCardState();
+}
+
+class _AiRecommendationsCardState extends State<_AiRecommendationsCard> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<AiBloc>().add(GetSkillRecommendations(userId: ''));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return BlocBuilder<AiBloc, AiState>(
+      builder: (context, state) {
+        if (state is AiLoading) {
+          return const SizedBox.shrink();
+        }
+
+        List<SkillRecommendationEntity> recs = [];
+        if (state is SkillRecommendationsLoaded) {
+          recs = state.recommendations;
+        }
+
+        if (recs.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF0F4FF),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFF5F5CFF).withValues(alpha: 0.2),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome,
+                      size: 16, color: const Color(0xFF5F5CFF)),
+                  const SizedBox(width: 6),
+                  Text(
+                    'AI recommends',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: const Color(0xFF5F5CFF),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ...recs.take(3).map(
+                    (rec) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          Icon(
+                            rec.type == RecommendationType.learn
+                                ? Icons.school
+                                : Icons.menu_book,
+                            size: 14,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              rec.skillTitle,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF5F5CFF)
+                                  .withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${(rec.confidenceScore * 100).toInt()}%',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: const Color(0xFF5F5CFF),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

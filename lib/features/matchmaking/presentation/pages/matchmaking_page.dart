@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_bloc.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
+import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_event.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_state.dart';
+import 'package:myapp/features/notifications/domain/entity/notification_type.dart';
+import 'package:myapp/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:myapp/features/notifications/presentation/bloc/notification_event.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_event.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_state.dart';
+import 'package:myapp/features/ai/domain/entities/match_optimization_entity.dart';
 
 class MatchmakingPage extends StatefulWidget {
   const MatchmakingPage({super.key});
@@ -20,7 +28,10 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
   double _minTrustScore = 0;
   double _maxDistance = double.infinity;
   bool _verifiedOnly = false;
-
+  bool _aiOptimized = false;
+  List<dynamic>? _lastMatches;
+  String? _lastAcceptedMatchId;
+  List<MatchOptimizationEntity>? _aiInsights;
   @override
   void initState() {
     super.initState();
@@ -40,7 +51,7 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
       if (_verifiedOnly && !m.targetIsVerified) return false;
       if (_maxDistance.isFinite &&
           m.distance != null &&
-          m.distance > _maxDistance) return false;
+          m.distance > _maxDistance) { return false; }
       return true;
     }).toList();
   }
@@ -87,6 +98,49 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
                     ),
                   ],
                 ),
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome,
+                        size: 18, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'AI-Optimized',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const Spacer(),
+                    Switch(
+                      value: _aiOptimized,
+                      onChanged: (v) => setDialogState(() {
+                        _aiOptimized = v;
+                        if (v) {
+                          _minScore = 50;
+                          _minTrustScore = 60;
+                          _verifiedOnly = true;
+                        } else {
+                          _minScore = 0;
+                          _minTrustScore = 0;
+                          _verifiedOnly = false;
+                        }
+                      }),
+                    ),
+                  ],
+                ),
+                if (_aiOptimized)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Automatically applies optimal match criteria based on your skill profile',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                          ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -98,12 +152,20 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
                   _minTrustScore = 0;
                   _maxDistance = double.infinity;
                   _verifiedOnly = false;
+                  _aiOptimized = false;
                 });
               },
               child: const Text('Reset'),
             ),
             FilledButton(
               onPressed: () {
+                if (_aiOptimized && _userId != null) {
+                  context.read<AiBloc>().add(
+                    GetMatchOptimizations(userId: _userId!),
+                  );
+                } else {
+                  setState(() => _aiInsights = null);
+                }
                 setState(() {});
                 Navigator.of(context).pop();
               },
@@ -116,6 +178,7 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
   }
 
   Future<void> _showFeedbackDialog(BuildContext context, String matchId) async {
+    final bloc = context.read<MatchBloc>();
     final rating = await showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
@@ -124,10 +187,62 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
       ),
     );
     if (rating != null && mounted) {
-      context
-          .read<MatchBloc>()
-          .add(SubmitFeedbackRequested(matchId: matchId, rating: rating));
+      bloc.add(SubmitFeedbackRequested(matchId: matchId, rating: rating));
     }
+  }
+
+  void _onAccept(String matchId) {
+    _lastAcceptedMatchId = matchId;
+    context.read<MatchBloc>().add(AcceptMatchRequested(matchId: matchId));
+    _showFeedbackDialog(context, matchId);
+  }
+
+  void _offerCreateAgreement(String matchId) {
+    if (_lastMatches == null) return;
+    dynamic match;
+    for (final m in _lastMatches!) {
+      if ((m as dynamic).id == matchId) {
+        match = m;
+        break;
+      }
+    }
+    if (match == null || !mounted) return;
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Create Agreement?'),
+        content: const Text(
+          'Would you like to formalize this match with a skill exchange agreement?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Not Now'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.push('/agreements/create', extra: {
+                'partnerId': match.targetUserId,
+                'partnerName': match.targetUserName,
+                'partnerSkillId': match.targetSkillId,
+                'partnerSkillTitle': match.targetSkillTitle,
+                'initiatorSkillId': match.matchedSkillId,
+                'initiatorName':
+                    '${authState.userEntity.firstName} ${authState.userEntity.lastName}',
+                'initiatorId': authState.userEntity.id,
+              });
+            },
+            icon: const Icon(Icons.handshake, size: 18),
+            label: const Text('Create Agreement'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -142,7 +257,29 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
           ),
         ],
       ),
-      body: BlocBuilder<MatchBloc, MatchState>(
+      body: BlocListener<AiBloc, AiState>(
+        listener: (context, state) {
+          if (state is MatchOptimizationsLoaded) {
+            setState(() => _aiInsights = state.optimizations);
+          }
+        },
+        child: Column(
+          children: [
+            if (_aiOptimized && _aiInsights != null && _aiInsights!.isNotEmpty)
+              _AiInsightsBanner(insights: _aiInsights!),
+            Expanded(
+              child: BlocConsumer<MatchBloc, MatchState>(
+        listener: (context, state) {
+          if (state is MatchesLoaded) {
+            _lastMatches = state.matches;
+          }
+          if (state is MatchStatusUpdated &&
+              state.status == MatchStatus.accepted &&
+              _lastAcceptedMatchId != null) {
+            _offerCreateAgreement(_lastAcceptedMatchId!);
+            _lastAcceptedMatchId = null;
+          }
+        },
         builder: (context, state) {
           if (state is MatchLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -186,12 +323,8 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
             }
             return _MatchCardStack(
               matches: filtered,
-              onAccept: (matchId) {
-                context
-                    .read<MatchBloc>()
-                    .add(AcceptMatchRequested(matchId: matchId));
-                _showFeedbackDialog(context, matchId);
-              },
+              currentUserId: _userId,
+              onAccept: _onAccept,
               onReject: (matchId) {
                 context
                     .read<MatchBloc>()
@@ -230,6 +363,10 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
 
           return const Center(child: Text('Ready to find matches'));
         },
+      ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -270,12 +407,14 @@ class _FilterSlider extends StatelessWidget {
 
 class _MatchCardStack extends StatelessWidget {
   final List<dynamic> matches;
+  final String? currentUserId;
   final ValueChanged<String> onAccept;
   final ValueChanged<String> onReject;
   final ValueChanged<String> onIgnore;
 
   const _MatchCardStack({
     required this.matches,
+    this.currentUserId,
     required this.onAccept,
     required this.onReject,
     required this.onIgnore,
@@ -334,6 +473,30 @@ class _MatchCardStack extends StatelessWidget {
                     if (match.targetIsVerified)
                       const Icon(Icons.verified,
                           size: 18, color: Colors.green),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () =>
+                          context.push('/trust/${match.targetUserId}'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _trustColor(
+                                  (match.targetTrustScore as num).toDouble())
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${(match.targetTrustScore as num).toInt()}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: _trustColor(
+                                (match.targetTrustScore as num).toDouble()),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -341,6 +504,9 @@ class _MatchCardStack extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 4),
                 Text('${match.targetSkillLevel.name} · ${match.targetSkillFormat.name}${match.distance != null ? ' · ${match.distance!.toStringAsFixed(1)} km' : ''}'),
+                const SizedBox(height: 12),
+                // AI session quality prediction derived from match score
+                _SessionQualityBar(score: match.score),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -358,7 +524,19 @@ class _MatchCardStack extends StatelessWidget {
                     _ActionButton(
                       icon: Icons.check,
                       color: Colors.green,
-                      onTap: () => onAccept(match.id),
+                      onTap: () {
+                        onAccept(match.id);
+                        if (currentUserId != null) {
+                          context.read<NotificationBloc>().add(
+                            SendNotificationRequested(
+                              userId: match.targetUserId,
+                              type: NotificationType.match,
+                              title: 'Match Accepted',
+                              body: '${match.targetUserName} wants to connect with you!',
+                            ),
+                          );
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -374,6 +552,12 @@ class _MatchCardStack extends StatelessWidget {
     if (score >= 70) return Colors.green;
     if (score >= 40) return Colors.orange;
     return Colors.grey;
+  }
+
+  Color _trustColor(double score) {
+    if (score >= 80) return Colors.green;
+    if (score >= 50) return Colors.orange;
+    return Colors.red;
   }
 }
 
@@ -415,6 +599,114 @@ class _RatingSelectorState extends State<_RatingSelector> {
           child: const Text('Submit'),
         ),
       ],
+    );
+  }
+}
+
+class _SessionQualityBar extends StatelessWidget {
+  final double score;
+
+  const _SessionQualityBar({required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final predictedQuality = (score * 0.7 + 15).clamp(0, 100);
+    final qualityColor = predictedQuality >= 70
+        ? const Color(0xFF2E7D32)
+        : predictedQuality >= 40
+            ? Colors.orange
+            : Colors.grey;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: qualityColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: qualityColor.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.analytics_outlined, size: 16, color: qualityColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Predicted session quality',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+          Text(
+            '${predictedQuality.toInt()}%',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: qualityColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiInsightsBanner extends StatelessWidget {
+  final List<MatchOptimizationEntity> insights;
+
+  const _AiInsightsBanner({required this.insights});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: 0.08),
+            theme.colorScheme.primary.withValues(alpha: 0.03),
+          ],
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.primary.withValues(alpha: 0.15),
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome,
+                  size: 16, color: theme.colorScheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                'AI Optimizations',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ...insights.take(2).map(
+            (opt) => Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                '• ${opt.insight}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

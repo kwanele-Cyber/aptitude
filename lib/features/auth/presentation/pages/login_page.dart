@@ -76,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
                       decoration: InputDecoration(
                         labelText: 'Email',
                         border: OutlineInputBorder(),
-                        prefix: Icon(Icons.email),
+                        prefixIcon: Icon(Icons.email),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -88,13 +88,14 @@ class _LoginPageState extends State<LoginPage> {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'Password',
                         border: OutlineInputBorder(),
-                        prefix: Icon(Icons.password),
+                        prefixIcon: Icon(Icons.password),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {

@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/injection_container.dart' as di;
 import 'package:myapp/features/admin/presentation/pages/admin_dashboard_page.dart';
 import 'package:myapp/features/admin/presentation/pages/admin_seed_page.dart';
 import 'package:myapp/features/admin/presentation/pages/admin_analytics_page.dart';
@@ -42,7 +44,31 @@ import 'package:myapp/features/skills/presentation/pages/skill_details_page.dart
 import 'package:myapp/features/skills/presentation/pages/filter_skills_page.dart';
 import 'package:myapp/features/matchmaking/presentation/pages/match_history_page.dart';
 import 'package:myapp/features/matchmaking/presentation/pages/matchmaking_page.dart';
+import 'package:myapp/features/notifications/presentation/pages/notification_history_page.dart';
+import 'package:myapp/features/notifications/presentation/pages/notification_preferences_page.dart';
+import 'package:myapp/features/progress/presentation/bloc/progress_bloc.dart';
+import 'package:myapp/features/progress/presentation/pages/progress_dashboard_page.dart';
+import 'package:myapp/features/progress/presentation/pages/set_goal_page.dart';
+import 'package:myapp/features/agreements/presentation/pages/my_agreements_page.dart';
+import 'package:myapp/features/agreements/presentation/pages/agreement_detail_page.dart';
+import 'package:myapp/features/agreements/presentation/pages/create_agreement_page.dart';
 import 'package:myapp/features/skills/presentation/pages/saved_searches_page.dart';
+import 'package:myapp/features/sessions/domain/entity/session_entity.dart';
+import 'package:myapp/features/sessions/presentation/bloc/session_bloc.dart';
+import 'package:myapp/features/sessions/presentation/pages/session_detail_page.dart';
+import 'package:myapp/features/sessions/presentation/pages/session_list_page.dart';
+import 'package:myapp/features/sessions/presentation/pages/create_session_page.dart';
+import 'package:myapp/features/disputes/presentation/pages/dispute_list_page.dart';
+import 'package:myapp/features/disputes/presentation/pages/create_dispute_page.dart';
+import 'package:myapp/features/disputes/presentation/pages/dispute_detail_page.dart';
+import 'package:myapp/features/ai/presentation/pages/ai_hub_page.dart';
+import 'package:myapp/features/trust/presentation/bloc/trust_bloc.dart';
+import 'package:myapp/features/trust/presentation/pages/trust_profile_page.dart';
+import 'package:myapp/features/trust/presentation/pages/appeal_page.dart';
+import 'package:myapp/features/ai/presentation/pages/skill_recommendations_page.dart';
+import 'package:myapp/features/ai/presentation/pages/behavior_analysis_page.dart';
+import 'package:myapp/features/ai/presentation/pages/match_optimization_page.dart';
+import 'package:myapp/features/ai/presentation/pages/session_prediction_page.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
@@ -61,6 +87,7 @@ class AppRouter {
     '/admin/users',
     '/admin/moderation',
     '/admin/penalties',
+    '/admin/disputes',
     '/admin/analytics',
     '/admin/config',
     '/admin/categories',
@@ -241,8 +268,163 @@ class AppRouter {
             MatchHistoryPage(userId: state.pathParameters['uid'] ?? ''),
       ),
       GoRoute(
+        path: '/agreements',
+        builder: (context, state) => const MyAgreementsPage(),
+      ),
+      GoRoute(
+        path: '/agreements/create',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, String>?;
+          return CreateAgreementPage(
+            partnerId: extra?['partnerId'],
+            partnerName: extra?['partnerName'],
+            initiatorSkillId: extra?['initiatorSkillId'],
+            initiatorSkillTitle: extra?['initiatorSkillTitle'],
+            partnerSkillId: extra?['partnerSkillId'],
+            partnerSkillTitle: extra?['partnerSkillTitle'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/agreements/:id',
+        builder: (context, state) =>
+            AgreementDetailPage(agreementId: state.pathParameters['id'] ?? ''),
+      ),
+      GoRoute(
         path: '/account-recovery',
         builder: (context, state) => const AccountRecoveryPage(),
+      ),
+
+      // Progress routes
+      GoRoute(
+        path: '/progress',
+        builder: (context, state) => BlocProvider(
+          create: (_) => di.sl<ProgressBloc>(),
+          child: const ProgressDashboardPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/progress/goals/new',
+        builder: (context, state) => BlocProvider(
+          create: (_) => di.sl<ProgressBloc>(),
+          child: const SetGoalPage(),
+        ),
+      ),
+
+      // Notification routes
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationHistoryPage(),
+      ),
+      GoRoute(
+        path: '/notifications/preferences',
+        builder: (context, state) => const NotificationPreferencesPage(),
+      ),
+
+      // Trust routes
+      GoRoute(
+        path: '/trust/:uid',
+        builder: (context, state) {
+          final uid = state.pathParameters['uid'] ?? '';
+          return BlocProvider(
+            create: (_) => di.sl<TrustBloc>(),
+            child: TrustProfilePage(userId: uid),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/trust/:uid/appeal',
+        builder: (context, state) {
+          final uid = state.pathParameters['uid'] ?? '';
+          return BlocProvider(
+            create: (_) => di.sl<TrustBloc>(),
+            child: AppealPage(userId: uid),
+          );
+        },
+      ),
+
+      // Session routes
+      GoRoute(
+        path: '/sessions/:uid',
+        builder: (context, state) {
+          final uid = state.pathParameters['uid'] ?? '';
+          return BlocProvider(
+            create: (_) => di.sl<SessionBloc>(),
+            child: SessionListPage(userId: uid),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/sessions/:uid/detail',
+        builder: (context, state) {
+          final uid = state.pathParameters['uid'] ?? '';
+          final session = state.extra as SessionEntity;
+          return BlocProvider(
+            create: (_) => di.sl<SessionBloc>(),
+            child: SessionDetailPage(session: session, userId: uid),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/sessions/create',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return CreateSessionPage(
+            matchId: extra?['matchId'] as String? ?? '',
+            skillId: extra?['skillId'] as String? ?? '',
+            skillTitle: extra?['skillTitle'] as String? ?? '',
+            initiatorId: extra?['initiatorId'] as String? ?? '',
+            participantId: extra?['participantId'] as String? ?? '',
+            participantName: extra?['participantName'] as String? ?? '',
+          );
+        },
+      ),
+
+      // Dispute routes
+      GoRoute(
+        path: '/disputes',
+        builder: (context, state) => const DisputeListPage(),
+      ),
+      GoRoute(
+        path: '/disputes/create',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, String>?;
+          return CreateDisputePage(
+            respondentId: extra?['respondentId'],
+            respondentName: extra?['respondentName'],
+            agreementId: extra?['agreementId'],
+            sessionId: extra?['sessionId'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/disputes/:id',
+        builder: (context, state) => DisputeDetailPage(
+          disputeId: state.pathParameters['id'] ?? '',
+        ),
+      ),
+
+      // AI Insights routes
+      GoRoute(
+        path: '/ai',
+        builder: (context, state) => const AiHubPage(),
+      ),
+      GoRoute(
+        path: '/ai/recommendations',
+        builder: (context, state) => const SkillRecommendationsPage(),
+      ),
+      GoRoute(
+        path: '/ai/behavior',
+        builder: (context, state) => const BehaviorAnalysisPage(),
+      ),
+      GoRoute(
+        path: '/ai/optimization',
+        builder: (context, state) => const MatchOptimizationPage(),
+      ),
+      GoRoute(
+        path: '/ai/prediction',
+        builder: (context, state) =>
+            SessionPredictionPage(matchId: state.extra as String? ?? ''),
       ),
 
       // Admin routes

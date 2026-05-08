@@ -41,4 +41,11 @@ abstract class MessageRepository {
   Stream<Either<Failure, Map<String, bool>>> watchTypingIndicator({
     required String conversationId,
   });
+
+  // Block user
+  Future<Either<Failure, void>> blockUser(
+      String currentUserId, String blockedUserId, String blockedUserName);
+  Future<Either<Failure, void>> unblockUser(
+      String currentUserId, String blockedUserId);
+  Stream<Either<Failure, List<String>>> getBlockedUserIds(String userId);
 }

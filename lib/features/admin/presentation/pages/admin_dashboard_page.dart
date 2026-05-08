@@ -8,6 +8,9 @@ import 'package:myapp/features/admin/presentation/bloc/admin_state.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_stat_card.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_bloc.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_event.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_state.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
@@ -24,6 +27,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void initState() {
     super.initState();
     context.read<AdminBloc>().add(AdminLoadDashboard());
+    context.read<AiBloc>().add(AnalyzeUserBehavior(userId: ''));
   }
 
   @override
@@ -82,6 +86,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                       const SizedBox(height: 24),
                       _buildKpiRow(theme, data),
+                      const SizedBox(height: 20),
+                      _AiBehaviorCard(),
                       const SizedBox(height: 32),
                       Text(
                         'Quick Actions',
@@ -161,6 +167,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _ActionTile(Icons.settings, 'System Config', () => context.go('/admin/config')),
       _ActionTile(Icons.campaign, 'Broadcast', () => context.go('/admin/broadcast')),
       _ActionTile(Icons.record_voice_over, 'Audit Log', () => context.go('/admin/audit')),
+      _ActionTile(Icons.gavel, 'Dispute Management', () => context.go('/admin/disputes')),
       if (kDebugMode)
         _ActionTile(Icons.science, 'Seed Data', () => context.go('/admin/seed')),
     ];
@@ -241,6 +248,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           _drawerItem(Icons.people, 'Users', () { Navigator.pop(context); context.go('/admin/users'); }),
           _drawerItem(Icons.flag, 'Moderation', () { Navigator.pop(context); context.go('/admin/moderation'); }),
           _drawerItem(Icons.gavel, 'Penalties', () { Navigator.pop(context); context.go('/admin/penalties'); }),
+          _drawerItem(Icons.shield, 'Disputes', () { Navigator.pop(context); context.go('/admin/disputes'); }),
           _drawerItem(Icons.analytics, 'Analytics', () { Navigator.pop(context); context.go('/admin/analytics'); }),
           _drawerItem(Icons.settings, 'Config', () { Navigator.pop(context); context.go('/admin/config'); }),
           _drawerItem(Icons.campaign, 'Broadcast', () { Navigator.pop(context); context.go('/admin/broadcast'); }),
@@ -268,4 +276,151 @@ class _ActionTile {
   final String label;
   final VoidCallback onTap;
   const _ActionTile(this.icon, this.label, this.onTap);
+}
+
+class _AiBehaviorCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return BlocBuilder<AiBloc, AiState>(
+      builder: (context, state) {
+        final isLoading = state is AiLoading;
+        final flags =
+            state is BehaviorAnalysisLoaded ? state.flags : <dynamic>[];
+
+        final flaggedCount = flags.length;
+        final criticalCount =
+            flags.where((f) => f.severity.name == 'critical').length;
+
+        return Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: flaggedCount > 0
+                  ? Colors.red.withValues(alpha: 0.3)
+                  : theme.colorScheme.outline.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      flaggedCount > 0
+                          ? Icons.shield_outlined
+                          : Icons.check_circle_outline,
+                      size: 20,
+                      color: flaggedCount > 0
+                          ? Colors.red
+                          : const Color(0xFF2E7D32),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'AI Behavior Insights',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (isLoading) ...[
+                      const Spacer(),
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (isLoading)
+                  Text(
+                    'Scanning for anomalies...',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.6),
+                    ),
+                  )
+                else if (flaggedCount == 0)
+                  Text(
+                    'No unusual activity detected across the platform.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.6),
+                    ),
+                  )
+                else
+                  Row(
+                    children: [
+                      _StatPill(
+                        label: 'Flagged Users',
+                        value: '$flaggedCount',
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(width: 12),
+                      _StatPill(
+                        label: 'Critical',
+                        value: '$criticalCount',
+                        color: Colors.red,
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: () => context.go('/admin/analytics'),
+                        icon: const Icon(Icons.arrow_forward, size: 16),
+                        label: const Text('Details'),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _StatPill({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: color,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
 }

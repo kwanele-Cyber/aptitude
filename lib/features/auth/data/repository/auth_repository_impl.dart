@@ -120,8 +120,12 @@ class AuthRepositoryImpl implements AuthRepository {
     required String newPassword,
   }) async {
     try {
-      await remoteDataSource.updatePassword(newPassword);
+      final user = await localDataSource.getCachedUser();
+      final email = user?.email ?? '';
+      await remoteDataSource.changePassword(email, oldPassword, newPassword);
       return const Right(null);
+    } on InvalidCredentialsException {
+      return Left(InvalidCredentialsFailure());
     } catch (e) {
       return Left(ServerFailure());
     }

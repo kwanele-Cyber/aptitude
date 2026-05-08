@@ -35,8 +35,14 @@ abstract class MessageRemoteDataSource {
     required String userId,
     required bool isTyping,
   });
-  
+
   Stream<Map<String, bool>> watchTypingIndicator({
     required String conversationId,
   });
+
+  // Block user
+  Future<void> blockUser(
+      String currentUserId, String blockedUserId, String blockedUserName);
+  Future<void> unblockUser(String currentUserId, String blockedUserId);
+  Stream<List<String>> getBlockedUserIds(String userId);
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
+import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
 import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_event.dart';
@@ -127,8 +129,25 @@ class _MatchHistoryCard extends StatelessWidget {
 
   const _MatchHistoryCard({required this.match});
 
+  void _createAgreement(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) return;
+
+    context.push('/agreements/create', extra: {
+      'partnerId': match.targetUserId,
+      'partnerName': match.targetUserName,
+      'partnerSkillId': match.targetSkillId,
+      'partnerSkillTitle': match.targetSkillTitle,
+      'initiatorSkillId': match.matchedSkillId,
+      'initiatorName':
+          '${authState.userEntity.firstName} ${authState.userEntity.lastName}',
+      'initiatorId': authState.userEntity.id,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -155,11 +174,11 @@ class _MatchHistoryCard extends StatelessWidget {
                     children: [
                       Text(
                         match.targetUserName,
-                        style: Theme.of(context).textTheme.titleSmall,
+                        style: theme.textTheme.titleSmall,
                       ),
                       Text(
                         match.targetSkillTitle,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -170,13 +189,24 @@ class _MatchHistoryCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               match.targetSkillCategory,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 4),
             Text(
               '${match.targetSkillLevel.name} · ${match.targetSkillFormat.name} · ${match.score.toStringAsFixed(0)}% match',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: theme.textTheme.bodySmall,
             ),
+            if (match.status == MatchStatus.accepted) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _createAgreement(context),
+                  icon: const Icon(Icons.handshake, size: 18),
+                  label: const Text('Create Agreement'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -204,7 +234,7 @@ class _StatusChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

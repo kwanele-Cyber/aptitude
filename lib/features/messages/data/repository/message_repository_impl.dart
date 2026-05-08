@@ -197,4 +197,39 @@ class MessageRepositoryImpl implements MessageRepository {
       yield Left(ServerFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, void>> blockUser(
+      String currentUserId, String blockedUserId, String blockedUserName) async {
+    try {
+      await remoteDataSource.blockUser(currentUserId, blockedUserId, blockedUserName);
+      return const Right(null);
+    } on ServerException {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> unblockUser(
+      String currentUserId, String blockedUserId) async {
+    try {
+      await remoteDataSource.unblockUser(currentUserId, blockedUserId);
+      return const Right(null);
+    } on ServerException {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Stream<Either<Failure, List<String>>> getBlockedUserIds(String userId) async* {
+    try {
+      await for (final ids in remoteDataSource.getBlockedUserIds(userId)) {
+        yield Right(ids);
+      }
+    } on ServerException {
+      yield Left(ServerFailure());
+    } catch (_) {
+      yield Left(ServerFailure());
+    }
+  }
 }

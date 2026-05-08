@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
+import 'package:myapp/features/disputes/presentation/pages/report_dialog.dart';
 import '../../domain/entity/file_attachment_entity.dart';
 import '../../domain/entity/message_entity.dart';
 import '../../domain/repository/message_repository.dart';
@@ -304,6 +305,31 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ],
         ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'report') {
+                ReportDialog.show(
+                  context,
+                  reportedUserId: widget.userId,
+                  reportedUserName: widget.userName,
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'report',
+                child: Row(
+                  children: [
+                    Icon(Icons.flag_outlined, size: 18),
+                    SizedBox(width: 8),
+                    Text('Report User'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(

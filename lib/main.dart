@@ -5,9 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
 import 'package:myapp/features/auth/presentation/bloc/auth_event.dart';
+import 'package:myapp/features/ai/presentation/bloc/ai_bloc.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/messages/presentation/bloc/message_bloc.dart';
+import 'package:myapp/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:myapp/features/progress/presentation/bloc/progress_bloc.dart';
+import 'package:myapp/features/sessions/presentation/bloc/session_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
+import 'package:myapp/features/trust/presentation/bloc/trust_bloc.dart';
 import 'package:myapp/firebase_options.dart';
 import 'package:myapp/router.dart';
 
@@ -53,6 +58,11 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<MatchBloc>()),
         BlocProvider(create: (_) => di.sl<SkillBloc>()),
         BlocProvider(create: (_) => di.sl<MessageBloc>()),
+        BlocProvider(create: (_) => di.sl<NotificationBloc>()),
+        BlocProvider(create: (_) => di.sl<ProgressBloc>()),
+        BlocProvider(create: (_) => di.sl<AiBloc>()),
+        BlocProvider(create: (_) => di.sl<SessionBloc>()),
+        BlocProvider(create: (_) => di.sl<TrustBloc>()),
       ],
       child: Builder(
         builder: (context) {
