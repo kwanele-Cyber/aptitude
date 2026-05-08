@@ -8,15 +8,25 @@ class WatchTypingIndicatorParams {
   WatchTypingIndicatorParams({required this.conversationId});
 }
 
+// class WatchTypingIndicatorUsecase {
+//   final MessageRepository repository;
+
+//   WatchTypingIndicatorUsecase(Object object, {required this.repository});
+
+//   Stream<Either<Failure, Map<String, bool>>> call(
+//       WatchTypingIndicatorParams params) {
+//     return repository.watchTypingIndicator(conversationId: params.conversationId);
+//   }
+// }
+
 class WatchTypingIndicatorUsecase {
   final MessageRepository repository;
 
-  WatchTypingIndicatorUsecase({required this.repository});
+  WatchTypingIndicatorUsecase(this.repository);
 
   Stream<Either<Failure, Map<String, bool>>> call(
       WatchTypingIndicatorParams params) {
     return repository.watchTypingIndicator(conversationId: params.conversationId);
   }
 }
-
 
