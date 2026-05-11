@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/create_direct_match_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/fetch_match_history_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/generate_matches_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart';
@@ -14,6 +15,7 @@ class MatchBloc extends Bloc<MatchEvent, MatchState> {
   final SaveMatchUseCase saveMatchUseCase;
   final FetchMatchHistoryUseCase fetchMatchHistoryUseCase;
   final SubmitMatchFeedbackUseCase submitMatchFeedbackUseCase;
+  final CreateDirectMatchUseCase createDirectMatchUseCase;
 
   MatchBloc({
     required this.generateMatchesUseCase,
@@ -21,6 +23,7 @@ class MatchBloc extends Bloc<MatchEvent, MatchState> {
     required this.saveMatchUseCase,
     required this.fetchMatchHistoryUseCase,
     required this.submitMatchFeedbackUseCase,
+    required this.createDirectMatchUseCase,
   }) : super(MatchInitial()) {
     on<FetchMatchesRequested>(_onFetchMatchesRequested);
     on<AcceptMatchRequested>(_onAcceptMatchRequested);
@@ -29,6 +32,7 @@ class MatchBloc extends Bloc<MatchEvent, MatchState> {
     on<SaveMatchRequested>(_onSaveMatchRequested);
     on<FetchMatchHistoryRequested>(_onFetchMatchHistoryRequested);
     on<SubmitFeedbackRequested>(_onSubmitFeedbackRequested);
+    on<ConnectWithUserRequested>(_onConnectWithUserRequested);
   }
 
   Future _onFetchMatchesRequested(
@@ -45,7 +49,45 @@ class MatchBloc extends Bloc<MatchEvent, MatchState> {
         emit(MatchError(message: 'Failed to fetch matches'));
       },
       (right) async {
-        emit(MatchesLoaded(matches: right));
+        // Merge with match history so direct connections also appear
+        final historyResult = await fetchMatchHistoryUseCase(
+          FetchMatchHistoryParams(userId: event.userId),
+        );
+
+        final allMatches = historyResult.fold(
+          (_) => right,
+          (historyMatches) {
+            final existingIds = right.map((m) => m.id).toSet();
+            return [
+              ...right,
+              ...historyMatches.where((m) => !existingIds.contains(m.id)),
+            ];
+          },
+        );
+
+        emit(MatchesLoaded(matches: allMatches));
+      },
+    );
+  }
+
+  Future _onConnectWithUserRequested(
+    ConnectWithUserRequested event,
+    Emitter<MatchState> emit,
+  ) async {
+    emit(MatchLoading());
+    final result = await createDirectMatchUseCase(
+      CreateDirectMatchParams(matchData: event.matchData),
+    );
+
+    await result.fold(
+      (left) async {
+        emit(MatchError(message: 'Failed to create connection'));
+      },
+      (right) async {
+        emit(MatchStatusUpdated(
+          matchId: '',
+          status: MatchStatus.pending,
+        ));
       },
     );
   }

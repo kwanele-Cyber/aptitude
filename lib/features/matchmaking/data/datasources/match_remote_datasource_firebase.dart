@@ -25,6 +25,19 @@ class MatchRemoteDataSourceFirebase implements MatchRemoteDataSource {
   }
 
   @override
+  Future<String> createDirectMatch(Map<String, dynamic> matchData) async {
+    try {
+      final ref = _matchesRef.push();
+      final data = Map<String, dynamic>.from(matchData)
+        ..putIfAbsent('id', () => ref.key);
+      await ref.set(data);
+      return ref.key ?? '';
+    } catch (e) {
+      throw ServerException();
+    }
+  }
+
+  @override
   Future<void> updateMatchStatus(
       String matchId, Map<String, dynamic> data) async {
     try {

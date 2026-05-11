@@ -45,6 +45,7 @@ class AuthDI {
         recoverAccountUseCase: sl(),
         getUserProfileUseCase: sl(),
         exportUserDataUseCase: sl(),
+        
       ),
     );
 

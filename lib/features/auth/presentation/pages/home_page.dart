@@ -12,6 +12,7 @@ import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
 import 'package:myapp/features/matchmaking/presentation/bloc/match_event.dart';
 import 'package:myapp/features/matchmaking/presentation/pages/matchmaking_page.dart';
 import 'package:myapp/features/messages/presentation/pages/messages_inbox_tab.dart';
+import 'package:myapp/features/skills/domain/usecases/filter_skills_usecase.dart';
 import 'package:myapp/injection_container.dart';
 
 class HomePage extends StatefulWidget {
@@ -99,8 +100,49 @@ class _HomePageState extends State<HomePage> {
 }
 
 // --- Explore Tab ---
-class _ExploreTab extends StatelessWidget {
+class _ExploreTab extends StatefulWidget {
   const _ExploreTab();
+
+  @override
+  State<_ExploreTab> createState() => _ExploreTabState();
+}
+
+class _ExploreTabState extends State<_ExploreTab> {
+  late final Future<List<_FeedData>> _feedFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _feedFuture = _loadFeedItems();
+  }
+
+  Future<List<_FeedData>> _loadFeedItems() async {
+    final result = await sl<FilterSkillsUseCase>().call(const FilterSkillsParams());
+    return result.fold(
+      (failure) => <_FeedData>[],
+      (skills) => skills.map((skill) => _FeedData(
+        skill.id,
+        skill.title,
+        _colorFromString(skill.category),
+        creatorId: skill.userId,
+      )).toList(),
+    );
+  }
+
+  static Color _colorFromString(String input) {
+    final hash = input.hashCode;
+    const colors = [
+      Color(0xFFE3F2FD),
+      Color(0xFFF3E5F5),
+      Color(0xFFFFF3E0),
+      Color(0xFFE8F5E9),
+      Color(0xFFFFEBEE),
+      Color(0xFFE0F7FA),
+      Color(0xFFFCE4EC),
+      Color(0xFFF1F8E9),
+    ];
+    return colors[hash.abs() % colors.length];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -246,16 +288,34 @@ class _ExploreTab extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                SizedBox(
-                  height: 160,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _feedItems.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      return _FeedCard(item: _feedItems[index]);
-                    },
-                  ),
+                FutureBuilder<List<_FeedData>>(
+                  future: _feedFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(
+                        height: 160,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final items = snapshot.data ?? const <_FeedData>[];
+                    if (items.isEmpty) {
+                      return const SizedBox(
+                        height: 160,
+                        child: Center(child: Text('No skills available')),
+                      );
+                    }
+                    return SizedBox(
+                      height: 160,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          return _FeedCard(item: items[index]);
+                        },
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
                 Text(
@@ -329,22 +389,16 @@ class _ExploreTab extends StatelessWidget {
   }
 }
 
-const _feedItems = [
-  // example feed items now include the creator info so we can offer a "Chat" action
-  _FeedData('Photography Basics', Color(0xFFE3F2FD), creatorId: 'user_1', creatorName: 'Ava'),
-  _FeedData('Flutter for Beginners', Color(0xFFF3E5F5), creatorId: 'user_2', creatorName: 'Liam'),
-  _FeedData('Watercolor Painting', Color(0xFFFFF3E0), creatorId: 'user_3', creatorName: 'Maya'),
-  _FeedData('Guitar Lessons', Color(0xFFE8F5E9), /* no creator => no chat button */),
-  _FeedData('Cooking 101', Color(0xFFFFEBEE), creatorId: 'user_4', creatorName: 'Noah'),
-];
+
 
 class _FeedData {
+  final String skillId;
   final String title;
   final Color color;
   final String? creatorId;
   final String? creatorName;
 
-  const _FeedData(this.title, this.color, {this.creatorId, this.creatorName});
+  const _FeedData(this.skillId, this.title, this.color, {this.creatorId, this.creatorName});
 }
 
 class _PeopleSection extends StatefulWidget {
@@ -1038,7 +1092,7 @@ class _FeedCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(15),
         ),
         child: InkWell(
-          onTap: () => context.push('/skills/feed'),
+          onTap: () => context.push('/skills/details/${item.skillId}'),
           borderRadius: BorderRadius.circular(15),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

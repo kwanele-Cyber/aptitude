@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/features/auth/presentation/bloc/auth_block.dart';
+import 'package:myapp/features/auth/presentation/bloc/auth_state.dart';
+import 'package:myapp/features/matchmaking/presentation/bloc/match_bloc.dart';
+import 'package:myapp/features/matchmaking/presentation/bloc/match_event.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
@@ -168,6 +172,8 @@ class _SkillDetailsPageState extends State<SkillDetailsPage> {
                   _infoRow('Level', skill.level.name),
                   _infoRow('Format', skill.format.name),
                   _infoRow('Type', skill.type.name),
+                  const SizedBox(height: 16),
+                  _ConnectButton(skill: skill),
                   if (skill.tags.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text('Tags',
@@ -256,6 +262,57 @@ class _SkillDetailsPageState extends State<SkillDetailsPage> {
           ),
           Expanded(child: Text(value)),
         ],
+      ),
+    );
+  }
+}
+
+class _ConnectButton extends StatelessWidget {
+  final SkillEntity skill;
+
+  const _ConnectButton({required this.skill});
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+
+    if (authState is! AuthAuthenticated || authState.userEntity.id == skill.userId) {
+      return const SizedBox.shrink();
+    }
+
+    return Center(
+      child: FilledButton.icon(
+        onPressed: () {
+          context.read<MatchBloc>().add(
+            ConnectWithUserRequested(
+              matchData: {
+                'targetUserId': authState.userEntity.id,
+                'targetSkillId': skill.id,
+                'targetSkillTitle': skill.title,
+                'targetSkillCategory': skill.category,
+                'targetSkillLevel': skill.level.name,
+                'targetSkillFormat': skill.format.name,
+                'score': 100,
+                'status': 'pending',
+                'createdAt': DateTime.now().toIso8601String(),
+                'targetUserName': '',
+                'targetTrustScore': 0,
+                'targetIsVerified': skill.isVerified,
+                'targetAvailability': skill.availability,
+                'skillOwnerId': skill.userId,
+                'isDirectConnection': true,
+              },
+            ),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Connected! View in Matches tab'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+        icon: const Icon(Icons.handshake),
+        label: const Text('Connect'),
       ),
     );
   }

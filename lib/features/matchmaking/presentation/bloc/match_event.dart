@@ -50,6 +50,15 @@ class SaveMatchRequested extends MatchEvent {
   List<Object?> get props => [matchId];
 }
 
+class ConnectWithUserRequested extends MatchEvent {
+  final Map<String, dynamic> matchData;
+
+  ConnectWithUserRequested({required this.matchData});
+
+  @override
+  List<Object?> get props => [matchData];
+}
+
 class FetchMatchHistoryRequested extends MatchEvent {
   final String userId;
 

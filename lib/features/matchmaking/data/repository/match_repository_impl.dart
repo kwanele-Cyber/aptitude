@@ -40,6 +40,18 @@ class MatchRepositoryImpl implements MatchRepository {
   }
 
   @override
+  Future<Either<Failure, String>> createDirectMatch(Map<String, dynamic> matchData) async {
+    try {
+      final matchId = await remoteDataSource.createDirectMatch(matchData);
+      return Right(matchId);
+    } on ServerException {
+      return Left(ServerFailure());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> saveMatch(String matchId) async {
     try {
       await remoteDataSource.updateMatchStatus(matchId, {

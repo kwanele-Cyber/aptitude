@@ -8,6 +8,7 @@ abstract class MatchRepository {
       String matchId, MatchStatus status);
   Future<Either<Failure, void>> saveMatch(String matchId);
   Future<Either<Failure, List<MatchEntity>>> fetchMatchHistory(String userId);
+  Future<Either<Failure, String>> createDirectMatch(Map<String, dynamic> matchData);
   Future<Either<Failure, void>> submitFeedback(
       String matchId, int rating, String? comment);
 }

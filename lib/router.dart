@@ -30,7 +30,7 @@ import 'package:myapp/features/auth/domain/entity/user_entity.dart';
 import 'package:myapp/features/messages/domain/entity/room_entity.dart';
 import 'package:myapp/features/messages/presentation/pages/room_chat_page.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
-import 'package:myapp/features/skills/presentation/pages/create_skill_offer_page.dart';
+import 'package:myapp/features/skills/presentation/pages/create_skill_page.dart';
 import 'package:myapp/features/auth/presentation/pages/register_page.dart';
 import 'package:myapp/features/auth/presentation/pages/two_factor_setup_page.dart';
 import 'package:myapp/features/auth/presentation/pages/account_recovery_page.dart';
@@ -224,12 +224,12 @@ class AppRouter {
       ),
       GoRoute(
         path: '/skills/create',
-        builder: (context, state) => const CreateSkillOfferPage(),
+        builder: (context, state) => const CreateSkillPage(),
       ),
       GoRoute(
         path: '/skills/create-request',
         builder: (context, state) =>
-            const CreateSkillOfferPage(type: SkillType.request),
+            const CreateSkillPage(type: SkillType.request),
       ),
       GoRoute(
         path: '/skills/edit',

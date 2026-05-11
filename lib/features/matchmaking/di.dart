@@ -3,6 +3,7 @@ import 'package:myapp/features/matchmaking/data/datasources/match_remote_datasou
 import 'package:myapp/features/matchmaking/data/datasources/match_remote_datasource_firebase.dart';
 import 'package:myapp/features/matchmaking/data/repository/match_repository_impl.dart';
 import 'package:myapp/features/matchmaking/domain/repository/match_repository.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/create_direct_match_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/fetch_match_history_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/generate_matches_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart'
@@ -24,6 +25,7 @@ class MatchMakingDI {
         saveMatchUseCase: sl(),
         fetchMatchHistoryUseCase: sl(),
         submitMatchFeedbackUseCase: sl(),
+        createDirectMatchUseCase: sl(),
       ),
     );
 
@@ -31,6 +33,7 @@ class MatchMakingDI {
     sl.registerLazySingleton(() => UpdateMatchStatusUseCase(repository: sl()));
     sl.registerLazySingleton(() => SaveMatchUseCase(repository: sl()));
     sl.registerLazySingleton(() => FetchMatchHistoryUseCase(repository: sl()));
+    sl.registerLazySingleton(() => CreateDirectMatchUseCase(repository: sl()));
     sl.registerLazySingleton(
       () => SubmitMatchFeedbackUseCase(repository: sl()),
     );

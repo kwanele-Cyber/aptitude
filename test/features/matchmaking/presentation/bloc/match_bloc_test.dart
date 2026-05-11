@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/matchmaking/domain/entity/match_entity.dart';
+import 'package:myapp/features/matchmaking/domain/usecases/create_direct_match_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/fetch_match_history_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/generate_matches_usecase.dart';
 import 'package:myapp/features/matchmaking/domain/usecases/save_match_usecase.dart';
@@ -28,6 +29,9 @@ class MockFetchMatchHistoryUseCase extends Mock
 class MockSubmitMatchFeedbackUseCase extends Mock
     implements SubmitMatchFeedbackUseCase {}
 
+class MockCreateDirectMatchUseCase extends Mock
+    implements CreateDirectMatchUseCase {}
+
 final tMatch = MatchEntity(
   id: 'match1',
   targetUserId: 'user2',
@@ -49,6 +53,7 @@ void main() {
   late MockSaveMatchUseCase mockSaveUseCase;
   late MockFetchMatchHistoryUseCase mockFetchHistoryUseCase;
   late MockSubmitMatchFeedbackUseCase mockSubmitFeedbackUseCase;
+  late MockCreateDirectMatchUseCase mockCreateDirectUseCase;
 
   setUpAll(() {
     registerFallbackValue(const GenerateMatchesParams(userId: ''));
@@ -62,6 +67,7 @@ void main() {
       matchId: '',
       rating: 1,
     ));
+    registerFallbackValue(const CreateDirectMatchParams(matchData: {}));
   });
 
   setUp(() {
@@ -70,6 +76,7 @@ void main() {
     mockSaveUseCase = MockSaveMatchUseCase();
     mockFetchHistoryUseCase = MockFetchMatchHistoryUseCase();
     mockSubmitFeedbackUseCase = MockSubmitMatchFeedbackUseCase();
+    mockCreateDirectUseCase = MockCreateDirectMatchUseCase();
 
     bloc = MatchBloc(
       generateMatchesUseCase: mockGenerateUseCase,
@@ -77,6 +84,7 @@ void main() {
       saveMatchUseCase: mockSaveUseCase,
       fetchMatchHistoryUseCase: mockFetchHistoryUseCase,
       submitMatchFeedbackUseCase: mockSubmitFeedbackUseCase,
+      createDirectMatchUseCase: mockCreateDirectUseCase,
     );
   });
 
@@ -90,6 +98,8 @@ void main() {
       build: () {
         when(() => mockGenerateUseCase(any()))
             .thenAnswer((_) async => Right([tMatch]));
+        when(() => mockFetchHistoryUseCase(any()))
+            .thenAnswer((_) async => Right([]));
         return bloc;
       },
       act: (bloc) => bloc.add(FetchMatchesRequested(userId: 'user1')),

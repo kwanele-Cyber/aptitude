@@ -12,16 +12,16 @@ import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_event.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_state.dart';
 
-class CreateSkillOfferPage extends StatefulWidget {
+class CreateSkillPage extends StatefulWidget {
   final SkillType type;
 
-  const CreateSkillOfferPage({super.key, this.type = SkillType.offer});
+  const CreateSkillPage({super.key, this.type = SkillType.offer});
 
   @override
-  State<CreateSkillOfferPage> createState() => _CreateSkillOfferPageState();
+  State<CreateSkillPage> createState() => _CreateSkillPageState();
 }
 
-class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
+class _CreateSkillPageState extends State<CreateSkillPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -80,6 +80,16 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
 
   String get _title =>
       widget.type == SkillType.offer ? 'Create Skill Offer' : 'Create Skill Request';
+  String get _actionLabel =>
+      widget.type == SkillType.offer ? 'Create Skill Offer' : 'Create Skill Request';
+  String get _successMessage =>
+      widget.type == SkillType.offer
+          ? 'Skill offer created successfully!'
+          : 'Skill request created successfully!';
+  String get _descriptionHint =>
+      widget.type == SkillType.offer
+          ? 'Describe what you can teach...'
+          : 'Describe what you want to learn...';
 
   @override
   Widget build(BuildContext context) {
@@ -89,8 +99,8 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
         listener: (context, state) {
           if (state is SkillOfferCreated) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Skill offer created successfully!'),
+              SnackBar(
+                content: Text(_successMessage),
                 backgroundColor: Colors.green,
               ),
             );
@@ -131,10 +141,10 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _descriptionController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Description',
-                        hintText: 'Describe what you can teach...',
-                        border: OutlineInputBorder(),
+                        hintText: _descriptionHint,
+                        border: const OutlineInputBorder(),
                       ),
                       maxLines: 4,
                       validator: (v) =>
@@ -263,7 +273,7 @@ class _CreateSkillOfferPageState extends State<CreateSkillOfferPage> {
                               child:
                                   CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Create Skill Offer'),
+                          : Text(_actionLabel),
                     ),
                   ],
                 ),

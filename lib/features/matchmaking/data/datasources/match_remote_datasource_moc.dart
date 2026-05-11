@@ -30,4 +30,10 @@ class MatchRemoteDataSourceMock implements MatchRemoteDataSource {
   Future<void> saveFeedback(String matchId, Map<String, dynamic> data) async {
     await Future.delayed(const Duration(seconds: 1));
   }
+  
+  @override
+  Future<String> createDirectMatch(Map<String, dynamic> matchData) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return 'mock_match_id';
+  }
 }

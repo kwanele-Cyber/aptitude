@@ -38,9 +38,9 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
       _userId = authState.userEntity.id;
-      context
-          .read<MatchBloc>()
-          .add(FetchMatchesRequested(userId: authState.userEntity.id));
+      context.read<MatchBloc>().add(
+        FetchMatchesRequested(userId: authState.userEntity.id),
+      );
     }
   }
 
@@ -95,22 +95,24 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
                     const Spacer(),
                     Switch(
                       value: _verifiedOnly,
-                      onChanged: (v) =>
-                          setDialogState(() => _verifiedOnly = v),
+                      onChanged: (v) => setDialogState(() => _verifiedOnly = v),
                     ),
                   ],
                 ),
                 const Divider(height: 24),
                 Row(
                   children: [
-                    Icon(Icons.auto_awesome,
-                        size: 18, color: Theme.of(context).colorScheme.primary),
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'AI-Optimized',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const Spacer(),
                     Switch(
@@ -136,11 +138,10 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
                     child: Text(
                       'Automatically applies optimal match criteria based on your skill profile',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
-                          ),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
                     ),
                   ),
               ],
@@ -228,16 +229,19 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
           FilledButton.icon(
             onPressed: () {
               Navigator.of(ctx).pop();
-              context.push('/agreements/create', extra: {
-                'partnerId': match!.targetUserId,
-                'partnerName': match!.targetUserName,
-                'partnerSkillId': match!.targetSkillId,
-                'partnerSkillTitle': match!.targetSkillTitle,
-                'initiatorSkillId': match!.matchedSkillId,
-                'initiatorName':
-                    '${authState.userEntity.firstName} ${authState.userEntity.lastName}',
-                'initiatorId': authState.userEntity.id,
-              });
+              context.push(
+                '/agreements/create',
+                extra: {
+                  'partnerId': match!.targetUserId,
+                  'partnerName': match.targetUserName,
+                  'partnerSkillId': match.targetSkillId,
+                  'partnerSkillTitle': match.targetSkillTitle,
+                  'initiatorSkillId': match.matchedSkillId,
+                  'initiatorName':
+                      '${authState.userEntity.firstName} ${authState.userEntity.lastName}',
+                  'initiatorId': authState.userEntity.id,
+                },
+              );
             },
             icon: const Icon(Icons.handshake, size: 18),
             label: const Text('Create Agreement'),
@@ -271,101 +275,108 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
               _AiInsightsBanner(insights: _aiInsights!),
             Expanded(
               child: BlocConsumer<MatchBloc, MatchState>(
-        listener: (context, state) {
-          if (state is MatchesLoaded) {
-            _lastMatches = state.matches;
-          }
-          if (state is MatchStatusUpdated &&
-              state.status == MatchStatus.accepted &&
-              _lastAcceptedMatchId != null) {
-            _offerCreateAgreement(_lastAcceptedMatchId!);
-            _lastAcceptedMatchId = null;
-          }
-        },
-        builder: (context, state) {
-          if (state is MatchLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+                listener: (context, state) {
+                  if (state is MatchesLoaded) {
+                    _lastMatches = state.matches;
+                  }
+                  if (state is MatchStatusUpdated &&
+                      state.status == MatchStatus.accepted &&
+                      _lastAcceptedMatchId != null) {
+                    _offerCreateAgreement(_lastAcceptedMatchId!);
+                    _lastAcceptedMatchId = null;
+                  }
+                },
+                builder: (context, state) {
+                  if (state is MatchLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-          if (state is MatchesLoaded) {
-            final filtered = _applyFilters(state.matches);
-            if (filtered.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.search_off, size: 64, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'No matches found',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.matches.isEmpty
-                          ? 'Create more skill listings to get matches'
-                          : 'Try adjusting your filters',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        if (_userId != null) {
-                          context
-                              .read<MatchBloc>()
-                              .add(FetchMatchesRequested(userId: _userId!));
-                        }
+                  if (state is MatchesLoaded) {
+                    final filtered = _applyFilters(state.matches);
+                    if (filtered.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'No matches found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              state.matches.isEmpty
+                                  ? 'Create more skill listings to get matches'
+                                  : 'Try adjusting your filters',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                if (_userId != null) {
+                                  context.read<MatchBloc>().add(
+                                    FetchMatchesRequested(userId: _userId!),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Refresh'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return _MatchCardStack(
+                      matches: filtered,
+                      currentUserId: _userId,
+                      onAccept: _onAccept,
+                      onReject: (matchId) {
+                        context.read<MatchBloc>().add(
+                          RejectMatchRequested(matchId: matchId),
+                        );
+                        _showFeedbackDialog(context, matchId);
                       },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Refresh'),
-                    ),
-                  ],
-                ),
-              );
-            }
-            return _MatchCardStack(
-              matches: filtered,
-              currentUserId: _userId,
-              onAccept: _onAccept,
-              onReject: (matchId) {
-                context
-                    .read<MatchBloc>()
-                    .add(RejectMatchRequested(matchId: matchId));
-                _showFeedbackDialog(context, matchId);
-              },
-              onIgnore: (matchId) {
-                context
-                    .read<MatchBloc>()
-                    .add(IgnoreMatchRequested(matchId: matchId));
-              },
-            );
-          }
+                      onIgnore: (matchId) {
+                        context.read<MatchBloc>().add(
+                          IgnoreMatchRequested(matchId: matchId),
+                        );
+                      },
+                    );
+                  }
 
-          if (state is MatchError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(state.message),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_userId != null) {
-                        context
-                            .read<MatchBloc>()
-                            .add(FetchMatchesRequested(userId: _userId!));
-                      }
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
+                  if (state is MatchError) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(state.message),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (_userId != null) {
+                                context.read<MatchBloc>().add(
+                                  FetchMatchesRequested(userId: _userId!),
+                                );
+                              }
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return const Center(child: Text('Ready to find matches'));
+                },
               ),
-            );
-          }
-
-          return const Center(child: Text('Ready to find matches'));
-        },
-      ),
             ),
           ],
         ),
@@ -441,7 +452,8 @@ class _MatchCardStack extends StatelessWidget {
                   children: [
                     InkWell(
                       borderRadius: BorderRadius.circular(20),
-                      onTap: () => context.push('/profile/${match.targetUserId}'),
+                      onTap: () =>
+                          context.push('/profile/${match.targetUserId}'),
                       child: CircleAvatar(
                         child: Text(
                           match.targetSkillTitle.isNotEmpty
@@ -456,7 +468,9 @@ class _MatchCardStack extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           InkWell(
-                            onTap: () => context.push('/skills/details/${match.targetSkillId}'),
+                            onTap: () => context.push(
+                              '/skills/details/${match.targetSkillId}',
+                            ),
                             child: Text(
                               match.targetSkillTitle,
                               style: Theme.of(context).textTheme.titleMedium,
@@ -473,19 +487,19 @@ class _MatchCardStack extends StatelessWidget {
                       ),
                     ),
                     if (match.targetIsVerified)
-                      const Icon(Icons.verified,
-                          size: 18, color: Colors.green),
+                      const Icon(Icons.verified, size: 18, color: Colors.green),
                     const SizedBox(width: 4),
                     GestureDetector(
-                      onTap: () =>
-                          context.push('/trust/${match.targetUserId}'),
+                      onTap: () => context.push('/trust/${match.targetUserId}'),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: _trustColor(
-                                  (match.targetTrustScore as num).toDouble())
-                              .withValues(alpha: 0.12),
+                            (match.targetTrustScore as num).toDouble(),
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -494,7 +508,8 @@ class _MatchCardStack extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: _trustColor(
-                                (match.targetTrustScore as num).toDouble()),
+                              (match.targetTrustScore as num).toDouble(),
+                            ),
                           ),
                         ),
                       ),
@@ -502,10 +517,14 @@ class _MatchCardStack extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(match.targetSkillCategory,
-                    style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  match.targetSkillCategory,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 const SizedBox(height: 4),
-                Text('${match.targetSkillLevel.name} · ${match.targetSkillFormat.name}${match.distance != null ? ' · ${match.distance!.toStringAsFixed(1)} km' : ''}'),
+                Text(
+                  '${match.targetSkillLevel.name} · ${match.targetSkillFormat.name}${match.distance != null ? ' · ${match.distance!.toStringAsFixed(1)} km' : ''}',
+                ),
                 const SizedBox(height: 12),
                 // AI session quality prediction derived from match score
                 _SessionQualityBar(score: match.score),
@@ -534,7 +553,8 @@ class _MatchCardStack extends StatelessWidget {
                               userId: match.targetUserId,
                               type: NotificationType.match,
                               title: 'Match Accepted',
-                              body: '${match.targetUserName} wants to connect with you!',
+                              body:
+                                  '${match.targetUserName} wants to connect with you!',
                             ),
                           );
                         }
@@ -576,8 +596,7 @@ class _RatingSelectorState extends State<_RatingSelector> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('How was this match?',
-            style: TextStyle(fontSize: 16)),
+        const Text('How was this match?', style: TextStyle(fontSize: 16)),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -617,17 +636,15 @@ class _SessionQualityBar extends StatelessWidget {
     final qualityColor = predictedQuality >= 70
         ? const Color(0xFF2E7D32)
         : predictedQuality >= 40
-            ? Colors.orange
-            : Colors.grey;
+        ? Colors.orange
+        : Colors.grey;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: qualityColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: qualityColor.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: qualityColor.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -683,8 +700,11 @@ class _AiInsightsBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome,
-                  size: 16, color: theme.colorScheme.primary),
+              Icon(
+                Icons.auto_awesome,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 6),
               Text(
                 'AI Optimizations',
@@ -696,17 +716,19 @@ class _AiInsightsBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          ...insights.take(2).map(
-            (opt) => Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                '• ${opt.insight}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          ...insights
+              .take(2)
+              .map(
+                (opt) => Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '• ${opt.insight}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
         ],
       ),
     );

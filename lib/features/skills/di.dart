@@ -20,13 +20,14 @@ import 'package:myapp/features/skills/domain/usecases/suggest_skill_category_use
 import 'package:myapp/features/skills/domain/usecases/update_skill_usecase.dart';
 import 'package:myapp/features/skills/presentation/bloc/skill_bloc.dart';
 
-class SkillsDI{
+class SkillsDI {
   final GetIt sl;
   SkillsDI(this.sl);
 
-  GetIt Init(){
+  GetIt Init() {
     // Skill ecosystem
-  sl.registerFactory(() => SkillBloc(
+    sl.registerFactory(
+      () => SkillBloc(
         createSkillOfferUseCase: sl(),
         updateSkillUseCase: sl(),
         deleteSkillUseCase: sl(),
@@ -42,7 +43,8 @@ class SkillsDI{
         deleteSavedSearchUseCase: sl(),
         suggestSkillCategoryUseCase: sl(),
         submitSkillVerificationUseCase: sl(),
-      ));
+      ),
+    );
 
     sl.registerLazySingleton(() => CreateSkillOfferUseCase(repository: sl()));
     sl.registerLazySingleton(() => UpdateSkillUseCase(repository: sl()));
@@ -58,8 +60,10 @@ class SkillsDI{
     sl.registerLazySingleton(() => FetchSavedSearchesUseCase(repository: sl()));
     sl.registerLazySingleton(() => DeleteSavedSearchUseCase(repository: sl()));
     sl.registerLazySingleton(() => SuggestSkillCategoryUseCase());
-    sl.registerLazySingleton(() => SubmitSkillVerificationUseCase(repository: sl()));
-
+    sl.registerLazySingleton(
+      () => SubmitSkillVerificationUseCase(repository: sl()),
+    );
+    sl.registerLazySingleton(() => FilterSkillsUseCase(repository: sl()));
     sl.registerLazySingleton<SkillRepository>(
       () => SkillRepositoryImpl(remoteDataSource: sl(), adminRepository: sl()),
     );
