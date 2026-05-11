@@ -7,11 +7,16 @@ import 'package:myapp/features/messages/domain/entity/inbox_conversation_entity.
 import 'package:myapp/features/messages/domain/entity/message_entity.dart';
 import 'package:myapp/features/messages/domain/entity/room_entity.dart';
 import 'package:myapp/features/messages/domain/repository/message_repository.dart';
+import 'package:myapp/features/admin/domain/repository/admin_repository.dart';
 
 class MessageRepositoryImpl implements MessageRepository {
   final MessageRemoteDataSource remoteDataSource;
+  final AdminRepository adminRepository;
 
-  MessageRepositoryImpl({required this.remoteDataSource});
+  MessageRepositoryImpl({
+    required this.remoteDataSource,
+    required this.adminRepository,
+  });
 
   @override
   Future<Either<Failure, void>> sendMessage(MessageEntity message) async {
@@ -72,6 +77,7 @@ class MessageRepositoryImpl implements MessageRepository {
   Future<Either<Failure, String>> createRoom(RoomEntity room) async {
     try {
       final roomId = await remoteDataSource.createRoom(room);
+      await adminRepository.logAudit('Created Chat Room', detail: 'Room ID: $roomId', severity: 'info', actorRole: 'User');
       return Right(roomId);
     } on ServerException {
       return Left(ServerFailure());
@@ -203,6 +209,7 @@ class MessageRepositoryImpl implements MessageRepository {
       String currentUserId, String blockedUserId, String blockedUserName) async {
     try {
       await remoteDataSource.blockUser(currentUserId, blockedUserId, blockedUserName);
+      await adminRepository.logAudit('Blocked User', detail: 'Blocked User ID: $blockedUserId', severity: 'warning', actorRole: 'User');
       return const Right(null);
     } on ServerException {
       return Left(ServerFailure());
@@ -214,6 +221,7 @@ class MessageRepositoryImpl implements MessageRepository {
       String currentUserId, String blockedUserId) async {
     try {
       await remoteDataSource.unblockUser(currentUserId, blockedUserId);
+      await adminRepository.logAudit('Unblocked User', detail: 'Unblocked User ID: $blockedUserId', severity: 'info', actorRole: 'User');
       return const Right(null);
     } on ServerException {
       return Left(ServerFailure());

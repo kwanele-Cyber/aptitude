@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
+import 'package:intl/intl.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
 class AdminAuditLogPage extends StatefulWidget {
@@ -63,8 +65,8 @@ class _AdminAuditLogPageState extends State<AdminAuditLogPage> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: _mockLogs.length,
-            itemBuilder: (_, i) => _buildLogEntry(theme, _mockLogs[i]),
+            itemCount: _logs.length,
+            itemBuilder: (_, i) => _buildLogEntry(theme, _logs[i]),
           ),
         ),
         _buildPagination(theme),
@@ -169,7 +171,8 @@ class _AdminAuditLogPageState extends State<AdminAuditLogPage> {
     );
   }
 
-  Widget _buildLogEntry(ThemeData theme, _MockLogEntry entry) {
+  Widget _buildLogEntry(ThemeData theme, AuditLogEntryEntity entry) {
+    final timeStr = DateFormat('HH:mm:ss').format(entry.timestamp);
     final severityIcon = entry.severity == 'critical' ? Icons.error : entry.severity == 'warning' ? Icons.warning_amber : Icons.info;
     final severityColor = entry.severity == 'critical' ? Colors.red : entry.severity == 'warning' ? Colors.orange : theme.colorScheme.onSurface.withValues(alpha: 0.4);
 
@@ -189,10 +192,10 @@ class _AdminAuditLogPageState extends State<AdminAuditLogPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(color: theme.colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(4)),
-              child: Text(entry.time, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontFamily: 'monospace')),
+              child: Text(timeStr, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontFamily: 'monospace')),
             ),
             const SizedBox(width: 12),
-            Text(entry.admin, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.primary)),
+            Text(entry.actorName, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.primary)),
             const SizedBox(width: 8),
             Text(entry.action, style: const TextStyle(fontSize: 13)),
           ],
@@ -294,21 +297,15 @@ class _AdminAuditLogPageState extends State<AdminAuditLogPage> {
   }
 }
 
-class _MockLogEntry {
-  final String time, admin, action, detail, severity;
-  final String? ip, device, changes;
-  _MockLogEntry({required this.time, required this.admin, required this.action, required this.detail, required this.severity, this.ip, this.device, this.changes});
-}
-
-final _mockLogs = [
-  _MockLogEntry(time: '10:32:15', admin: 'Admin_A', action: 'Suspended user Kwanele Mhlongo (#2847)', detail: 'Reason: Violation of Rule 3', severity: 'critical', ip: '192.168.1.1', device: 'Chrome/Windows', changes: 'Status: Active → Suspended'),
-  _MockLogEntry(time: '10:15:22', admin: 'Admin_B', action: 'Modified agreement #D-2026-0042 terms', detail: 'Change: Duration 8→12 weeks', severity: 'info', changes: 'Duration: 8 → 12 weeks'),
-  _MockLogEntry(time: '09:58:44', admin: 'System', action: 'User registered Thandi Nkosi (#2848)', detail: 'Email: thandi@example.com | Signup via: Google OAuth', severity: 'info'),
-  _MockLogEntry(time: '09:30:00', admin: 'Admin_A', action: 'Login successful', detail: 'Admin_A authenticated successfully', severity: 'info', ip: '10.0.0.5', device: 'Chrome/Windows'),
-  _MockLogEntry(time: '09:12:33', admin: 'Admin_C', action: 'Deleted review #1568 by Busi D', detail: 'Reason: Inappropriate content', severity: 'warning', changes: 'Review: visible → hidden'),
-  _MockLogEntry(time: '08:45:10', admin: 'System', action: 'Auto-flagged content in chat #2291', detail: 'Pattern: spam link detected', severity: 'warning'),
-  _MockLogEntry(time: '08:22:00', admin: 'Admin_B', action: 'Applied penalty to Sipho Zulu', detail: 'Type: Warning | Strike: 1/3', severity: 'warning'),
-  _MockLogEntry(time: '07:55:30', admin: 'Admin_A', action: 'Updated system config: match radius', detail: 'Changed from 30km to 50km', severity: 'info', changes: 'Match Radius: 30 → 50'),
-  _MockLogEntry(time: '07:30:00', admin: 'Admin_C', action: 'Resolved dispute #DSP-2026-0089', detail: 'Decision: In favor of reporter', severity: 'info'),
-  _MockLogEntry(time: '06:45:20', admin: 'System', action: 'Daily backup completed', detail: 'Size: 2.4GB | Duration: 12m 34s', severity: 'info'),
+final _logs = [
+  AuditLogEntryEntity(id: 'l1', timestamp: DateTime.now(), actorId: 'a1', actorName: 'Admin_A', actorRole: 'Admin', action: 'Suspended user Kwanele Mhlongo (#2847)', detail: 'Reason: Violation of Rule 3', severity: 'critical', ip: '192.168.1.1', device: 'Chrome/Windows', changes: 'Status: Active → Suspended'),
+  AuditLogEntryEntity(id: 'l2', timestamp: DateTime.now(), actorId: 'a2', actorName: 'Admin_B', actorRole: 'Admin', action: 'Modified agreement #D-2026-0042 terms', detail: 'Change: Duration 8→12 weeks', severity: 'info', changes: 'Duration: 8 → 12 weeks'),
+  AuditLogEntryEntity(id: 'l3', timestamp: DateTime.now(), actorId: 'system', actorName: 'System', actorRole: 'System', action: 'User registered Thandi Nkosi (#2848)', detail: 'Email: thandi@example.com | Signup via: Google OAuth', severity: 'info'),
+  AuditLogEntryEntity(id: 'l4', timestamp: DateTime.now(), actorId: 'a1', actorName: 'Admin_A', actorRole: 'Admin', action: 'Login successful', detail: 'Admin_A authenticated successfully', severity: 'info', ip: '10.0.0.5', device: 'Chrome/Windows'),
+  AuditLogEntryEntity(id: 'l5', timestamp: DateTime.now(), actorId: 'a3', actorName: 'Admin_C', actorRole: 'Admin', action: 'Deleted review #1568 by Busi D', detail: 'Reason: Inappropriate content', severity: 'warning', changes: 'Review: visible → hidden'),
+  AuditLogEntryEntity(id: 'l6', timestamp: DateTime.now(), actorId: 'system', actorName: 'System', actorRole: 'System', action: 'Auto-flagged content in chat #2291', detail: 'Pattern: spam link detected', severity: 'warning'),
+  AuditLogEntryEntity(id: 'l7', timestamp: DateTime.now(), actorId: 'a2', actorName: 'Admin_B', actorRole: 'Admin', action: 'Applied penalty to Sipho Zulu', detail: 'Type: Warning | Strike: 1/3', severity: 'warning'),
+  AuditLogEntryEntity(id: 'l8', timestamp: DateTime.now(), actorId: 'a1', actorName: 'Admin_A', actorRole: 'Admin', action: 'Updated system config: match radius', detail: 'Changed from 30km to 50km', severity: 'info', changes: 'Match Radius: 30 → 50'),
+  AuditLogEntryEntity(id: 'l9', timestamp: DateTime.now(), actorId: 'a3', actorName: 'Admin_C', actorRole: 'Admin', action: 'Resolved dispute #DSP-2026-0089', detail: 'Decision: In favor of reporter', severity: 'info'),
+  AuditLogEntryEntity(id: 'l10', timestamp: DateTime.now(), actorId: 'system', actorName: 'System', actorRole: 'System', action: 'Daily backup completed', detail: 'Size: 2.4GB | Duration: 12m 34s', severity: 'info'),
 ];

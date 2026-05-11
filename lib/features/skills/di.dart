@@ -61,7 +61,7 @@ class SkillsDI{
     sl.registerLazySingleton(() => SubmitSkillVerificationUseCase(repository: sl()));
 
     sl.registerLazySingleton<SkillRepository>(
-      () => SkillRepositoryImpl(remoteDataSource: sl()),
+      () => SkillRepositoryImpl(remoteDataSource: sl(), adminRepository: sl()),
     );
     sl.registerLazySingleton<SkillRemoteDataSource>(
       () => SkillRemoteDataSourceFirebase(),

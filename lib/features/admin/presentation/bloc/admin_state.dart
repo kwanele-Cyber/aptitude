@@ -9,18 +9,32 @@ abstract class AdminState extends Equatable {
 
 class AdminInitial extends AdminState {}
 
+class AdminLoading extends AdminState {}
+
 // Dashboard
 class AdminDashboardLoading extends AdminState {}
+
 class AdminDashboardLoaded extends AdminState {
   final int totalUsers, activeMatches, sessionsThisWeek;
   final double averageRating;
-  const AdminDashboardLoaded({this.totalUsers = 0, this.activeMatches = 0, this.sessionsThisWeek = 0, this.averageRating = 0.0});
+  const AdminDashboardLoaded({
+    this.totalUsers = 0,
+    this.activeMatches = 0,
+    this.sessionsThisWeek = 0,
+    this.averageRating = 0.0,
+  });
   @override
-  List<Object?> get props => [totalUsers, activeMatches, sessionsThisWeek, averageRating];
+  List<Object?> get props => [
+    totalUsers,
+    activeMatches,
+    sessionsThisWeek,
+    averageRating,
+  ];
 }
 
 // Users
 class AdminUsersLoading extends AdminState {}
+
 class AdminUsersLoaded extends AdminState {
   final List<AdminUserEntity> users;
   const AdminUsersLoaded(this.users);
@@ -30,6 +44,7 @@ class AdminUsersLoaded extends AdminState {
 
 // Moderation
 class AdminModerationLoading extends AdminState {}
+
 class AdminModerationLoaded extends AdminState {
   final List<FlaggedContentEntity> items;
   const AdminModerationLoaded(this.items);
@@ -39,6 +54,7 @@ class AdminModerationLoaded extends AdminState {
 
 // Penalties
 class AdminPenaltiesLoading extends AdminState {}
+
 class AdminPenaltiesLoaded extends AdminState {
   final List<PenaltyEntity> penalties;
   const AdminPenaltiesLoaded(this.penalties);
@@ -48,6 +64,7 @@ class AdminPenaltiesLoaded extends AdminState {
 
 // Analytics
 class AdminAnalyticsLoading extends AdminState {}
+
 class AdminAnalyticsLoaded extends AdminState {
   final AnalyticsDataEntity data;
   const AdminAnalyticsLoaded(this.data);
@@ -57,6 +74,7 @@ class AdminAnalyticsLoaded extends AdminState {
 
 // Config
 class AdminConfigLoading extends AdminState {}
+
 class AdminConfigLoaded extends AdminState {
   final SystemConfigEntity config;
   const AdminConfigLoaded(this.config);
@@ -66,6 +84,7 @@ class AdminConfigLoaded extends AdminState {
 
 // Categories
 class AdminCategoriesLoading extends AdminState {}
+
 class AdminCategoriesLoaded extends AdminState {
   final List<SkillCategoryEntity> categories;
   const AdminCategoriesLoaded(this.categories);
@@ -75,6 +94,7 @@ class AdminCategoriesLoaded extends AdminState {
 
 // Broadcasts
 class AdminBroadcastsLoading extends AdminState {}
+
 class AdminBroadcastsLoaded extends AdminState {
   final List<BroadcastMessageEntity> broadcasts;
   const AdminBroadcastsLoaded(this.broadcasts);
@@ -84,17 +104,23 @@ class AdminBroadcastsLoaded extends AdminState {
 
 // Audit Log
 class AdminAuditLogLoading extends AdminState {}
+
 class AdminAuditLogLoaded extends AdminState {
   final List<AuditLogEntryEntity> entries;
   final int page;
   final bool hasMore;
-  const AdminAuditLogLoaded(this.entries, {this.page = 1, this.hasMore = false});
+  const AdminAuditLogLoaded(
+    this.entries, {
+    this.page = 1,
+    this.hasMore = false,
+  });
   @override
   List<Object?> get props => [entries, page, hasMore];
 }
 
 // Roles
 class AdminRolesLoading extends AdminState {}
+
 class AdminRolesLoaded extends AdminState {
   final List<AdminRoleEntity> roles;
   const AdminRolesLoaded(this.roles);
@@ -104,6 +130,7 @@ class AdminRolesLoaded extends AdminState {
 
 // Database
 class AdminDatabaseLoading extends AdminState {}
+
 class AdminDatabaseLoaded extends AdminState {
   final DatabaseStatsEntity stats;
   const AdminDatabaseLoaded(this.stats);
@@ -119,12 +146,14 @@ class AdminSeedInProgress extends AdminState {
   @override
   List<Object?> get props => [step, progress];
 }
+
 class AdminSeedComplete extends AdminState {
   final List<String> results;
   const AdminSeedComplete(this.results);
   @override
   List<Object?> get props => [results];
 }
+
 class AdminSeedError extends AdminState {
   final String message;
   const AdminSeedError(this.message);

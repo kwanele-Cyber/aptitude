@@ -10,7 +10,8 @@ class PolicyModel extends PolicyEntity {
     required super.requiresAcknowledgement,
   });
 
-  factory PolicyModel.fromJson(String id, Map<String, dynamic> json) {
+  factory PolicyModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return PolicyModel(
       id: id,
       title: json['title'] as String? ?? '',

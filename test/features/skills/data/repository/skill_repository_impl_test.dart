@@ -7,9 +7,13 @@ import 'package:myapp/features/skills/data/models/saved_search_model.dart';
 import 'package:myapp/features/skills/data/models/skill_model.dart';
 import 'package:myapp/features/skills/data/repository/skill_repository_impl.dart';
 import 'package:myapp/features/skills/domain/entity/skill_entity.dart';
+import 'package:myapp/features/admin/domain/repository/admin_repository.dart';
+import 'package:dartz/dartz.dart';
 
 class MockSkillRemoteDataSource extends Mock
     implements SkillRemoteDataSource {}
+
+class MockAdminRepository extends Mock implements AdminRepository {}
 
 final tSkillModel = SkillModel(
   id: 'skill1',
@@ -24,10 +28,25 @@ final tSkillModel = SkillModel(
 void main() {
   late SkillRepositoryImpl repository;
   late MockSkillRemoteDataSource mockRemote;
+  late MockAdminRepository mockAdmin;
 
   setUp(() {
     mockRemote = MockSkillRemoteDataSource();
-    repository = SkillRepositoryImpl(remoteDataSource: mockRemote);
+    mockAdmin = MockAdminRepository();
+
+    // Stub logAudit to return success by default
+    when(() => mockAdmin.logAudit(
+      any(),
+      detail: any(named: 'detail'),
+      severity: any(named: 'severity'),
+      actorRole: any(named: 'actorRole'),
+      actorId: any(named: 'actorId'),
+    )).thenAnswer((_) async => const Right(null));
+
+    repository = SkillRepositoryImpl(
+      remoteDataSource: mockRemote,
+      adminRepository: mockAdmin,
+    );
   });
 
   group('createSkill', () {

@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:myapp/core/error/exceptions.dart';
 import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/admin/data/datasources/admin_remote_datasource.dart';
+import 'package:myapp/features/admin/data/models/admin_models.dart';
 import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
 import 'package:myapp/features/admin/domain/repository/admin_repository.dart';
 
@@ -46,6 +47,7 @@ class AdminRepositoryImpl implements AdminRepository {
   Future<Either<Failure, void>> suspendUser(String userId, String reason) async {
     try {
       await remoteDataSource.suspendUser(userId, reason);
+      await logAudit('Suspended User', detail: 'User ID: $userId | Reason: $reason', severity: 'warning', actorRole: 'Admin');
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure());
@@ -56,6 +58,7 @@ class AdminRepositoryImpl implements AdminRepository {
   Future<Either<Failure, void>> deleteUser(String userId) async {
     try {
       await remoteDataSource.deleteUser(userId);
+      await logAudit('Deleted User', detail: 'User ID: $userId', severity: 'danger', actorRole: 'Admin');
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure());
@@ -66,6 +69,17 @@ class AdminRepositoryImpl implements AdminRepository {
   Future<Either<Failure, void>> bulkAction(List<String> userIds, String action) async {
     try {
       await remoteDataSource.bulkAction(userIds, action);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateTrustScore(String userId, double score, String reason) async {
+    try {
+      await remoteDataSource.updateTrustScore(userId, score, reason);
+      await logAudit('Updated Trust Score', detail: 'User ID: $userId | New Score: $score', severity: 'info', actorRole: 'Admin');
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure());
@@ -113,9 +127,9 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, List<PenaltyEntity>>> getPenalties() async {
+  Future<Either<Failure, List<PenaltyEntity>>> getPenalties({String? query}) async {
     try {
-      final penalties = await remoteDataSource.getPenalties();
+      final penalties = await remoteDataSource.getPenalties(query: query);
       return Right(penalties);
     } catch (e) {
       return Left(ServerFailure());
@@ -143,6 +157,47 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
+  Future<Either<Failure, List<DisputeEntity>>> getDisputes() async {
+    try {
+      final disputes = await remoteDataSource.getDisputes();
+      return Right(disputes);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resolveDispute(String disputeId, String resolution) async {
+    try {
+      await remoteDataSource.resolveDispute(disputeId, resolution);
+      await logAudit('Resolved Dispute', detail: 'Dispute ID: $disputeId', severity: 'info', actorRole: 'Admin');
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<AppealEntity>>> getAppeals() async {
+    try {
+      final appeals = await remoteDataSource.getAppeals();
+      return Right(appeals);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> handleAppeal(String appealId, String decision) async {
+    try {
+      await remoteDataSource.handleAppeal(appealId, decision);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, AnalyticsDataEntity>> getAnalytics(String dateRange, {DateTime? start, DateTime? end}) async {
     try {
       final data = await remoteDataSource.getAnalytics(dateRange, start: start, end: end);
@@ -153,9 +208,19 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, SystemConfigEntity>> getConfig() async {
+  Future<Either<Failure, String>> exportSystemData(String type) async {
     try {
-      final config = await remoteDataSource.getConfig();
+      final url = await remoteDataSource.exportSystemData(type);
+      return Right(url);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, SystemConfigEntity>> getConfig({String? query}) async {
+    try {
+      final config = await remoteDataSource.getConfig(query: query);
       return Right(config);
     } catch (e) {
       return Left(ServerFailure());
@@ -165,7 +230,14 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<Either<Failure, void>> saveConfig(SystemConfigEntity config) async {
     try {
-      await remoteDataSource.saveConfig((config as dynamic).toJson() as Map<String, dynamic>);
+      final model = SystemConfigModel(
+        featureFlags: config.featureFlags,
+        matchParams: config.matchParams,
+        trustThresholds: config.trustThresholds,
+        generalSettings: config.generalSettings,
+      );
+      await remoteDataSource.saveConfig(model.toJson());
+      await logAudit('Updated System Config', detail: 'Modified system parameters', severity: 'warning', actorRole: 'Admin');
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure());
@@ -253,9 +325,39 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, List<AuditLogEntryEntity>>> getAuditLogs({String? admin, String? action, int page = 1, int pageSize = 25}) async {
+  Future<Either<Failure, void>> logAudit(String action, {String detail = '', String severity = 'info', String actorRole = 'User', String? actorId}) async {
     try {
-      final logs = await remoteDataSource.getAuditLogs(admin: admin, action: action, page: page, pageSize: pageSize);
+      await remoteDataSource.logAudit(action, detail: detail, severity: severity, actorRole: actorRole, actorId: actorId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<SupportRequestEntity>>> getSupportRequests() async {
+    try {
+      final requests = await remoteDataSource.getSupportRequests();
+      return Right(requests);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> respondToSupportRequest(String requestId, String response) async {
+    try {
+      await remoteDataSource.respondToSupportRequest(requestId, response);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<AuditLogEntryEntity>>> getAuditLogs({String? actor, String? action, int page = 1, int pageSize = 25}) async {
+    try {
+      final logs = await remoteDataSource.getAuditLogs(actor: actor, action: action, page: page, pageSize: pageSize);
       return Right(logs);
     } catch (e) {
       return Left(ServerFailure());
@@ -336,6 +438,36 @@ class AdminRepositoryImpl implements AdminRepository {
   Future<Either<Failure, void>> runMaintenance() async {
     try {
       await remoteDataSource.runMaintenance();
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> assignEmergencyAdmin(String userId, String verificationToken) async {
+    try {
+      await remoteDataSource.assignEmergencyAdmin(userId, verificationToken);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> grantTemporaryAdmin(String userId, Duration duration, List<String> permissions) async {
+    try {
+      await remoteDataSource.grantTemporaryAdmin(userId, duration, permissions);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> rotateRecoveryKeys() async {
+    try {
+      await remoteDataSource.rotateRecoveryKeys();
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure());

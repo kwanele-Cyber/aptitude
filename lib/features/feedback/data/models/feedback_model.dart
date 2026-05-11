@@ -17,8 +17,9 @@ class FeedbackModel extends FeedbackEntity {
   });
 
   factory FeedbackModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return FeedbackModel(
-      id: key,
+      id: id,
       sessionId: json['sessionId'] as String? ?? '',
       reviewerId: json['reviewerId'] as String? ?? '',
       reviewerName: json['reviewerName'] as String? ?? '',

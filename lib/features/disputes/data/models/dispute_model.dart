@@ -27,8 +27,9 @@ class DisputeModel extends DisputeEntity {
   });
 
   factory DisputeModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return DisputeModel(
-      id: key,
+      id: id,
       type: _parseDisputeType(json['type']),
       reporterId: json['reporterId'] as String? ?? '',
       reporterName: json['reporterName'] as String? ?? '',

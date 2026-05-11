@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_event.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_state.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -12,30 +17,11 @@ class AdminSystemConfigPage extends StatefulWidget {
 }
 
 class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
-  bool _isLoading = true;
   bool _hasChanges = false;
-  bool _chatSystem = true;
-  bool _videoCalls = false;
-  bool _geoCheckin = true;
-  bool _qrScanner = true;
-  bool _e2eEncryption = false;
-  bool _trustV2 = false;
-  bool _aiMatch = true;
-  bool _maintenanceMode = false;
-  double _matchRadius = 50;
-  double _maxMatchesPerDay = 5;
-  double _skillOverlap = 70;
-  double _availWeight = 30;
-  double _ratingWeight = 20;
-  final _excellentMinCtrl = TextEditingController(text: '80');
-  final _goodMinCtrl = TextEditingController(text: '60');
-  final _fairMinCtrl = TextEditingController(text: '40');
-  final _noShowPenaltyCtrl = TextEditingController(text: '-15');
-  final _sessionCreditCtrl = TextEditingController(text: '2');
-  final _sessionTimeoutCtrl = TextEditingController(text: '15');
-  final _reviewEditCtrl = TextEditingController(text: '48');
-  final _agreementExpiryCtrl = TextEditingController(text: '90');
-  final _maxAgreementsCtrl = TextEditingController(text: '10');
+  late Map<String, bool> _featureFlags;
+  late Map<String, double> _matchParams;
+  late Map<String, int> _trustThresholds;
+  late Map<String, int> _generalSettings;
 
   @override
   void initState() {
@@ -43,24 +29,16 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
     _loadData();
   }
 
-  @override
-  void dispose() {
-    _excellentMinCtrl.dispose();
-    _goodMinCtrl.dispose();
-    _fairMinCtrl.dispose();
-    _noShowPenaltyCtrl.dispose();
-    _sessionCreditCtrl.dispose();
-    _sessionTimeoutCtrl.dispose();
-    _reviewEditCtrl.dispose();
-    _agreementExpiryCtrl.dispose();
-    _maxAgreementsCtrl.dispose();
-    super.dispose();
+  void _loadData() {
+    context.read<AdminBloc>().add(AdminLoadConfig());
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 600));
-    setState(() => _isLoading = false);
+  void _initLocalState(SystemConfigEntity config) {
+    _featureFlags = Map.from(config.featureFlags);
+    _matchParams = Map.from(config.matchParams);
+    _trustThresholds = Map.from(config.trustThresholds);
+    _generalSettings = Map.from(config.generalSettings);
+    _hasChanges = false;
   }
 
   void _markChanged() => setState(() => _hasChanges = true);
@@ -71,61 +49,86 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
     final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
-      appBar: AdminAppBar(title: 'System Configuration'),
+      appBar: const AdminAppBar(title: 'System Configuration'),
       drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
           if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
-          Expanded(child: _buildContent(theme)),
+          Expanded(
+            child: BlocConsumer<AdminBloc, AdminState>(
+              listener: (context, state) {
+                if (state is AdminConfigLoaded) {
+                  _initLocalState(state.config);
+                }
+              },
+              builder: (context, state) {
+                if (state is AdminConfigLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is AdminError) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(state.message),
+                        const SizedBox(height: 16),
+                        FilledButton(onPressed: _loadData, child: const Text('Retry')),
+                      ],
+                    ),
+                  );
+                }
+                if (state is! AdminConfigLoaded && state is! AdminLoading) {
+                  // Fallback for initial state before loading starts
+                  return const SizedBox();
+                }
+
+                return Column(
+                  children: [
+                    if (_hasChanges)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        child: Row(
+                          children: [
+                            Icon(Icons.warning_amber, size: 16, color: Colors.amber.shade800),
+                            const SizedBox(width: 8),
+                            Text('You have unsaved changes', style: TextStyle(fontSize: 13, color: Colors.amber.shade800, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildWarningBanner(theme),
+                            const SizedBox(height: 24),
+                            _buildSection(theme, 'Feature Flags', Icons.toggle_on_outlined, _buildFeatureFlags(theme)),
+                            const SizedBox(height: 24),
+                            _buildSection(theme, 'Match Parameters', Icons.tune, _buildMatchParams(theme)),
+                            const SizedBox(height: 24),
+                            _buildSection(theme, 'Trust Score Thresholds', Icons.shield_outlined, _buildTrustThresholds(theme)),
+                            const SizedBox(height: 24),
+                            _buildSection(theme, 'General Settings', Icons.settings_applications, _buildGeneralSettings(theme)),
+                            const SizedBox(height: 32),
+                            _buildActionRow(theme),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildContent(ThemeData theme) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Column(
-      children: [
-        if (_hasChanges)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            color: Colors.amber.withValues(alpha: 0.15),
-            child: Row(
-              children: [
-                Icon(Icons.warning_amber, size: 16, color: Colors.amber.shade800),
-                const SizedBox(width: 8),
-                Text('You have unsaved changes', style: TextStyle(fontSize: 13, color: Colors.amber.shade800, fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildWarningBanner(theme),
-                const SizedBox(height: 24),
-                _buildSection(theme, 'Feature Flags', Icons.toggle_on_outlined, _buildFeatureFlags(theme)),
-                const SizedBox(height: 24),
-                _buildSection(theme, 'Match Parameters', Icons.tune, _buildMatchParams(theme)),
-                const SizedBox(height: 24),
-                _buildSection(theme, 'Trust Score Thresholds', Icons.shield_outlined, _buildTrustThresholds(theme)),
-                const SizedBox(height: 24),
-                _buildSection(theme, 'General Settings', Icons.settings_applications, _buildGeneralSettings(theme)),
-                const SizedBox(height: 32),
-                _buildActionRow(theme),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -185,23 +188,27 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
   }
 
   Widget _buildFeatureFlags(ThemeData theme) {
+    final keys = _featureFlags.keys.toList();
     return Column(
-      children: [
-        _toggleRow(theme, 'Chat System', _chatSystem, (v) { setState(() => _chatSystem = v); _markChanged(); }),
-        _divider(theme),
-        _toggleRow(theme, 'Video Calls', _videoCalls, (v) { setState(() => _videoCalls = v); _markChanged(); }),
-        _divider(theme),
-        _toggleRow(theme, 'Geolocation Check-in', _geoCheckin, (v) { setState(() => _geoCheckin = v); _markChanged(); }),
-        _divider(theme),
-        _toggleRow(theme, 'QR Code Scanner', _qrScanner, (v) { setState(() => _qrScanner = v); _markChanged(); }),
-        _divider(theme),
-        _toggleRow(theme, 'End-to-End Encryption', _e2eEncryption, (v) { setState(() => _e2eEncryption = v); _markChanged(); }),
-        _divider(theme),
-        _toggleRow(theme, 'Trust Score v2', _trustV2, (v) { setState(() => _trustV2 = v); _markChanged(); }),
-        _divider(theme),
-        _toggleRow(theme, 'AI Match Suggestions', _aiMatch, (v) { setState(() => _aiMatch = v); _markChanged(); }),
-      ],
+      children: keys.asMap().entries.map((entry) {
+        final key = entry.value;
+        final isLast = entry.key == keys.length - 1;
+        return Column(
+          children: [
+            _toggleRow(theme, _formatKey(key), _featureFlags[key] ?? false, (v) {
+              setState(() => _featureFlags[key] = v);
+              _markChanged();
+            }),
+            if (!isLast) _divider(theme),
+          ],
+        );
+      }).toList(),
     );
+  }
+
+  String _formatKey(String key) {
+    final result = key.replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}');
+    return result[0].toUpperCase() + result.substring(1);
   }
 
   Widget _toggleRow(ThemeData theme, String label, bool value, ValueChanged<bool> onChanged) {
@@ -220,18 +227,21 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
   }
 
   Widget _buildMatchParams(ThemeData theme) {
+    final keys = _matchParams.keys.toList();
     return Column(
-      children: [
-        _sliderRow(theme, 'Match Radius (km)', _matchRadius, 1, 200, (v) { setState(() => _matchRadius = v); _markChanged(); }),
-        _divider(theme),
-        _sliderRow(theme, 'Max Matches per Day', _maxMatchesPerDay, 1, 20, (v) { setState(() => _maxMatchesPerDay = v); _markChanged(); }),
-        _divider(theme),
-        _sliderRow(theme, 'Skill Overlap Threshold %', _skillOverlap, 0, 100, (v) { setState(() => _skillOverlap = v); _markChanged(); }),
-        _divider(theme),
-        _sliderRow(theme, 'Availability Match Weight', _availWeight, 0, 100, (v) { setState(() => _availWeight = v); _markChanged(); }),
-        _divider(theme),
-        _sliderRow(theme, 'Rating Impact Weight', _ratingWeight, 0, 100, (v) { setState(() => _ratingWeight = v); _markChanged(); }),
-      ],
+      children: keys.asMap().entries.map((entry) {
+        final key = entry.value;
+        final isLast = entry.key == keys.length - 1;
+        return Column(
+          children: [
+            _sliderRow(theme, _formatKey(key), _matchParams[key] ?? 0.0, 0, 100, (v) {
+              setState(() => _matchParams[key] = v);
+              _markChanged();
+            }),
+            if (!isLast) _divider(theme),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -239,99 +249,111 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: ResponsiveUtils.isMobile(context)
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 14)),
-              Row(
-                children: [
-                  Expanded(child: Slider(value: value, min: min, max: max, divisions: max == 100 ? 20 : max.round(), label: value.round().toString(), onChanged: onChanged)),
-                  SizedBox(width: 40, child: Text(value.round().toString(), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.primary))),
-                ],
-              ),
-            ],
-          )
-        : Row(
-            children: [
-              SizedBox(width: 180, child: Text(label, style: const TextStyle(fontSize: 14))),
-              Expanded(child: Slider(value: value, min: min, max: max, divisions: max == 100 ? 20 : max.round(), label: value.round().toString(), onChanged: onChanged)),
-              SizedBox(width: 40, child: Text(value.round().toString(), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.primary))),
-            ],
-          ),
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 14)),
+                Row(
+                  children: [
+                    Expanded(child: Slider(value: value, min: min, max: max, divisions: 100, label: value.round().toString(), onChanged: onChanged)),
+                    SizedBox(width: 40, child: Text(value.round().toString(), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.primary))),
+                  ],
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                SizedBox(width: 180, child: Text(label, style: const TextStyle(fontSize: 14))),
+                Expanded(child: Slider(value: value, min: min, max: max, divisions: 100, label: value.round().toString(), onChanged: onChanged)),
+                SizedBox(width: 40, child: Text(value.round().toString(), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.primary))),
+              ],
+            ),
     );
   }
 
   Widget _buildTrustThresholds(ThemeData theme) {
+    final keys = _trustThresholds.keys.toList();
     return Column(
-      children: [
-        _inputRow(theme, 'Excellent Score Min', _excellentMinCtrl),
-        _divider(theme),
-        _inputRow(theme, 'Good Score Min', _goodMinCtrl),
-        _divider(theme),
-        _inputRow(theme, 'Fair Score Min', _fairMinCtrl),
-        _divider(theme),
-        _inputRow(theme, 'No-Show Penalty', _noShowPenaltyCtrl),
-        _divider(theme),
-        _inputRow(theme, 'Session Credit', _sessionCreditCtrl),
-      ],
+      children: keys.asMap().entries.map((entry) {
+        final key = entry.value;
+        final isLast = entry.key == keys.length - 1;
+        return Column(
+          children: [
+            _inputRow(theme, _formatKey(key), _trustThresholds[key]?.toString() ?? '0', (v) {
+              final val = int.tryParse(v);
+              if (val != null) {
+                _trustThresholds[key] = val;
+                _markChanged();
+              }
+            }),
+            if (!isLast) _divider(theme),
+          ],
+        );
+      }).toList(),
     );
   }
 
   Widget _buildGeneralSettings(ThemeData theme) {
+    final keys = _generalSettings.keys.toList();
     return Column(
-      children: [
-        _inputRow(theme, 'Session Auto-Cancel (min)', _sessionTimeoutCtrl),
-        _divider(theme),
-        _inputRow(theme, 'Review Edit Window (hours)', _reviewEditCtrl),
-        _divider(theme),
-        _inputRow(theme, 'Agreement Expiry (days)', _agreementExpiryCtrl),
-        _divider(theme),
-        _inputRow(theme, 'Max Agreements/User', _maxAgreementsCtrl),
-        _divider(theme),
-        _toggleRow(theme, 'Maintenance Mode', _maintenanceMode, (v) { setState(() => _maintenanceMode = v); _markChanged(); }),
-      ],
+      children: keys.asMap().entries.map((entry) {
+        final key = entry.value;
+        final isLast = entry.key == keys.length - 1;
+        return Column(
+          children: [
+            _inputRow(theme, _formatKey(key), _generalSettings[key]?.toString() ?? '0', (v) {
+              final val = int.tryParse(v);
+              if (val != null) {
+                _generalSettings[key] = val;
+                _markChanged();
+              }
+            }),
+            if (!isLast) _divider(theme),
+          ],
+        );
+      }).toList(),
     );
   }
 
-  Widget _inputRow(ThemeData theme, String label, TextEditingController ctrl) {
+  Widget _inputRow(ThemeData theme, String label, String value, ValueChanged<String> onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: ResponsiveUtils.isMobile(context)
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 14)),
-              const SizedBox(height: 4),
-              TextField(
-                controller: ctrl,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (_) => _markChanged(),
-              ),
-            ],
-          )
-        : Row(
-            children: [
-              SizedBox(width: 200, child: Text(label, style: const TextStyle(fontSize: 14))),
-              SizedBox(
-                width: 120,
-                child: TextField(
-                  controller: ctrl,
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: TextEditingController(text: value)..selection = TextSelection.fromPosition(TextPosition(offset: value.length)),
                   decoration: InputDecoration(
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   keyboardType: TextInputType.number,
-                  onChanged: (_) => _markChanged(),
+                  onChanged: onChanged,
                 ),
-              ),
-            ],
-          ),
+              ],
+            )
+          : Row(
+              children: [
+                SizedBox(width: 200, child: Text(label, style: const TextStyle(fontSize: 14))),
+                SizedBox(
+                  width: 120,
+                  child: TextField(
+                    controller: TextEditingController(text: value)..selection = TextSelection.fromPosition(TextPosition(offset: value.length)),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: onChanged,
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -340,10 +362,18 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
       children: [
         Expanded(
           child: FilledButton.icon(
-            onPressed: _hasChanges ? () {
-              setState(() => _hasChanges = false);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Configuration saved successfully')));
-            } : null,
+            onPressed: _hasChanges
+                ? () {
+                    final config = SystemConfigEntity(
+                      featureFlags: _featureFlags,
+                      matchParams: _matchParams,
+                      trustThresholds: _trustThresholds,
+                      generalSettings: _generalSettings,
+                    );
+                    context.read<AdminBloc>().add(AdminSaveConfig(config: config));
+                    setState(() => _hasChanges = false);
+                  }
+                : null,
             icon: const Icon(Icons.save, size: 18),
             label: const Text('Save Configuration'),
           ),
@@ -359,7 +389,13 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
                   content: const Text('This will reset all configuration values to their system defaults.'),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                    FilledButton(onPressed: () { Navigator.pop(ctx); }, child: const Text('Restore')),
+                    FilledButton(
+                      onPressed: () {
+                        context.read<AdminBloc>().add(AdminRestoreConfig());
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Restore'),
+                    ),
                   ],
                 ),
               );
@@ -377,8 +413,8 @@ class _AdminSystemConfigPageState extends State<AdminSystemConfigPage> {
     return Drawer(
       child: ListView(padding: EdgeInsets.zero, children: [
         DrawerHeader(decoration: BoxDecoration(color: theme.colorScheme.primary), child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [
-          Icon(Icons.admin_panel_settings, color: Colors.white, size: 40), const SizedBox(height: 8),
-          Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Icon(Icons.admin_panel_settings, color: Colors.white, size: 40), const SizedBox(height: 8),
+          const Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
         ])),
         _drw(Icons.dashboard, 'Dashboard', '/admin'), _drw(Icons.people, 'Users', '/admin/users'),
         _drw(Icons.flag, 'Moderation', '/admin/moderation'), _drw(Icons.gavel, 'Penalties', '/admin/penalties'),

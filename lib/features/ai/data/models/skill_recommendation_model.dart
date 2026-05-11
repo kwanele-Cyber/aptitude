@@ -12,11 +12,11 @@ class SkillRecommendationModel extends SkillRecommendationEntity {
 
   factory SkillRecommendationModel.fromJson(Map<String, dynamic> json) {
     return SkillRecommendationModel(
-      id: json['id'] as String,
-      skillTitle: json['skillTitle'] as String,
-      category: json['category'] as String,
-      reason: json['reason'] as String,
-      confidenceScore: (json['confidenceScore'] as num).toDouble(),
+      id: json['id'] as String? ?? json['uid'] as String? ?? '',
+      skillTitle: json['skillTitle'] as String? ?? '',
+      category: json['category'] as String? ?? '',
+      reason: json['reason'] as String? ?? '',
+      confidenceScore: (json['confidenceScore'] as num?)?.toDouble() ?? 0.0,
       type: RecommendationType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => RecommendationType.learn,

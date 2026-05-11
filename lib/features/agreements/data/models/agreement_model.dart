@@ -24,8 +24,9 @@ class AgreementModel extends AgreementEntity {
   });
 
   factory AgreementModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return AgreementModel(
-      id: key,
+      id: id,
       initiatorId: json['initiatorId'] as String? ?? '',
       initiatorName: json['initiatorName'] as String? ?? '',
       partnerId: json['partnerId'] as String? ?? '',

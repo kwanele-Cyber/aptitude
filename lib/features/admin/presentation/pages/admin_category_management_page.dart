@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
 class AdminCategoryManagementPage extends StatefulWidget {
@@ -56,8 +57,8 @@ class _AdminCategoryManagementPageState extends State<AdminCategoryManagementPag
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: _mockCategories.length,
-            itemBuilder: (_, i) => _buildCategoryCard(theme, _mockCategories[i]),
+            itemCount: _categories.length,
+            itemBuilder: (_, i) => _buildCategoryCard(theme, _categories[i]),
           ),
         ),
       ],
@@ -83,7 +84,7 @@ class _AdminCategoryManagementPageState extends State<AdminCategoryManagementPag
     );
   }
 
-  Widget _buildCategoryCard(ThemeData theme, _MockCategory cat) {
+  Widget _buildCategoryCard(ThemeData theme, SkillCategoryEntity cat) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 0,
@@ -161,7 +162,7 @@ class _AdminCategoryManagementPageState extends State<AdminCategoryManagementPag
     );
   }
 
-  void _showCategoryDialog(BuildContext context, _MockCategory? existing, {String? parent}) {
+  void _showCategoryDialog(BuildContext context, SkillCategoryEntity? existing, {String? parent}) {
     final nameCtrl = TextEditingController(text: existing?.name ?? '');
     final descCtrl = TextEditingController(text: '');
 
@@ -234,19 +235,11 @@ class _AdminCategoryManagementPageState extends State<AdminCategoryManagementPag
   }
 }
 
-class _MockCategory {
-  final String name, emoji;
-  final int skillCount, subCount;
-  final bool active;
-  final List<String> subcategories;
-  _MockCategory({required this.name, required this.emoji, required this.skillCount, required this.subCount, required this.active, this.subcategories = const []});
-}
-
-final _mockCategories = [
-  _MockCategory(name: 'Technology & Programming', emoji: '📘', skillCount: 124, subCount: 6, active: true, subcategories: ['Web Development', 'Mobile Development', 'Data Science', 'DevOps & Cloud']),
-  _MockCategory(name: 'Arts & Design', emoji: '🎨', skillCount: 89, subCount: 4, active: true, subcategories: ['Graphic Design', 'UI/UX', 'Animation', 'Photography']),
-  _MockCategory(name: 'Music & Performance', emoji: '🎵', skillCount: 67, subCount: 5, active: true, subcategories: ['Guitar', 'Piano', 'Vocals', 'Drums', 'Production']),
-  _MockCategory(name: 'Academics & Languages', emoji: '📚', skillCount: 156, subCount: 7, active: true, subcategories: ['Mathematics', 'English', 'French', 'Science']),
-  _MockCategory(name: 'Sports & Fitness', emoji: '⚽', skillCount: 45, subCount: 3, active: false, subcategories: ['Soccer', 'Basketball', 'Yoga']),
-  _MockCategory(name: 'Business & Finance', emoji: '💼', skillCount: 78, subCount: 4, active: true, subcategories: ['Marketing', 'Accounting', 'Entrepreneurship']),
+final _categories = [
+  SkillCategoryEntity(id: 'c1', name: 'Technology & Programming', emoji: '📘', skillCount: 124, active: true, displayOrder: 1, subcategories: ['Web Development', 'Mobile Development', 'Data Science', 'DevOps & Cloud']),
+  SkillCategoryEntity(id: 'c2', name: 'Arts & Design', emoji: '🎨', skillCount: 89, active: true, displayOrder: 2, subcategories: ['Graphic Design', 'UI/UX', 'Animation', 'Photography']),
+  SkillCategoryEntity(id: 'c3', name: 'Music & Performance', emoji: '🎵', skillCount: 67, active: true, displayOrder: 3, subcategories: ['Guitar', 'Piano', 'Vocals', 'Drums', 'Production']),
+  SkillCategoryEntity(id: 'c4', name: 'Academics & Languages', emoji: '📚', skillCount: 156, active: true, displayOrder: 4, subcategories: ['Mathematics', 'English', 'French', 'Science']),
+  SkillCategoryEntity(id: 'c5', name: 'Sports & Fitness', emoji: '⚽', skillCount: 45, active: false, displayOrder: 5, subcategories: ['Soccer', 'Basketball', 'Yoga']),
+  SkillCategoryEntity(id: 'c6', name: 'Business & Finance', emoji: '💼', skillCount: 78, active: true, displayOrder: 6, subcategories: ['Marketing', 'Accounting', 'Entrepreneurship']),
 ];

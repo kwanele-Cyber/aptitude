@@ -12,8 +12,9 @@ class TrustAppealModel extends TrustAppealEntity {
   });
 
   factory TrustAppealModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return TrustAppealModel(
-      id: key,
+      id: id,
       userId: json['userId'] as String? ?? '',
       reason: json['reason'] as String? ?? '',
       adminNotes: json['adminNotes'] as String?,
@@ -87,6 +88,7 @@ class TrustModel extends TrustEntity {
   });
 
   factory TrustModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     final factorsList =
         (json['factors'] as List<dynamic>?)
             ?.map(
@@ -98,7 +100,7 @@ class TrustModel extends TrustEntity {
         [];
 
     return TrustModel(
-      id: key,
+      id: id,
       userId: json['userId'] as String? ?? '',
       score: json['score'] as int? ?? 0,
       factors: factorsList,

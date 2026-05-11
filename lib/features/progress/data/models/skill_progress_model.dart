@@ -16,8 +16,9 @@ class SkillProgressModel extends SkillProgressEntity {
   });
 
   factory SkillProgressModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return SkillProgressModel(
-      id: key,
+      id: id,
       userId: json['userId'] as String? ?? '',
       skillId: json['skillId'] as String? ?? '',
       skillTitle: json['skillTitle'] as String? ?? '',

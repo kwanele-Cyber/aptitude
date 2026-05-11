@@ -95,7 +95,7 @@ class SessionsDI {
 
     // Session repository + datasource
     sl.registerLazySingleton<SessionRepository>(
-      () => SessionRepositoryImpl(remoteDataSource: sl()),
+      () => SessionRepositoryImpl(remoteDataSource: sl(), adminRepository: sl()),
     );
     sl.registerLazySingleton<SessionRemoteDataSource>(
       () => SessionRemoteDataSourceFirebase(),

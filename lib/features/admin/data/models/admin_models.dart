@@ -13,10 +13,11 @@ class AdminUserModel extends AdminUserEntity {
     super.rating,
     super.reportsCount,
     super.twoFactorEnabled,
+    super.trustScore,
   });
 
   factory AdminUserModel.fromJson(Map<String, dynamic> json) => AdminUserModel(
-        id: json['id'] as String? ?? '',
+        id: json['id'] as String? ?? json['uid'] as String? ?? '',
         firstName: json['firstName'] as String? ?? json['first_name'] as String? ?? '',
         lastName: json['lastName'] as String? ?? json['last_name'] as String? ?? '',
         email: json['email'] as String? ?? '',
@@ -27,6 +28,7 @@ class AdminUserModel extends AdminUserEntity {
         rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
         reportsCount: (json['reportsCount'] as num?)?.toInt() ?? 0,
         twoFactorEnabled: json['twoFactorEnabled'] as bool? ?? false,
+        trustScore: (json['trustScore'] as num?)?.toDouble() ?? 100.0,
       );
 
   Map<String, dynamic> toJson() => {
@@ -41,6 +43,7 @@ class AdminUserModel extends AdminUserEntity {
         'rating': rating,
         'reportsCount': reportsCount,
         'twoFactorEnabled': twoFactorEnabled,
+        'trustScore': trustScore,
       };
 }
 
@@ -259,43 +262,48 @@ class BroadcastMessageModel extends BroadcastMessageEntity {
 }
 
 class AuditLogEntryModel extends AuditLogEntryEntity {
-  AuditLogEntryModel({
+  const AuditLogEntryModel({
     required super.id,
-    required super.time,
-    required super.admin,
+    required super.timestamp,
+    required super.actorId,
+    required super.actorName,
+    required super.actorRole,
     required super.action,
     required super.detail,
     required super.severity,
     super.ip,
     super.device,
     super.changes,
-    super.timestamp,
   });
 
   factory AuditLogEntryModel.fromJson(Map<String, dynamic> json) => AuditLogEntryModel(
         id: json['id'] as String? ?? '',
-        time: json['time'] as String? ?? '',
-        admin: json['admin'] as String? ?? '',
+        timestamp: json['timestamp'] != null
+            ? DateTime.parse(json['timestamp'] as String)
+            : DateTime.now(),
+        actorId: json['actorId'] as String? ?? json['userId'] as String? ?? '',
+        actorName: json['actorName'] as String? ?? json['admin'] as String? ?? 'Unknown',
+        actorRole: json['actorRole'] as String? ?? json['userRole'] as String? ?? 'User',
         action: json['action'] as String? ?? '',
         detail: json['detail'] as String? ?? '',
         severity: json['severity'] as String? ?? 'info',
         ip: json['ip'] as String?,
         device: json['device'] as String?,
         changes: json['changes'] as String?,
-        timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp'] as String) : null,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'time': time,
-        'admin': admin,
+        'timestamp': timestamp.toIso8601String(),
+        'actorId': actorId,
+        'actorName': actorName,
+        'actorRole': actorRole,
         'action': action,
         'detail': detail,
         'severity': severity,
         'ip': ip,
         'device': device,
         'changes': changes,
-        'timestamp': timestamp.toIso8601String(),
       };
 }
 
@@ -405,5 +413,104 @@ class AdminDashboardDataModel extends AdminDashboardDataEntity {
         'activeMatches': activeMatches,
         'sessionsThisWeek': sessionsThisWeek,
         'averageRating': averageRating,
+      };
+}
+
+class DisputeModel extends DisputeEntity {
+  const DisputeModel({
+    required super.id,
+    required super.agreementId,
+    required super.reporterId,
+    required super.respondentId,
+    required super.reason,
+    super.status,
+    required super.timestamp,
+    super.resolution,
+  });
+
+  factory DisputeModel.fromJson(Map<String, dynamic> json) => DisputeModel(
+        id: json['id'] as String? ?? '',
+        agreementId: json['agreementId'] as String? ?? '',
+        reporterId: json['reporterId'] as String? ?? '',
+        respondentId: json['respondentId'] as String? ?? '',
+        reason: json['reason'] as String? ?? '',
+        status: json['status'] as String? ?? 'Pending',
+        timestamp: json['timestamp'] as String? ?? '',
+        resolution: json['resolution'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'agreementId': agreementId,
+        'reporterId': reporterId,
+        'respondentId': respondentId,
+        'reason': reason,
+        'status': status,
+        'timestamp': timestamp,
+        'resolution': resolution,
+      };
+}
+
+class AppealModel extends AppealEntity {
+  const AppealModel({
+    required super.id,
+    required super.penaltyId,
+    required super.userId,
+    required super.reason,
+    super.status,
+    required super.timestamp,
+    super.decision,
+  });
+
+  factory AppealModel.fromJson(Map<String, dynamic> json) => AppealModel(
+        id: json['id'] as String? ?? '',
+        penaltyId: json['penaltyId'] as String? ?? '',
+        userId: json['userId'] as String? ?? '',
+        reason: json['reason'] as String? ?? '',
+        status: json['status'] as String? ?? 'Pending',
+        timestamp: json['timestamp'] as String? ?? '',
+        decision: json['decision'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'penaltyId': penaltyId,
+        'userId': userId,
+        'reason': reason,
+        'status': status,
+        'timestamp': timestamp,
+        'decision': decision,
+      };
+}
+
+class SupportRequestModel extends SupportRequestEntity {
+  const SupportRequestModel({
+    required super.id,
+    required super.userId,
+    required super.subject,
+    required super.message,
+    super.status,
+    required super.timestamp,
+    super.adminResponse,
+  });
+
+  factory SupportRequestModel.fromJson(Map<String, dynamic> json) => SupportRequestModel(
+        id: json['id'] as String? ?? '',
+        userId: json['userId'] as String? ?? '',
+        subject: json['subject'] as String? ?? '',
+        message: json['message'] as String? ?? '',
+        status: json['status'] as String? ?? 'Open',
+        timestamp: json['timestamp'] as String? ?? '',
+        adminResponse: json['adminResponse'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'userId': userId,
+        'subject': subject,
+        'message': message,
+        'status': status,
+        'timestamp': timestamp,
+        'adminResponse': adminResponse,
       };
 }

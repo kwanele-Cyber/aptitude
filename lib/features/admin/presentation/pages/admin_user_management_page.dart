@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_event.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_state.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -15,8 +20,7 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
   final _searchController = TextEditingController();
   String _roleFilter = 'All';
   String _statusFilter = 'All';
-  int _selectedCount = 0;
-  bool _isLoading = true;
+  final Set<String> _selectedIds = {};
 
   @override
   void initState() {
@@ -30,10 +34,16 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    setState(() => _isLoading = false);
+  void _loadData() {
+    context.read<AdminBloc>().add(AdminSearchUsers(
+      query: _searchController.text,
+      role: _roleFilter,
+      status: _statusFilter,
+    ));
+  }
+
+  void _onSearchChanged() {
+    _loadData();
   }
 
   @override
@@ -42,43 +52,63 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
     final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
-      appBar: AdminAppBar(title: 'User Management'),
+      appBar: const AdminAppBar(title: 'User Management'),
       drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
           if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
-          Expanded(child: _buildContent(theme)),
+          Expanded(
+            child: BlocBuilder<AdminBloc, AdminState>(
+              builder: (context, state) {
+                return Column(
+                  children: [
+                    _buildSearchAndFilter(theme),
+                    const Divider(height: 1),
+                    if (_selectedIds.isNotEmpty) _buildBulkActionBar(theme),
+                    Expanded(child: _buildMainContent(theme, state)),
+                    _buildPagination(theme),
+                  ],
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildContent(ThemeData theme) {
-    if (_isLoading) return _buildLoading(theme);
+  Widget _buildMainContent(ThemeData theme, AdminState state) {
+    if (state is AdminUsersLoading) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: theme.colorScheme.primary),
+            const SizedBox(height: 16),
+            const Text('Loading user data...'),
+          ],
+        ),
+      );
+    }
 
-    return Column(
-      children: [
-        _buildSearchAndFilter(theme),
-        const Divider(height: 1),
-        if (_selectedCount > 0) _buildBulkActionBar(theme),
-        Expanded(child: _buildTable(theme)),
-        _buildPagination(theme),
-      ],
-    );
-  }
+    if (state is AdminError) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(state.message),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: _loadData, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
 
-  Widget _buildLoading(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircularProgressIndicator(color: theme.colorScheme.primary),
-          const SizedBox(height: 16),
-          Text('Loading user data...', style: theme.textTheme.bodyMedium),
-        ],
-      ),
-    );
+    final users = state is AdminUsersLoaded ? state.users : <AdminUserEntity>[];
+    return _buildTable(theme, users);
   }
 
   Widget _buildSearchAndFilter(ThemeData theme) {
@@ -99,7 +129,7 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
                         icon: const Icon(Icons.clear),
                         onPressed: () {
                           _searchController.clear();
-                          setState(() {});
+                          _onSearchChanged();
                         },
                       )
                     : null,
@@ -108,93 +138,55 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) => _onSearchChanged(),
             ),
           ),
           const SizedBox(height: 12),
-          if (ResponsiveUtils.isMobile(context))
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _buildFilterChip(theme, 'Role', _roleFilter, ['All', 'User', 'Admin', 'Moderator', 'Support'], (v) {
-                  setState(() => _roleFilter = v);
-                }),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _buildFilterChip(theme, 'Role', _roleFilter, ['All', 'User', 'Admin', 'Moderator', 'Support'], (v) {
+                setState(() => _roleFilter = v);
+                _loadData();
+              }),
+              const SizedBox(width: 8),
+              _buildFilterChip(theme, 'Status', _statusFilter, ['All', 'Active', 'Suspended', 'Deleted', 'Banned'], (v) {
+                setState(() => _statusFilter = v);
+                _loadData();
+              }),
+              if (_roleFilter != 'All' || _statusFilter != 'All') ...[
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Active Filters',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                _buildFilterChip(theme, 'Status', _statusFilter, ['All', 'Active', 'Suspended', 'Deleted', 'Banned'], (v) {
-                  setState(() => _statusFilter = v);
-                }),
-                if (_roleFilter != 'All' || _statusFilter != 'All') ...[
-                  const SizedBox(width: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Active Filters',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _roleFilter = 'All';
-                        _statusFilter = 'All';
-                      });
-                    },
-                    child: const Text('Clear All'),
-                  ),
-                ],
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _roleFilter = 'All';
+                      _statusFilter = 'All';
+                    });
+                    _loadData();
+                  },
+                  child: const Text('Clear All'),
+                ),
               ],
-            )
-          else
-            Row(
-              children: [
-                _buildFilterChip(theme, 'Role', _roleFilter, ['All', 'User', 'Admin', 'Moderator', 'Support'], (v) {
-                  setState(() => _roleFilter = v);
-                }),
-                const SizedBox(width: 8),
-                _buildFilterChip(theme, 'Status', _statusFilter, ['All', 'Active', 'Suspended', 'Deleted', 'Banned'], (v) {
-                  setState(() => _statusFilter = v);
-                }),
-                if (_roleFilter != 'All' || _statusFilter != 'All') ...[
-                  const SizedBox(width: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Active Filters',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _roleFilter = 'All';
-                        _statusFilter = 'All';
-                      });
-                    },
-                    child: const Text('Clear All'),
-                  ),
-                ],
-              ],
-            ),
+            ],
+          ),
         ],
       ),
     );
@@ -233,16 +225,16 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
       child: Row(
         children: [
-          Text('$_selectedCount selected', style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
+          Text('${_selectedIds.length} selected', style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
           const SizedBox(width: 16),
-          _bulkButton(theme, Icons.block, 'Suspend'),
+          _bulkButton(theme, Icons.block, 'Suspend', 'suspend'),
           const SizedBox(width: 8),
-          _bulkButton(theme, Icons.delete_outline, 'Delete'),
+          _bulkButton(theme, Icons.check_circle_outline, 'Activate', 'activate'),
           const SizedBox(width: 8),
-          _bulkButton(theme, Icons.swap_horiz, 'Change Role'),
+          _bulkButton(theme, Icons.delete_outline, 'Delete', 'delete'),
           const Spacer(),
           TextButton(
-            onPressed: () => setState(() => _selectedCount = 0),
+            onPressed: () => setState(() => _selectedIds.clear()),
             child: const Text('Cancel'),
           ),
         ],
@@ -250,9 +242,9 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
     );
   }
 
-  Widget _bulkButton(ThemeData theme, IconData icon, String label) {
+  Widget _bulkButton(ThemeData theme, IconData icon, String label, String action) {
     return OutlinedButton.icon(
-      onPressed: () => _showConfirmation(context, label),
+      onPressed: () => _handleBulkAction(action),
       icon: Icon(icon, size: 16),
       label: Text(label),
       style: OutlinedButton.styleFrom(
@@ -262,9 +254,12 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
     );
   }
 
-  Widget _buildTable(ThemeData theme) {
-    final users = _mockUsers;
+  void _handleBulkAction(String action) {
+    context.read<AdminBloc>().add(AdminBulkUserAction(userIds: _selectedIds.toList(), action: action));
+    setState(() => _selectedIds.clear());
+  }
 
+  Widget _buildTable(ThemeData theme, List<AdminUserEntity> users) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -275,27 +270,25 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Table header
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  const SizedBox(width: 32, child: Text('')),
-                  const Expanded(flex: 2, child: Text('Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-                  const Expanded(flex: 2, child: Text('Email', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-                  const Expanded(child: Text('Role', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-                  const Expanded(child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-                  const Expanded(child: Text('Joined', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-                  const SizedBox(width: 120, child: Text('', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  SizedBox(width: 32, child: Text('')),
+                  Expanded(flex: 2, child: Text('Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  Expanded(flex: 2, child: Text('Email', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  Expanded(child: Text('Role', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  Expanded(child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  Expanded(child: Text('Joined', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                  SizedBox(width: 120, child: Text('')),
                 ],
               ),
             ),
             const SizedBox(height: 4),
-            // Table rows
             ...users.map((user) => _buildUserRow(theme, user)),
             if (users.isEmpty)
               Padding(
@@ -307,7 +300,7 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
                       const SizedBox(height: 16),
                       Text('No users found', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      Text('Try adjusting your search or filters', style: theme.textTheme.bodySmall),
+                      const Text('Try adjusting your search or filters'),
                     ],
                   ),
                 ),
@@ -318,8 +311,8 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
     );
   }
 
-  Widget _buildUserRow(ThemeData theme, _MockUser user) {
-    final isSelected = user.selected;
+  Widget _buildUserRow(ThemeData theme, AdminUserEntity user) {
+    final isSelected = _selectedIds.contains(user.id);
     return Container(
       margin: const EdgeInsets.only(bottom: 2),
       decoration: BoxDecoration(
@@ -328,7 +321,13 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: () => setState(() => user.selected = !user.selected),
+        onTap: () => setState(() {
+          if (isSelected) {
+            _selectedIds.remove(user.id);
+          } else {
+            _selectedIds.add(user.id);
+          }
+        }),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
           child: Row(
@@ -337,7 +336,13 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
                 width: 32,
                 child: Checkbox(
                   value: isSelected,
-                  onChanged: (v) => setState(() => user.selected = v ?? false),
+                  onChanged: (v) => setState(() {
+                    if (v == true) {
+                      _selectedIds.add(user.id);
+                    } else {
+                      _selectedIds.remove(user.id);
+                    }
+                  }),
                 ),
               ),
               Expanded(
@@ -353,8 +358,8 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user.name, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
-                        Text('@${user.username}', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        Text(user.name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+                        Text(user.id.substring(0, 8), style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                       ],
                     ),
                   ],
@@ -376,8 +381,8 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
                       icon: Icon(Icons.more_vert, size: 18, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                       offset: const Offset(0, 32),
                       onSelected: (v) {
-                        if (v == 'suspend') _showConfirmation(context, 'Suspend ${user.name}');
-                        if (v == 'delete') _showConfirmation(context, 'Delete ${user.name}');
+                        if (v == 'suspend') _showSuspendDialog(user);
+                        if (v == 'delete') _showDeleteDialog(user);
                       },
                       itemBuilder: (_) => [
                         const PopupMenuItem(value: 'suspend', child: ListTile(leading: Icon(Icons.block, size: 18), title: Text('Suspend'), dense: true)),
@@ -390,6 +395,51 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showSuspendDialog(AdminUserEntity user) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Suspend ${user.name}'),
+        content: TextField(
+          controller: reasonController,
+          decoration: const InputDecoration(hintText: 'Enter reason for suspension'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              context.read<AdminBloc>().add(AdminSuspendUser(userId: user.id, reason: reasonController.text));
+              Navigator.pop(ctx);
+            },
+            child: const Text('Suspend'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(AdminUserEntity user) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete ${user.name}'),
+        content: const Text('Are you sure? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              context.read<AdminBloc>().add(AdminDeleteUser(user.id));
+              Navigator.pop(ctx);
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
@@ -449,13 +499,11 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Showing 1-25 of 2,847 users', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+          const Text('Showing 1-25 users', style: TextStyle(fontSize: 13)),
           Row(
             children: [
-              IconButton(icon: const Icon(Icons.chevron_left, size: 20), onPressed: null, padding: EdgeInsets.zero),
-              _pageBtn('1', true), _pageBtn('2', false), _pageBtn('3', false), _pageBtn('4', false), _pageBtn('5', false),
-              Text('...', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4))),
-              _pageBtn('114', false),
+              IconButton(icon: const Icon(Icons.chevron_left, size: 20), onPressed: () {}, padding: EdgeInsets.zero),
+              _pageBtn('1', true),
               IconButton(icon: const Icon(Icons.chevron_right, size: 20), onPressed: () {}, padding: EdgeInsets.zero),
             ],
           ),
@@ -489,9 +537,9 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
           DrawerHeader(
             decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [
-              Icon(Icons.admin_panel_settings, color: Colors.white, size: 40),
+              const Icon(Icons.admin_panel_settings, color: Colors.white, size: 40),
               const SizedBox(height: 8),
-              Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             ]),
           ),
           _drawerItem(Icons.dashboard, 'Dashboard', () { Navigator.pop(context); context.go('/admin'); }),
@@ -500,11 +548,6 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
           _drawerItem(Icons.gavel, 'Penalties', () { Navigator.pop(context); context.go('/admin/penalties'); }),
           _drawerItem(Icons.analytics, 'Analytics', () { Navigator.pop(context); context.go('/admin/analytics'); }),
           _drawerItem(Icons.settings, 'Config', () { Navigator.pop(context); context.go('/admin/config'); }),
-          _drawerItem(Icons.category, 'Categories', () { Navigator.pop(context); context.go('/admin/categories'); }),
-          _drawerItem(Icons.campaign, 'Broadcast', () { Navigator.pop(context); context.go('/admin/broadcast'); }),
-          _drawerItem(Icons.record_voice_over, 'Audit Log', () { Navigator.pop(context); context.go('/admin/audit'); }),
-          _drawerItem(Icons.admin_panel_settings, 'Roles', () { Navigator.pop(context); context.go('/admin/roles'); }),
-          _drawerItem(Icons.storage, 'Database', () { Navigator.pop(context); context.go('/admin/database'); }),
         ],
       ),
     );
@@ -514,21 +557,7 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
     return ListTile(leading: Icon(icon), title: Text(label), onTap: onTap);
   }
 
-  void _showConfirmation(BuildContext context, String action) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirm Action'),
-        content: Text('Are you sure you want to $action? This action can be audited.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () { Navigator.pop(ctx); }, child: const Text('Confirm')),
-        ],
-      ),
-    );
-  }
-
-  void _showUserDetail(BuildContext context, _MockUser user) {
+  void _showUserDetail(BuildContext context, AdminUserEntity user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -548,16 +577,18 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
                 const SizedBox(width: 16),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(user.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('@${user.username}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
+                  Text(user.email, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
                 ]),
               ]),
               const SizedBox(height: 24),
-              _detailRow('Email', user.email),
+              _detailRow('ID', user.id),
               _detailRow('Role', user.role),
               _detailRow('Status', user.status),
               _detailRow('Joined', user.joined),
               _detailRow('Sessions', '${user.sessions}'),
               _detailRow('Rating', '${user.rating}/5.0'),
+              _detailRow('Reports', '${user.reportsCount}'),
+              _detailRow('2FA Enabled', user.twoFactorEnabled ? 'Yes' : 'No'),
             ],
           ),
         ),
@@ -570,35 +601,8 @@ class _AdminUserManagementPageState extends State<AdminUserManagementPage> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(label, style: TextStyle(fontWeight: FontWeight.w500)), Text(value)],
+        children: [Text(label, style: const TextStyle(fontWeight: FontWeight.w500)), Text(value)],
       ),
     );
   }
 }
-
-class _MockUser {
-  final String name;
-  final String username;
-  final String email;
-  final String role;
-  final String status;
-  final String joined;
-  final int sessions;
-  final double rating;
-  bool selected = false;
-
-  _MockUser({required this.name, required this.username, required this.email, required this.role, required this.status, required this.joined, this.sessions = 0, this.rating = 0.0});
-
-  String get initials => name.split(' ').map((n) => n[0]).take(2).join();
-}
-
-final _mockUsers = [
-  _MockUser(name: 'Kwanele Mhlongo', username: 'kwanele', email: 'kwanele@example.com', role: 'User', status: 'Active', joined: 'Jan 2026', sessions: 24, rating: 4.8),
-  _MockUser(name: 'Thandi Nkosi', username: 'thandi', email: 'thandi@example.com', role: 'User', status: 'Active', joined: 'Feb 2026', sessions: 18, rating: 4.5),
-  _MockUser(name: 'Admin A', username: 'admin_a', email: 'admin@example.com', role: 'Admin', status: 'Active', joined: 'Dec 2025', sessions: 0, rating: 5.0),
-  _MockUser(name: 'Busi Dlamini', username: 'busi', email: 'busi@example.com', role: 'User', status: 'Suspended', joined: 'Mar 2026', sessions: 7, rating: 3.2),
-  _MockUser(name: 'Sipho Zulu', username: 'sipho', email: 'sipho@example.com', role: 'Moderator', status: 'Active', joined: 'Jan 2026', sessions: 42, rating: 4.9),
-  _MockUser(name: 'Lindiwe Mokoena', username: 'lindiwe', email: 'lindiwe@example.com', role: 'User', status: 'Active', joined: 'Apr 2026', sessions: 3, rating: 4.0),
-  _MockUser(name: 'Nomsa Khumalo', username: 'nomsa', email: 'nomsa@example.com', role: 'User', status: 'Banned', joined: 'Feb 2026', sessions: 1, rating: 1.0),
-  _MockUser(name: 'Themba Mthembu', username: 'themba', email: 'themba@example.com', role: 'Support', status: 'Active', joined: 'Nov 2025', sessions: 56, rating: 4.7),
-];

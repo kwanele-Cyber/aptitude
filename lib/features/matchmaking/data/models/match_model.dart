@@ -22,8 +22,9 @@ class MatchModel extends MatchEntity {
   });
 
   factory MatchModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return MatchModel(
-      id: key,
+      id: id,
       targetUserId: json['targetUserId'] as String? ?? '',
       targetSkillId: json['targetSkillId'] as String? ?? '',
       matchedSkillId: json['matchedSkillId'] as String? ?? '',

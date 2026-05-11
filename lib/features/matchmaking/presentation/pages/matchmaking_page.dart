@@ -29,7 +29,7 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
   double _maxDistance = double.infinity;
   bool _verifiedOnly = false;
   bool _aiOptimized = false;
-  List<dynamic>? _lastMatches;
+  List<MatchEntity>? _lastMatches;
   String? _lastAcceptedMatchId;
   List<MatchOptimizationEntity>? _aiInsights;
   @override
@@ -44,14 +44,16 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
     }
   }
 
-  List<dynamic> _applyFilters(List<dynamic> matches) {
+  List<MatchEntity> _applyFilters(List<MatchEntity> matches) {
     return matches.where((m) {
       if (m.score < _minScore) return false;
       if (m.targetTrustScore < _minTrustScore) return false;
       if (_verifiedOnly && !m.targetIsVerified) return false;
       if (_maxDistance.isFinite &&
           m.distance != null &&
-          m.distance > _maxDistance) { return false; }
+          m.distance! > _maxDistance) {
+        return false;
+      }
       return true;
     }).toList();
   }
@@ -199,9 +201,9 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
 
   void _offerCreateAgreement(String matchId) {
     if (_lastMatches == null) return;
-    dynamic match;
+    MatchEntity? match;
     for (final m in _lastMatches!) {
-      if ((m as dynamic).id == matchId) {
+      if (m.id == matchId) {
         match = m;
         break;
       }
@@ -227,11 +229,11 @@ class _MatchmakingPageState extends State<MatchmakingPage> {
             onPressed: () {
               Navigator.of(ctx).pop();
               context.push('/agreements/create', extra: {
-                'partnerId': match.targetUserId,
-                'partnerName': match.targetUserName,
-                'partnerSkillId': match.targetSkillId,
-                'partnerSkillTitle': match.targetSkillTitle,
-                'initiatorSkillId': match.matchedSkillId,
+                'partnerId': match!.targetUserId,
+                'partnerName': match!.targetUserName,
+                'partnerSkillId': match!.targetSkillId,
+                'partnerSkillTitle': match!.targetSkillTitle,
+                'initiatorSkillId': match!.matchedSkillId,
                 'initiatorName':
                     '${authState.userEntity.firstName} ${authState.userEntity.lastName}',
                 'initiatorId': authState.userEntity.id,
@@ -406,7 +408,7 @@ class _FilterSlider extends StatelessWidget {
 }
 
 class _MatchCardStack extends StatelessWidget {
-  final List<dynamic> matches;
+  final List<MatchEntity> matches;
   final String? currentUserId;
   final ValueChanged<String> onAccept;
   final ValueChanged<String> onReject;

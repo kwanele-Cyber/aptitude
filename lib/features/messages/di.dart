@@ -45,7 +45,7 @@ class MessagesDI{
   sl.registerLazySingleton(() => GetBlockedUsersUseCase(sl()));
 
   sl.registerLazySingleton<MessageRepository>(
-    () => MessageRepositoryImpl(remoteDataSource: sl()),
+    () => MessageRepositoryImpl(remoteDataSource: sl(), adminRepository: sl()),
   );
   sl.registerLazySingleton<MessageRemoteDataSource>(
     () => MessageRemoteDataSourceFirebase(),

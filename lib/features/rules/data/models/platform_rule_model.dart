@@ -9,7 +9,8 @@ class PlatformRuleModel extends PlatformRuleEntity {
     required super.order,
   });
 
-  factory PlatformRuleModel.fromJson(String id, Map<String, dynamic> json) {
+  factory PlatformRuleModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return PlatformRuleModel(
       id: id,
       title: json['title'] as String? ?? '',

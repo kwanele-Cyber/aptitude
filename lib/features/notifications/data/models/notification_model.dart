@@ -17,8 +17,9 @@ class NotificationModel extends NotificationEntity {
   });
 
   factory NotificationModel.fromJson(String key, Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? json['uid'] as String? ?? key;
     return NotificationModel(
-      id: key,
+      id: id,
       userId: json['userId'] as String? ?? '',
       type: _parseType(json['type'] as String?),
       title: json['title'] as String? ?? '',

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_event.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_state.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -13,7 +18,6 @@ class AdminAnalyticsPage extends StatefulWidget {
 
 class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
   String _dateRange = 'Last 30 Days';
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -21,10 +25,8 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 700));
-    setState(() => _isLoading = false);
+  void _loadData() {
+    context.read<AdminBloc>().add(AdminLoadAnalytics(dateRange: _dateRange));
   }
 
   @override
@@ -33,23 +35,44 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
     final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
-      appBar: AdminAppBar(title: 'Analytics'),
+      appBar: const AdminAppBar(title: 'Analytics'),
       drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
           if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
-          Expanded(child: _buildContent(theme)),
+          Expanded(
+            child: BlocBuilder<AdminBloc, AdminState>(
+              builder: (context, state) {
+                if (state is AdminAnalyticsLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is AdminError) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(state.message),
+                        const SizedBox(height: 16),
+                        FilledButton(onPressed: _loadData, child: const Text('Retry')),
+                      ],
+                    ),
+                  );
+                }
+
+                final data = state is AdminAnalyticsLoaded ? state.data : const AnalyticsDataEntity();
+                return _buildContent(theme, data);
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildContent(ThemeData theme) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+  Widget _buildContent(ThemeData theme, AnalyticsDataEntity data) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -57,13 +80,13 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
         children: [
           _buildDateRangeSelector(theme),
           const SizedBox(height: 24),
-          _buildOverviewCards(theme),
+          _buildOverviewCards(theme, data),
           const SizedBox(height: 24),
-          _buildChartSection(theme, 'User Growth', Icons.trending_up, _buildUserGrowthChart(theme)),
+          _buildChartSection(theme, 'User Growth', Icons.trending_up, _buildUserGrowthChart(theme, data.userGrowth)),
           const SizedBox(height: 24),
-          _buildChartSection(theme, 'Match Success Rate', Icons.handshake, _buildBarChart(theme)),
+          _buildChartSection(theme, 'Match Success Rate by Category', Icons.handshake, _buildBarChart(theme, data.matchSuccessByCategory)),
           const SizedBox(height: 24),
-          _buildChartSection(theme, 'Session Completion', Icons.check_circle_outline, _buildSessionBreakdown(theme)),
+          _buildChartSection(theme, 'Session Breakdown', Icons.check_circle_outline, _buildSessionBreakdown(theme, data)),
           const SizedBox(height: 24),
           _buildExportRow(theme),
         ],
@@ -81,7 +104,12 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
             child: DropdownButton<String>(
               value: _dateRange,
               style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface),
-              onChanged: (v) => setState(() => _dateRange = v!),
+              onChanged: (v) {
+                if (v != null) {
+                  setState(() => _dateRange = v);
+                  _loadData();
+                }
+              },
               items: ['Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'This Year', 'All Time'].map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
             ),
           ),
@@ -102,12 +130,12 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
     );
   }
 
-  Widget _buildOverviewCards(ThemeData theme) {
+  Widget _buildOverviewCards(ThemeData theme, AnalyticsDataEntity data) {
     final metrics = [
-      _MetricData('New Users', '847', '+12.3%', Colors.blue, Icons.person_add),
-      _MetricData('Matches', '1,234', '+8.1%', Colors.green, Icons.handshake),
-      _MetricData('Sessions', '892', '+15.7%', Colors.orange, Icons.event),
-      _MetricData('Avg Rating', '4.6', '+2.1%', Colors.purple, Icons.star),
+      _MetricData('New Users', '${data.newUsers}', '+0%', Colors.blue, Icons.person_add),
+      _MetricData('Total Matches', '${data.totalMatches}', '+0%', Colors.green, Icons.handshake),
+      _MetricData('Sessions Completed', '${data.sessionsCompleted}', '+0%', Colors.orange, Icons.event),
+      _MetricData('Avg Rating', data.avgRating.toStringAsFixed(1), '+0%', Colors.purple, Icons.star),
     ];
 
     if (ResponsiveUtils.isMobile(context)) {
@@ -181,57 +209,53 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
     );
   }
 
-  Widget _buildUserGrowthChart(ThemeData theme) {
+  Widget _buildUserGrowthChart(ThemeData theme, List<double> growthData) {
+    if (growthData.isEmpty) {
+      return const Center(child: Text('No growth data available'));
+    }
     return CustomPaint(
       size: const Size(double.infinity, 200),
-      painter: _LineChartPainter(theme.colorScheme.primary, _growthData),
+      painter: _LineChartPainter(theme.colorScheme.primary, growthData),
     );
   }
 
-  Widget _buildBarChart(ThemeData theme) {
-    final bars = [
-      _BarData('Tech', 0.78),
-      _BarData('Arts', 0.62),
-      _BarData('Music', 0.55),
-      _BarData('Academics', 0.71),
-      _BarData('Sports', 0.48),
-      _BarData('Biz', 0.58),
-    ];
-
+  Widget _buildBarChart(ThemeData theme, Map<String, double> categoryData) {
+    if (categoryData.isEmpty) {
+      return const Center(child: Text('No category data available'));
+    }
+    
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: bars.map((b) => Column(
+          children: categoryData.entries.map((e) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: 32,
-                height: 160 * b.ratio,
+                height: 160 * e.value,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.7),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                 ),
               ),
               const SizedBox(height: 8),
-              Text(b.label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+              Text(e.key, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
             ],
           )).toList(),
         ),
-        const SizedBox(height: 8),
-        Text('${(bars.fold(0.0, (sum, b) => sum + b.ratio) / bars.length * 100).round()}% average', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
       ],
     );
   }
 
-  Widget _buildSessionBreakdown(ThemeData theme) {
+  Widget _buildSessionBreakdown(ThemeData theme, AnalyticsDataEntity data) {
     final items = [
-      _BreakdownData('Completed', 0.78, Colors.green),
-      _BreakdownData('Cancelled', 0.12, Colors.orange),
-      _BreakdownData('No-Show', 0.08, Colors.red),
-      _BreakdownData('Rescheduled', 0.02, Colors.blue),
+      _BreakdownData('Completed', data.sessionCompletionRate, Colors.green),
+      _BreakdownData('Cancelled', data.sessionCancelRate, Colors.orange),
+      _BreakdownData('No-Show', data.sessionNoShowRate, Colors.red),
+      _BreakdownData('Rescheduled', data.sessionRescheduleRate, Colors.blue),
     ];
 
     return Column(
@@ -284,8 +308,8 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
     return Drawer(
       child: ListView(padding: EdgeInsets.zero, children: [
         DrawerHeader(decoration: BoxDecoration(color: theme.colorScheme.primary), child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [
-          Icon(Icons.admin_panel_settings, color: Colors.white, size: 40), const SizedBox(height: 8),
-          Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Icon(Icons.admin_panel_settings, color: Colors.white, size: 40), const SizedBox(height: 8),
+          const Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
         ])),
         _drw(Icons.dashboard, 'Dashboard', '/admin'),
         _drw(Icons.people, 'Users', '/admin/users'),
@@ -309,20 +333,12 @@ class _MetricData {
   _MetricData(this.label, this.value, this.change, this.color, this.icon);
 }
 
-class _BarData {
-  final String label;
-  final double ratio;
-  _BarData(this.label, this.ratio);
-}
-
 class _BreakdownData {
   final String label;
   final double ratio;
   final Color color;
   _BreakdownData(this.label, this.ratio, this.color);
 }
-
-const _growthData = [10.0, 18.0, 25.0, 22.0, 30.0, 45.0, 38.0, 52.0, 48.0, 60.0, 55.0, 72.0, 68.0, 85.0, 78.0, 95.0, 88.0, 102.0, 98.0, 115.0, 108.0, 125.0, 118.0, 135.0, 128.0, 142.0, 138.0, 150.0];
 
 class _LineChartPainter extends CustomPainter {
   final Color color;
@@ -347,12 +363,12 @@ class _LineChartPainter extends CustomPainter {
     path.moveTo(0, size.height);
     for (int i = 0; i < values.length; i++) {
       final x = i * stepX;
-      final y = size.height - (values[i] / maxVal) * size.height * 0.85;
+      final y = size.height - (values[i] / (maxVal > 0 ? maxVal : 1)) * size.height * 0.85;
       if (i == 0) {
         path.lineTo(x, y);
       } else {
         final prevX = (i - 1) * stepX;
-        final prevY = size.height - (values[i - 1] / maxVal) * size.height * 0.85;
+        final prevY = size.height - (values[i - 1] / (maxVal > 0 ? maxVal : 1)) * size.height * 0.85;
         final ctrlX1 = prevX + (x - prevX) / 3;
         final ctrlX2 = prevX + 2 * (x - prevX) / 3;
         path.cubicTo(ctrlX1, prevY, ctrlX2, y, x, y);

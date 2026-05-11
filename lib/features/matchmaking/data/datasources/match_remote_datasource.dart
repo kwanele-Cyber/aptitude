@@ -10,32 +10,3 @@ abstract class MatchRemoteDataSource {
   Future<void> saveFeedback(String matchId, Map<String, dynamic> data);
 }
 
-class MatchRemoteDataSourceMock implements MatchRemoteDataSource {
-  @override
-  Future<List<MatchModel>> generateMatches(
-      String userId, List<SkillModel> allSkills) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return [];
-  }
-
-  @override
-  Future<void> saveMatch(MatchModel match) async {
-    await Future.delayed(const Duration(seconds: 1));
-  }
-
-  @override
-  Future<void> updateMatchStatus(String matchId, Map<String, dynamic> data) async {
-    await Future.delayed(const Duration(seconds: 1));
-  }
-
-  @override
-  Future<List<MatchModel>> fetchMatchesForUser(String userId) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return [];
-  }
-
-  @override
-  Future<void> saveFeedback(String matchId, Map<String, dynamic> data) async {
-    await Future.delayed(const Duration(seconds: 1));
-  }
-}

@@ -34,8 +34,9 @@ class SessionModel extends SessionEntity {
   });
 
   factory SessionModel.fromJson(String id, Map<String, dynamic> json) {
+    final docId = json['id'] as String? ?? json['uid'] as String? ?? id;
     return SessionModel(
-      id: id,
+      id: docId,
       matchId: json['matchId'] as String? ?? '',
       skillId: json['skillId'] as String? ?? '',
       skillTitle: json['skillTitle'] as String? ?? '',
@@ -82,6 +83,7 @@ class SessionModel extends SessionEntity {
 
   Map<String, dynamic> toJson() {
     return {
+      'id':id,
       'matchId': matchId,
       'skillId': skillId,
       'skillTitle': skillTitle,

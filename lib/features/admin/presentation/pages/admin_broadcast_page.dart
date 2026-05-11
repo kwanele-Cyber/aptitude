@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
 class AdminBroadcastPage extends StatefulWidget {
@@ -230,7 +231,7 @@ class _AdminBroadcastPageState extends State<AdminBroadcastPage> {
       children: [
         Text('Recent Broadcasts', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 20),
-        ..._mockBroadcasts.map((b) => Card(
+        ..._broadcasts.map((b) => Card(
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -258,11 +259,11 @@ class _AdminBroadcastPageState extends State<AdminBroadcastPage> {
                   children: [
                     Icon(Icons.people, size: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                     const SizedBox(width: 4),
-                    Text('${b.recipients} users', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                    Text('${b.recipientCount} users', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                     const SizedBox(width: 12),
                     Icon(Icons.access_time, size: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                     const SizedBox(width: 4),
-                    Text(b.date, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                    Text(b.sentDate, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -309,15 +310,8 @@ class _AdminBroadcastPageState extends State<AdminBroadcastPage> {
   }
 }
 
-class _MockBroadcast {
-  final String title, date;
-  final int recipients;
-  final double openRate;
-  _MockBroadcast({required this.title, required this.date, required this.recipients, required this.openRate});
-}
-
-final _mockBroadcasts = [
-  _MockBroadcast(title: 'Platform Update v2.1', date: 'Feb 10, 2026', recipients: 2847, openRate: 68),
-  _MockBroadcast(title: 'Maintenance Notice', date: 'Feb 5, 2026', recipients: 2801, openRate: 82),
-  _MockBroadcast(title: 'Community Guidelines Update', date: 'Jan 28, 2026', recipients: 2750, openRate: 74),
+final _broadcasts = [
+  BroadcastMessageEntity(id: 'b1', title: 'Platform Update v2.1', message: 'We\'re excited to announce...', audience: 'All Users', recipientCount: 2847, sentDate: 'Feb 10, 2026', openRate: 68),
+  BroadcastMessageEntity(id: 'b2', title: 'Maintenance Notice', message: 'Scheduled maintenance...', audience: 'All Users', recipientCount: 2801, sentDate: 'Feb 5, 2026', openRate: 82),
+  BroadcastMessageEntity(id: 'b3', title: 'Community Guidelines Update', message: 'Please review...', audience: 'All Users', recipientCount: 2750, sentDate: 'Jan 28, 2026', openRate: 74),
 ];

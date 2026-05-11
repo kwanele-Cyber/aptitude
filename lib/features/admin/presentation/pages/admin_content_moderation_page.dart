@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_event.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_state.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -14,10 +19,9 @@ class AdminContentModerationPage extends StatefulWidget {
 class _AdminContentModerationPageState extends State<AdminContentModerationPage> {
   final _searchController = TextEditingController();
   String _typeFilter = 'All Types';
-  String _statusFilter = 'Pending';
+  String _statusFilter = 'All';
   String _priorityFilter = 'All';
-  bool _isLoading = true;
-  final Set<int> _selected = {};
+  final Set<String> _selectedIds = {};
 
   @override
   void initState() {
@@ -31,10 +35,12 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 600));
-    setState(() => _isLoading = false);
+  void _loadData() {
+    context.read<AdminBloc>().add(AdminLoadFlaggedContent(
+      status: _statusFilter,
+      priority: _priorityFilter,
+      type: _typeFilter == 'All Types' ? 'All' : _typeFilter,
+    ));
   }
 
   @override
@@ -43,57 +49,82 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
     final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
-      appBar: AdminAppBar(title: 'Content Moderation'),
+      appBar: const AdminAppBar(title: 'Content Moderation'),
       drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
           if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
-          Expanded(child: _buildContent(theme)),
+          Expanded(
+            child: BlocBuilder<AdminBloc, AdminState>(
+              builder: (context, state) {
+                return Column(
+                  children: [
+                    _buildSummaryBar(theme, state),
+                    const Divider(height: 1),
+                    _buildSearchAndFilter(theme),
+                    const Divider(height: 1),
+                    if (_selectedIds.isNotEmpty) _buildBulkBar(theme),
+                    Expanded(child: _buildMainContent(theme, state)),
+                    _buildPagination(theme),
+                  ],
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildContent(ThemeData theme) {
-    if (_isLoading) {
+  Widget _buildMainContent(ThemeData theme, AdminState state) {
+    if (state is AdminModerationLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final flagged = _mockFlaggedItems;
-
-    return Column(
-      children: [
-        _buildSummaryBar(theme),
-        const Divider(height: 1),
-        _buildSearchAndFilter(theme),
-        const Divider(height: 1),
-        if (_selected.isNotEmpty) _buildBulkBar(theme),
-        Expanded(
-          child: flagged.isEmpty
-              ? _buildEmpty(theme)
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: flagged.length,
-                  itemBuilder: (_, i) => _buildFlaggedCard(theme, flagged[i], i),
-                ),
+    if (state is AdminError) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(state.message),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: _loadData, child: const Text('Retry')),
+          ],
         ),
-        _buildPagination(theme),
-      ],
+      );
+    }
+
+    final items = state is AdminModerationLoaded ? state.items : <FlaggedContentEntity>[];
+    if (items.isEmpty) return _buildEmpty(theme);
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: items.length,
+      itemBuilder: (_, i) => _buildFlaggedCard(theme, items[i]),
     );
   }
 
-  Widget _buildSummaryBar(ThemeData theme) {
+  Widget _buildSummaryBar(ThemeData theme, AdminState state) {
+    final items = state is AdminModerationLoaded ? state.items : <FlaggedContentEntity>[];
+    final pendingCount = items.where((i) => i.status == 'Pending').length;
+    final highPriorityCount = items.where((i) => i.priority == 'High').length;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       color: theme.colorScheme.surfaceContainerLow,
       child: Row(
         children: [
-          _statChip(theme, Icons.flag, '23 Pending', Colors.orange),
+          _statChip(theme, Icons.flag, '$pendingCount Pending', Colors.orange),
           const SizedBox(width: 16),
-          _statChip(theme, Icons.warning_amber, '12 Escalated', Colors.red),
+          _statChip(theme, Icons.warning_amber, '$highPriorityCount High Priority', Colors.red),
           const Spacer(),
-          Icon(Icons.refresh, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+          IconButton(
+            onPressed: _loadData,
+            icon: Icon(Icons.refresh, size: 20, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+          ),
         ],
       ),
     );
@@ -117,55 +148,39 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
   Widget _buildSearchAndFilter(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-      child: ResponsiveUtils.isMobile(context)
-          ? Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search flagged content...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      isDense: true,
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                _dropdownFilter(theme, _typeFilter, ['All Types', 'Messages', 'Reviews', 'Profiles', 'Notes', 'Images'], (v) => setState(() => _typeFilter = v)),
-                _dropdownFilter(theme, _statusFilter, ['Pending', 'Under Review', 'Resolved', 'Dismissed'], (v) => setState(() => _statusFilter = v)),
-                _dropdownFilter(theme, _priorityFilter, ['All', 'High', 'Medium', 'Low'], (v) => setState(() => _priorityFilter = v)),
-              ],
-            )
-          : Row(
-              children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search flagged content...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      isDense: true,
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                _dropdownFilter(theme, _typeFilter, ['All Types', 'Messages', 'Reviews', 'Profiles', 'Notes', 'Images'], (v) => setState(() => _typeFilter = v)),
-                const SizedBox(width: 8),
-                _dropdownFilter(theme, _statusFilter, ['Pending', 'Under Review', 'Resolved', 'Dismissed'], (v) => setState(() => _statusFilter = v)),
-                const SizedBox(width: 8),
-                _dropdownFilter(theme, _priorityFilter, ['All', 'High', 'Medium', 'Low'], (v) => setState(() => _priorityFilter = v)),
-              ],
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search flagged content...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                isDense: true,
+              ),
+              onChanged: (_) => setState(() {}),
             ),
+          ),
+          _dropdownFilter(theme, _typeFilter, ['All Types', 'Message', 'Review', 'Profile', 'Note', 'Image'], (v) {
+            setState(() => _typeFilter = v);
+            _loadData();
+          }),
+          _dropdownFilter(theme, _statusFilter, ['All', 'Pending', 'Under Review', 'Resolved', 'Dismissed'], (v) {
+            setState(() => _statusFilter = v);
+            _loadData();
+          }),
+          _dropdownFilter(theme, _priorityFilter, ['All', 'High', 'Medium', 'Low'], (v) {
+            setState(() => _priorityFilter = v);
+            _loadData();
+          }),
+        ],
+      ),
     );
   }
 
@@ -191,32 +206,33 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
       child: Row(
         children: [
-          Text('${_selected.length} selected', style: TextStyle(fontWeight: FontWeight.w600)),
+          Text('${_selectedIds.length} selected', style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(width: 16),
-          _bulkBtn('Dismiss', Icons.check_circle_outline),
+          _bulkBtn('Dismiss', Icons.check_circle_outline, 'dismiss'),
           const SizedBox(width: 8),
-          _bulkBtn('Remove Content', Icons.delete_outline),
-          const SizedBox(width: 8),
-          _bulkBtn('Suspend User', Icons.block),
+          _bulkBtn('Remove Content', Icons.delete_outline, 'remove'),
           const Spacer(),
-          TextButton(onPressed: () => setState(() => _selected.clear()), child: const Text('Clear')),
+          TextButton(onPressed: () => setState(() => _selectedIds.clear()), child: const Text('Clear')),
         ],
       ),
     );
   }
 
-  Widget _bulkBtn(String label, IconData icon) {
+  Widget _bulkBtn(String label, IconData icon, String action) {
     return OutlinedButton.icon(
-      onPressed: () => _showConfirm(context, label),
+      onPressed: () {
+        context.read<AdminBloc>().add(AdminBulkModeration(flagIds: _selectedIds.toList(), action: action));
+        setState(() => _selectedIds.clear());
+      },
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 12)),
       style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
     );
   }
 
-  Widget _buildFlaggedCard(ThemeData theme, _MockFlaggedItem item, int index) {
-    final isSelected = _selected.contains(index);
-    final priorityColor = item.priority == 'HIGH' ? Colors.red : item.priority == 'MED' ? Colors.orange : Colors.grey;
+  Widget _buildFlaggedCard(ThemeData theme, FlaggedContentEntity item) {
+    final isSelected = _selectedIds.contains(item.id);
+    final priorityColor = item.priority.toUpperCase() == 'HIGH' ? Colors.red : item.priority.toUpperCase() == 'MEDIUM' ? Colors.orange : Colors.grey;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -229,7 +245,7 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           setState(() {
-            if (isSelected) { _selected.remove(index); } else { _selected.add(index); }
+            if (isSelected) { _selectedIds.remove(item.id); } else { _selectedIds.add(item.id); }
           });
         },
         child: Padding(
@@ -237,13 +253,13 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
           child: Row(
             children: [
               Checkbox(value: isSelected, onChanged: (v) {
-                setState(() { if (v == true) { _selected.add(index); } else { _selected.remove(index); } });
+                setState(() { if (v == true) { _selectedIds.add(item.id); } else { _selectedIds.remove(item.id); } });
               }),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(color: priorityColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                child: Text(item.priority, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: priorityColor)),
+                child: Text(item.priority.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: priorityColor)),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -258,7 +274,7 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
                       children: [
                         Icon(Icons.person_outline, size: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                         const SizedBox(width: 4),
-                        Text('Reported by: ${item.reportedBy}', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        Text('By: ${item.reportedBy}', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                         const SizedBox(width: 16),
                         Icon(Icons.access_time, size: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                         const SizedBox(width: 4),
@@ -266,7 +282,7 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
                         const SizedBox(width: 16),
                         Icon(Icons.person, size: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                         const SizedBox(width: 4),
-                        Text('From: ${item.from}', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                        Text('Target: ${item.fromUser}', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
                       ],
                     ),
                   ],
@@ -275,12 +291,42 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
               const SizedBox(width: 8),
               _actionBtn('View', Icons.visibility_outlined, () => _showDetail(context, item)),
               const SizedBox(width: 4),
-              _actionBtn('Dismiss', Icons.check, () => _showConfirm(context, 'Dismiss')),
-              const SizedBox(width: 4),
-              _actionBtn('Action', Icons.more_horiz, () {}),
+              _actionBtn('Dismiss', Icons.check, () => _handleAction(item, 'dismiss')),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _handleAction(FlaggedContentEntity item, String action) {
+    if (action == 'dismiss') {
+      context.read<AdminBloc>().add(AdminDismissFlag(item.id));
+    } else if (action == 'remove') {
+      _showRemoveDialog(item);
+    }
+  }
+
+  void _showRemoveDialog(FlaggedContentEntity item) {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Content'),
+        content: TextField(
+          controller: reasonController,
+          decoration: const InputDecoration(hintText: 'Enter reason for removal'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              context.read<AdminBloc>().add(AdminRemoveContent(flagId: item.id, reason: reasonController.text));
+              Navigator.pop(ctx);
+            },
+            child: const Text('Remove'),
+          ),
+        ],
       ),
     );
   }
@@ -302,12 +348,12 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
           Container(
             width: 80, height: 80,
             decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(Icons.shield, size: 40, color: Colors.green),
+            child: const Icon(Icons.shield, size: 40, color: Colors.green),
           ),
           const SizedBox(height: 16),
           Text('All clear!', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text('No flagged content pending review.', style: theme.textTheme.bodySmall),
+          const Text('No flagged content pending review.'),
         ],
       ),
     );
@@ -320,10 +366,10 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Showing 1-10 of 23', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+          const Text('Showing current results', style: TextStyle(fontSize: 13)),
           Row(children: [
-            IconButton(icon: const Icon(Icons.chevron_left, size: 20), onPressed: null, padding: EdgeInsets.zero),
-            _pageBtn('1', true), _pageBtn('2', false), _pageBtn('3', false),
+            IconButton(icon: const Icon(Icons.chevron_left, size: 20), onPressed: () {}, padding: EdgeInsets.zero),
+            _pageBtn('1', true),
             IconButton(icon: const Icon(Icons.chevron_right, size: 20), onPressed: () {}, padding: EdgeInsets.zero),
           ]),
         ],
@@ -357,9 +403,9 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
           DrawerHeader(
             decoration: BoxDecoration(color: theme.colorScheme.primary),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [
-              Icon(Icons.admin_panel_settings, color: Colors.white, size: 40),
+              const Icon(Icons.admin_panel_settings, color: Colors.white, size: 40),
               const SizedBox(height: 8),
-              Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             ]),
           ),
           _drawerItem(Icons.dashboard, 'Dashboard', () { Navigator.pop(context); context.go('/admin'); }),
@@ -368,11 +414,6 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
           _drawerItem(Icons.gavel, 'Penalties', () { Navigator.pop(context); context.go('/admin/penalties'); }),
           _drawerItem(Icons.analytics, 'Analytics', () { Navigator.pop(context); context.go('/admin/analytics'); }),
           _drawerItem(Icons.settings, 'Config', () { Navigator.pop(context); context.go('/admin/config'); }),
-          _drawerItem(Icons.category, 'Categories', () { Navigator.pop(context); context.go('/admin/categories'); }),
-          _drawerItem(Icons.campaign, 'Broadcast', () { Navigator.pop(context); context.go('/admin/broadcast'); }),
-          _drawerItem(Icons.record_voice_over, 'Audit Log', () { Navigator.pop(context); context.go('/admin/audit'); }),
-          _drawerItem(Icons.admin_panel_settings, 'Roles', () { Navigator.pop(context); context.go('/admin/roles'); }),
-          _drawerItem(Icons.storage, 'Database', () { Navigator.pop(context); context.go('/admin/database'); }),
         ],
       ),
     );
@@ -382,21 +423,7 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
     return ListTile(leading: Icon(icon), title: Text(label), onTap: onTap);
   }
 
-  void _showConfirm(BuildContext context, String action) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('$action?'),
-        content: Text('Are you sure you want to $action this content? This action will be logged.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () { Navigator.pop(ctx); }, child: const Text('Confirm')),
-        ],
-      ),
-    );
-  }
-
-  void _showDetail(BuildContext context, _MockFlaggedItem item) {
+  void _showDetail(BuildContext context, FlaggedContentEntity item) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -413,10 +440,10 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: (item.priority == 'HIGH' ? Colors.red : item.priority == 'MED' ? Colors.orange : Colors.grey).withValues(alpha: 0.15),
+                    color: (item.priority.toUpperCase() == 'HIGH' ? Colors.red : item.priority.toUpperCase() == 'MEDIUM' ? Colors.orange : Colors.grey).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(item.priority, style: TextStyle(fontWeight: FontWeight.bold, color: item.priority == 'HIGH' ? Colors.red : item.priority == 'MED' ? Colors.orange : Colors.grey)),
+                  child: Text(item.priority.toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, color: item.priority.toUpperCase() == 'HIGH' ? Colors.red : item.priority.toUpperCase() == 'MEDIUM' ? Colors.orange : Colors.grey)),
                 ),
                 const Spacer(),
                 TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
@@ -431,9 +458,36 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
               ),
               const SizedBox(height: 16),
               _detailRow('Reported by', item.reportedBy),
-              _detailRow('From user', item.from),
+              _detailRow('Target user', item.fromUser),
               _detailRow('Time', item.timestamp),
               _detailRow('Type', item.type),
+              _detailRow('Status', item.status),
+              if (item.contentId != null) _detailRow('Content ID', item.contentId!),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _handleAction(item, 'dismiss');
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Dismiss Report'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showRemoveDialog(item);
+                      },
+                      style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                      child: const Text('Remove Content'),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -444,26 +498,7 @@ class _AdminContentModerationPageState extends State<AdminContentModerationPage>
   Widget _detailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(label, style: TextStyle(fontWeight: FontWeight.w500)), Text(value)]),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(label, style: const TextStyle(fontWeight: FontWeight.w500)), Text(value)]),
     );
   }
 }
-
-class _MockFlaggedItem {
-  final String priority;
-  final String reason;
-  final String preview;
-  final String reportedBy;
-  final String from;
-  final String timestamp;
-  final String type;
-  _MockFlaggedItem({required this.priority, required this.reason, required this.preview, required this.reportedBy, required this.from, required this.timestamp, required this.type});
-}
-
-final _mockFlaggedItems = [
-  _MockFlaggedItem(priority: 'HIGH', reason: 'Inappropriate message', preview: '"You are so..." in chat conversation', reportedBy: 'Thandi Nkosi', from: 'Kwanele Mhlongo', timestamp: '5m ago', type: 'Message'),
-  _MockFlaggedItem(priority: 'MED', reason: 'Spam review', preview: '"Check out my..." on Busi\'s profile', reportedBy: 'Auto-flagged', from: 'Busi Dlamini', timestamp: '15m ago', type: 'Review'),
-  _MockFlaggedItem(priority: 'LOW', reason: 'Offensive avatar', preview: 'Profile picture flagged as inappropriate', reportedBy: 'Auto-flagged', from: 'Unknown', timestamp: '1h ago', type: 'Profile'),
-  _MockFlaggedItem(priority: 'HIGH', reason: 'Harassment report', preview: 'Repeated messages in direct chat', reportedBy: 'Sipho Zulu', from: 'Lindiwe Mokoena', timestamp: '2h ago', type: 'Message'),
-  _MockFlaggedItem(priority: 'MED', reason: 'Misleading content', preview: 'False information in skill description', reportedBy: 'Nomsa Khumalo', from: 'Themba Mthembu', timestamp: '3h ago', type: 'Skills'),
-];

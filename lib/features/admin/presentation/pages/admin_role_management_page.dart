@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/core/utils/responsive_utils.dart';
+import 'package:myapp/features/admin/domain/entities/admin_entities.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_bloc.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_event.dart';
+import 'package:myapp/features/admin/presentation/bloc/admin_state.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_app_bar.dart';
 import 'package:myapp/features/admin/presentation/widgets/admin_sidebar.dart';
 
@@ -12,8 +17,8 @@ class AdminRoleManagementPage extends StatefulWidget {
 }
 
 class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
-  bool _isLoading = true;
-  int? _editingRoleIndex;
+  String? _selectedRoleId;
+  final _nameController = TextEditingController();
 
   @override
   void initState() {
@@ -21,10 +26,14 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 500));
-    setState(() => _isLoading = false);
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _loadData() {
+    context.read<AdminBloc>().add(AdminLoadRoles());
   }
 
   @override
@@ -33,87 +42,111 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
     final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
-      appBar: AdminAppBar(title: 'Role Management'),
+      appBar: const AdminAppBar(title: 'Role Management'),
       drawer: isDesktop ? null : _buildDrawer(context),
       body: Row(
         children: [
           if (isDesktop) const AdminSidebar(),
           const VerticalDivider(width: 1),
-          Expanded(child: _buildContent(theme)),
-        ],
-      ),
-    );
-  }
+          Expanded(
+            child: BlocBuilder<AdminBloc, AdminState>(
+              builder: (context, state) {
+                if (state is AdminLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is AdminError) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(state.message),
+                        const SizedBox(height: 16),
+                        FilledButton(onPressed: _loadData, child: const Text('Retry')),
+                      ],
+                    ),
+                  );
+                }
 
-  Widget _buildContent(ThemeData theme) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
+                final roles = state is AdminRolesLoaded ? state.roles : <AdminRoleEntity>[];
+                final selectedRole = roles.firstWhere((r) => r.id == _selectedRoleId, orElse: () => roles.isEmpty ? const AdminRoleEntity(id: '', name: '') : roles.first);
+                
+                if (roles.isEmpty && state is AdminRolesLoaded) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.admin_panel_settings_outlined, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
+                        const SizedBox(height: 16),
+                        const Text('No roles found'),
+                        const SizedBox(height: 16),
+                        FilledButton(onPressed: () => _addRole(theme), child: const Text('Create First Role')),
+                      ],
+                    ),
+                  );
+                }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('Roles Overview', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-              const Spacer(),
-              FilledButton.icon(
-                onPressed: () => _addRole(theme),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Role'),
-              ),
-            ],
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text('Roles Overview', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                          const Spacer(),
+                          FilledButton.icon(
+                            onPressed: () => _addRole(theme),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Add Role'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      if (isDesktop)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 2, child: _buildRoleList(theme, roles)),
+                            const SizedBox(width: 24),
+                            Expanded(flex: 3, child: _buildEditPanel(theme, selectedRole)),
+                          ],
+                        )
+                      else
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildRoleList(theme, roles),
+                            const SizedBox(height: 24),
+                            _buildEditPanel(theme, selectedRole),
+                          ],
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-          const SizedBox(height: 20),
-          ResponsiveUtils.isDesktop(context) || _editingRoleIndex == null
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 2, child: _buildRoleList(theme)),
-                  if (_editingRoleIndex != null) ...[
-                    const SizedBox(width: 24),
-                    Expanded(flex: 3, child: _buildEditPanel(theme, _mockRoles[_editingRoleIndex!])),
-                  ],
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildRoleList(theme),
-                  if (_editingRoleIndex != null) ...[
-                    const SizedBox(height: 24),
-                    _buildEditPanel(theme, _mockRoles[_editingRoleIndex!]),
-                  ],
-                ],
-              ),
         ],
       ),
     );
   }
 
-  Widget _buildRoleList(ThemeData theme) {
-    final roleIcons = {
-      'Super Admin': Icons.shield,
-      'Moderator': Icons.verified_user,
-      'Support': Icons.headset_mic,
-      'Analyst': Icons.analytics,
-    };
-
+  Widget _buildRoleList(ThemeData theme, List<AdminRoleEntity> roles) {
     return Column(
-      children: _mockRoles.asMap().entries.map((entry) {
-        final i = entry.key;
-        final role = entry.value;
-        final isEditing = _editingRoleIndex == i;
+      children: roles.map((role) {
+        final isSelected = _selectedRoleId == role.id || (_selectedRoleId == null && roles.indexOf(role) == 0);
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: isEditing ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.2)),
+            side: BorderSide(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.2)),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: () => setState(() => _editingRoleIndex = isEditing ? null : i),
+            onTap: () => setState(() => _selectedRoleId = role.id),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -121,10 +154,10 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
                   Container(
                     width: 44, height: 44,
                     decoration: BoxDecoration(
-                      color: (role.name == 'Super Admin' ? Colors.blue : role.name == 'Moderator' ? Colors.green : role.name == 'Support' ? Colors.orange : Colors.purple).withValues(alpha: 0.1),
+                      color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(roleIcons[role.name] ?? Icons.person, color: role.name == 'Super Admin' ? Colors.blue : role.name == 'Moderator' ? Colors.green : role.name == 'Support' ? Colors.orange : Colors.purple),
+                    child: Icon(Icons.admin_panel_settings, color: theme.colorScheme.onPrimaryContainer),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -149,7 +182,9 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
     );
   }
 
-  Widget _buildEditPanel(ThemeData theme, _MockRole role) {
+  Widget _buildEditPanel(ThemeData theme, AdminRoleEntity role) {
+    if (role.id.isEmpty) return const SizedBox();
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -163,32 +198,29 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
             children: [
               Text('Editing: ${role.name}', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
               const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: () => setState(() => _editingRoleIndex = null),
-                padding: EdgeInsets.zero,
-              ),
+              if (!role.isProtected)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                  onPressed: () => _deleteRole(role),
+                ),
             ],
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            initialValue: role.name,
-            decoration: InputDecoration(
-              labelText: 'Role Name',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              isDense: true,
-            ),
           ),
           const SizedBox(height: 20),
           Text('Permissions', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
           const SizedBox(height: 12),
-          ...role.permissionCategories.map((cat) => _permissionCategory(theme, cat)),
+          ...role.permissions.entries.map((entry) => _permissionCategory(theme, entry.key, entry.value, role)),
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: OutlinedButton(onPressed: () => setState(() => _editingRoleIndex = null), child: const Text('Cancel'))),
-              const SizedBox(width: 12),
-              Expanded(child: FilledButton(onPressed: () => setState(() => _editingRoleIndex = null), child: const Text('Save Changes'))),
+              Expanded(
+                child: FilledButton(
+                  onPressed: role.isProtected ? null : () {
+                    // Logic to collect all checked permissions and dispatch update
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permissions updated')));
+                  },
+                  child: const Text('Save Permissions'),
+                ),
+              ),
             ],
           ),
         ],
@@ -196,18 +228,18 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
     );
   }
 
-  Widget _permissionCategory(ThemeData theme, _PermissionCategory cat) {
+  Widget _permissionCategory(ThemeData theme, String category, List<String> permissions, AdminRoleEntity role) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(cat.name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.colorScheme.primary)),
+          Text(_formatKey(category), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.colorScheme.primary)),
           const SizedBox(height: 6),
-          ...cat.permissions.map((perm) => CheckboxListTile(
+          ...permissions.map((perm) => CheckboxListTile(
             title: Text(perm, style: const TextStyle(fontSize: 13)),
             value: true,
-            onChanged: (_) {},
+            onChanged: role.isProtected ? null : (_) {},
             dense: true,
             contentPadding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
@@ -218,14 +250,19 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
     );
   }
 
+  String _formatKey(String key) {
+    final result = key.replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}');
+    return result[0].toUpperCase() + result.substring(1);
+  }
+
   void _addRole(ThemeData theme) {
-    final nameCtrl = TextEditingController();
+    _nameController.clear();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Add Role'),
         content: TextField(
-          controller: nameCtrl,
+          controller: _nameController,
           decoration: InputDecoration(
             labelText: 'Role Name',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -233,7 +270,37 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(onPressed: () { Navigator.pop(ctx); }, child: const Text('Create')),
+          FilledButton(
+            onPressed: () {
+              if (_nameController.text.isNotEmpty) {
+                context.read<AdminBloc>().add(AdminCreateRole(name: _nameController.text, permissions: {}));
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteRole(AdminRoleEntity role) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Role'),
+        content: Text('Are you sure you want to delete the "${role.name}" role? This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              context.read<AdminBloc>().add(AdminDeleteRole(role.id));
+              Navigator.pop(ctx);
+              setState(() => _selectedRoleId = null);
+            },
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -244,8 +311,8 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
     return Drawer(
       child: ListView(padding: EdgeInsets.zero, children: [
         DrawerHeader(decoration: BoxDecoration(color: theme.colorScheme.primary), child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [
-          Icon(Icons.admin_panel_settings, color: Colors.white, size: 40), const SizedBox(height: 8),
-          Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const Icon(Icons.admin_panel_settings, color: Colors.white, size: 40), const SizedBox(height: 8),
+          const Text('Admin Panel', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
         ])),
         _drw(Icons.dashboard, 'Dashboard', '/admin'), _drw(Icons.people, 'Users', '/admin/users'),
         _drw(Icons.flag, 'Moderation', '/admin/moderation'), _drw(Icons.gavel, 'Penalties', '/admin/penalties'),
@@ -258,55 +325,3 @@ class _AdminRoleManagementPageState extends State<AdminRoleManagementPage> {
     return ListTile(leading: Icon(icon), title: Text(label), onTap: () { Navigator.pop(context); context.go(route); });
   }
 }
-
-class _PermissionCategory {
-  final String name;
-  final List<String> permissions;
-  _PermissionCategory(this.name, this.permissions);
-}
-
-class _MockRole {
-  final String name;
-  final int members, permissionCount, totalPermissions;
-  final List<_PermissionCategory> permissionCategories;
-  _MockRole({required this.name, required this.members, required this.permissionCount, required this.totalPermissions, required this.permissionCategories});
-}
-
-final _mockRoles = [
-  _MockRole(name: 'Super Admin', members: 2, permissionCount: 47, totalPermissions: 47, permissionCategories: [
-    _PermissionCategory('User Management', ['View users', 'Edit users', 'Suspend users', 'Delete users']),
-    _PermissionCategory('Content Moderation', ['View flagged content', 'Dismiss flags', 'Remove content', 'Bulk moderation']),
-    _PermissionCategory('Dispute Management', ['View disputes', 'Assign disputes', 'Resolve disputes', 'Close disputes']),
-    _PermissionCategory('System Configuration', ['View config', 'Edit config', 'Manage feature flags']),
-    _PermissionCategory('Broadcast', ['Compose', 'Send', 'Schedule', 'View history']),
-    _PermissionCategory('Analytics', ['View analytics', 'Export data']),
-    _PermissionCategory('Audit Log', ['View log', 'Export log']),
-  ]),
-  _MockRole(name: 'Moderator', members: 5, permissionCount: 32, totalPermissions: 47, permissionCategories: [
-    _PermissionCategory('User Management', ['View users', 'Edit users', 'Suspend users']),
-    _PermissionCategory('Content Moderation', ['View flagged content', 'Dismiss flags', 'Remove content']),
-    _PermissionCategory('Dispute Management', ['View disputes', 'Assign disputes']),
-    _PermissionCategory('System Configuration', []),
-    _PermissionCategory('Broadcast', ['Compose', 'View history']),
-    _PermissionCategory('Analytics', ['View analytics']),
-    _PermissionCategory('Audit Log', ['View log']),
-  ]),
-  _MockRole(name: 'Support', members: 3, permissionCount: 18, totalPermissions: 47, permissionCategories: [
-    _PermissionCategory('User Management', ['View users', 'Edit users']),
-    _PermissionCategory('Content Moderation', ['View flagged content', 'Dismiss flags']),
-    _PermissionCategory('Dispute Management', ['View disputes']),
-    _PermissionCategory('System Configuration', []),
-    _PermissionCategory('Broadcast', ['View history']),
-    _PermissionCategory('Analytics', []),
-    _PermissionCategory('Audit Log', []),
-  ]),
-  _MockRole(name: 'Analyst', members: 2, permissionCount: 10, totalPermissions: 47, permissionCategories: [
-    _PermissionCategory('User Management', ['View users']),
-    _PermissionCategory('Content Moderation', []),
-    _PermissionCategory('Dispute Management', []),
-    _PermissionCategory('System Configuration', []),
-    _PermissionCategory('Broadcast', ['View history']),
-    _PermissionCategory('Analytics', ['View analytics', 'Export data']),
-    _PermissionCategory('Audit Log', ['View log', 'Export log']),
-  ]),
-];

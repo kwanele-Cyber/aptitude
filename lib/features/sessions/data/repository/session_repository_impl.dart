@@ -4,17 +4,23 @@ import 'package:myapp/core/error/failures.dart';
 import 'package:myapp/features/sessions/data/datasources/session_remote_datasource.dart';
 import 'package:myapp/features/sessions/domain/entity/session_entity.dart';
 import 'package:myapp/features/sessions/domain/repository/session_repository.dart';
+import 'package:myapp/features/admin/domain/repository/admin_repository.dart';
 
 class SessionRepositoryImpl implements SessionRepository {
   final SessionRemoteDataSource remoteDataSource;
+  final AdminRepository adminRepository;
 
-  SessionRepositoryImpl({required this.remoteDataSource});
+  SessionRepositoryImpl({
+    required this.remoteDataSource,
+    required this.adminRepository,
+  });
 
   @override
   Future<Either<Failure, SessionEntity>> createSession(
       Map<String, dynamic> data) async {
     try {
       final session = await remoteDataSource.createSession(data);
+      await adminRepository.logAudit('Created Session', detail: 'Session ID: ${session.id}', severity: 'info', actorRole: 'User');
       return Right(session);
     } on ServerException {
       return Left(ServerFailure());
@@ -41,6 +47,7 @@ class SessionRepositoryImpl implements SessionRepository {
       String id, String? reason) async {
     try {
       final session = await remoteDataSource.cancelSession(id, reason);
+      await adminRepository.logAudit('Cancelled Session', detail: 'Session ID: $id | Reason: $reason', severity: 'warning', actorRole: 'User');
       return Right(session);
     } on ServerException {
       return Left(ServerFailure());
@@ -144,6 +151,7 @@ class SessionRepositoryImpl implements SessionRepository {
   Future<Either<Failure, SessionEntity>> completeSession(String id) async {
     try {
       final session = await remoteDataSource.completeSession(id);
+      await adminRepository.logAudit('Completed Session', detail: 'Session ID: $id', severity: 'info', actorRole: 'User');
       return Right(session);
     } on ServerException {
       return Left(ServerFailure());

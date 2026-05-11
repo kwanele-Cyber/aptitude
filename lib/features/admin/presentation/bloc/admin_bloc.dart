@@ -191,7 +191,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   Future<void> _onLoadPenalties(AdminLoadPenalties event, Emitter<AdminState> emit) async {
     emit(AdminPenaltiesLoading());
     if (getPenalties == null) return;
-    final result = await getPenalties!();
+    final result = await getPenalties!(query: event.query);
     result.fold((l) => emit(const AdminError('Failed to load penalties')), (r) => emit(AdminPenaltiesLoaded(r)));
   }
 
@@ -285,7 +285,7 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
   Future<void> _onLoadAuditLogs(AdminLoadAuditLogs event, Emitter<AdminState> emit) async {
     emit(AdminAuditLogLoading());
     if (getAuditLogs == null) return;
-    final result = await getAuditLogs!(admin: event.admin, action: event.action, page: event.page, pageSize: event.pageSize);
+    final result = await getAuditLogs!(actor: event.actor, action: event.action, page: event.page, pageSize: event.pageSize);
     result.fold((l) => emit(const AdminError('Failed to load audit logs')), (r) => emit(AdminAuditLogLoaded(r, page: event.page, hasMore: r.length >= event.pageSize)));
   }
 

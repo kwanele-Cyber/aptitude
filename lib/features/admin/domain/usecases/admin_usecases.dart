@@ -72,7 +72,7 @@ class BulkModerationUseCase {
 class GetPenaltiesUseCase {
   final AdminRepository repository;
   GetPenaltiesUseCase(this.repository);
-  Future<Either<Failure, List<PenaltyEntity>>> call() => repository.getPenalties();
+  Future<Either<Failure, List<PenaltyEntity>>> call({String? query}) => repository.getPenalties(query: query);
 }
 
 class ApplyPenaltyUseCase {
@@ -100,7 +100,7 @@ class GetAnalyticsUseCase {
 class GetConfigUseCase {
   final AdminRepository repository;
   GetConfigUseCase(this.repository);
-  Future<Either<Failure, SystemConfigEntity>> call() => repository.getConfig();
+  Future<Either<Failure, SystemConfigEntity>> call({String? query}) => repository.getConfig(query: query);
 }
 
 class SaveConfigUseCase {
@@ -164,8 +164,8 @@ class SendBroadcastUseCase {
 class GetAuditLogsUseCase {
   final AdminRepository repository;
   GetAuditLogsUseCase(this.repository);
-  Future<Either<Failure, List<AuditLogEntryEntity>>> call({String? admin, String? action, int page = 1, int pageSize = 25}) =>
-      repository.getAuditLogs(admin: admin, action: action, page: page, pageSize: pageSize);
+  Future<Either<Failure, List<AuditLogEntryEntity>>> call({String? actor, String? action, int page = 1, int pageSize = 25}) =>
+      repository.getAuditLogs(actor: actor, action: action, page: page, pageSize: pageSize);
 }
 
 // Role Management

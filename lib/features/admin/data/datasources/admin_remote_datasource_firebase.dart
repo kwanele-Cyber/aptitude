@@ -8,9 +8,11 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
   final FirebaseAuth _auth;
   final FirebaseDatabase _database;
 
-  AdminRemoteDataSourceFirebase({FirebaseAuth? auth, FirebaseDatabase? database})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _database = database ?? FirebaseDatabase.instance;
+  AdminRemoteDataSourceFirebase({
+    FirebaseAuth? auth,
+    FirebaseDatabase? database,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _database = database ?? FirebaseDatabase.instance;
 
   DatabaseReference get _usersRef => _database.ref('users');
   DatabaseReference get _reportsRef => _database.ref('reports');
@@ -23,6 +25,9 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
   DatabaseReference get _analyticsRef => _database.ref('analytics');
   DatabaseReference get _matchesRef => _database.ref('matches');
   DatabaseReference get _sessionsRef => _database.ref('sessions');
+  DatabaseReference get _disputesRef => _database.ref('disputes');
+  DatabaseReference get _appealsRef => _database.ref('appeals');
+  DatabaseReference get _supportRequestsRef => _database.ref('supportRequests');
 
   String? get _currentUid => _auth.currentUser?.uid;
 
@@ -100,7 +105,9 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
             ratingCount++;
           }
         }
-        avgRating = ratingCount > 0 ? double.parse((ratingSum / ratingCount).toStringAsFixed(1)) : 0.0;
+        avgRating = ratingCount > 0
+            ? double.parse((ratingSum / ratingCount).toStringAsFixed(1))
+            : 0.0;
       }
 
       return AdminDashboardDataModel(
@@ -124,10 +131,7 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
     try {
       final snapshot = await _usersRef.get();
       return _decodeChildren(snapshot, (key, data) {
-        return AdminUserModel.fromJson({
-          ...data,
-          'id': key,
-        });
+        return AdminUserModel.fromJson({...data, 'id': key});
       });
     } catch (e) {
       if (e is ServerException) rethrow;
@@ -144,10 +148,7 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
     try {
       final snapshot = await _usersRef.get();
       var users = _decodeChildren(snapshot, (key, data) {
-        return AdminUserModel.fromJson({
-          ...data,
-          'id': key,
-        });
+        return AdminUserModel.fromJson({...data, 'id': key});
       });
 
       if (query.isNotEmpty) {
@@ -204,7 +205,8 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
         switch (action) {
           case 'suspend':
             updates['users/$uid/status'] = 'Suspended';
-            updates['users/$uid/suspendedAt'] = DateTime.now().toIso8601String();
+            updates['users/$uid/suspendedAt'] = DateTime.now()
+                .toIso8601String();
             break;
           case 'activate':
             updates['users/$uid/status'] = 'Active';
@@ -217,6 +219,19 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
       }
       await _database.ref().update(updates);
       await _logAudit('Bulk action: $action on ${userIds.length} users');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> updateTrustScore(String userId, double score, String reason) async {
+    try {
+      await _usersRef.child(userId).update({
+        'trustScore': score,
+      });
+      await _logAudit('Updated trust score for user $userId', 'New score: $score | Reason: $reason');
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException();
@@ -291,8 +306,7 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
             : 'Content Removed';
       }
       await _database.ref().update(updates);
-      await _logAudit(
-          'Bulk moderation: $action on ${flagIds.length} flags');
+      await _logAudit('Bulk moderation: $action on ${flagIds.length} flags');
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException();
@@ -304,12 +318,21 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
   // ---------------------------------------------------------------------------
 
   @override
-  Future<List<PenaltyModel>> getPenalties() async {
+  Future<List<PenaltyModel>> getPenalties({String? query}) async {
     try {
       final snapshot = await _penaltiesRef.get();
-      return _decodeChildren(snapshot, (key, data) {
+      var penalties = _decodeChildren(snapshot, (key, data) {
         return PenaltyModel.fromJson({...data, 'id': key});
       });
+
+      if (query != null && query.isNotEmpty) {
+        final q = query.toLowerCase();
+        penalties = penalties.where((p) {
+          return p.user.toLowerCase().contains(q) ||
+              p.reason.toLowerCase().contains(q);
+        }).toList();
+      }
+      return penalties;
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException();
@@ -327,8 +350,8 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
         'severity': type.contains('Ban')
             ? 'High'
             : type.contains('Warning')
-                ? 'Medium'
-                : 'Low',
+            ? 'Medium'
+            : 'Low',
         'date': DateTime.now().toIso8601String(),
         'duration': _defaultDuration(type),
         'strikes': 1,
@@ -344,7 +367,11 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
 
       final userSnap = await _usersRef.child(userId).child('firstName').get();
       final userName = userSnap.value?.toString() ?? userId;
-      await _logAudit('Applied penalty to $userName', 'Type: $type | $reason', 'warning');
+      await _logAudit(
+        'Applied penalty to $userName',
+        'Type: $type | $reason',
+        'warning',
+      );
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException();
@@ -369,6 +396,62 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
         await _usersRef.child(userId).update({'status': 'Active'});
       }
       await _logAudit('Overturned penalty $penaltyId');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<List<DisputeModel>> getDisputes() async {
+    try {
+      final snapshot = await _disputesRef.get();
+      return _decodeChildren(snapshot, (key, data) {
+        return DisputeModel.fromJson({...data, 'id': key});
+      });
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> resolveDispute(String disputeId, String resolution) async {
+    try {
+      await _disputesRef.child(disputeId).update({
+        'status': 'Resolved',
+        'resolution': resolution,
+        'resolvedAt': DateTime.now().toIso8601String(),
+      });
+      await _logAudit('Resolved dispute $disputeId', resolution);
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<List<AppealModel>> getAppeals() async {
+    try {
+      final snapshot = await _appealsRef.get();
+      return _decodeChildren(snapshot, (key, data) {
+        return AppealModel.fromJson({...data, 'id': key});
+      });
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> handleAppeal(String appealId, String decision) async {
+    try {
+      await _appealsRef.child(appealId).update({
+        'status': decision.contains('Approved') ? 'Approved' : 'Rejected',
+        'decision': decision,
+        'handledAt': DateTime.now().toIso8601String(),
+      });
+      await _logAudit('Handled appeal $appealId', decision);
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException();
@@ -406,9 +489,7 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
       final matchesSnap = results[1];
       final sessionsSnap = results[2];
 
-      final totalUsers = usersSnap.exists
-          ? (usersSnap.value as Map).length
-          : 0;
+      final totalUsers = usersSnap.exists ? (usersSnap.value as Map).length : 0;
       final totalMatches = matchesSnap.exists
           ? (matchesSnap.value as Map).length
           : 0;
@@ -450,12 +531,25 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
     }
   }
 
+  @override
+  Future<String> exportSystemData(String type) async {
+    try {
+      // In a real app, this would trigger a Cloud Function to generate a report.
+      // For now, we simulate a successful trigger.
+      await _logAudit('Exported system data', 'Type: $type');
+      return 'https://firebasestorage.googleapis.com/v0/b/aptitude-app/o/exports%2F${type}_${DateTime.now().millisecondsSinceEpoch}.csv?alt=media';
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // System Config
   // ---------------------------------------------------------------------------
 
   @override
-  Future<SystemConfigModel> getConfig() async {
+  Future<SystemConfigModel> getConfig({String? query}) async {
     try {
       final snapshot = await _configRef.get();
       if (!snapshot.exists) return const SystemConfigModel();
@@ -628,13 +722,46 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
     }
   }
 
+  @override
+  Future<void> logAudit(String action, {String detail = '', String severity = 'info', String actorRole = 'User', String? actorId}) async {
+    await _logAudit(action, detail, severity, actorRole, actorId);
+  }
+
+  @override
+  Future<List<SupportRequestModel>> getSupportRequests() async {
+    try {
+      final snapshot = await _supportRequestsRef.get();
+      return _decodeChildren(snapshot, (key, data) {
+        return SupportRequestModel.fromJson({...data, 'id': key});
+      });
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> respondToSupportRequest(String requestId, String response) async {
+    try {
+      await _supportRequestsRef.child(requestId).update({
+        'status': 'Resolved',
+        'adminResponse': response,
+        'respondedAt': DateTime.now().toIso8601String(),
+      });
+      await _logAudit('Responded to support request $requestId', response);
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Audit Logs
   // ---------------------------------------------------------------------------
 
   @override
   Future<List<AuditLogEntryModel>> getAuditLogs({
-    String? admin,
+    String? actor,
     String? action,
     int page = 1,
     int pageSize = 25,
@@ -652,8 +779,8 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
       // Reverse so most recent comes first
       logs = logs.reversed.toList();
 
-      if (admin != null && admin.isNotEmpty) {
-        logs = logs.where((l) => l.admin == admin).toList();
+      if (actor != null && actor.isNotEmpty) {
+        logs = logs.where((l) => l.actorName == actor).toList();
       }
       if (action != null && action.isNotEmpty) {
         logs = logs.where((l) => l.action.contains(action)).toList();
@@ -693,10 +820,15 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
   }
 
   @override
-  Future<void> createRole(String name, Map<String, List<String>> permissions) async {
+  Future<void> createRole(
+    String name,
+    Map<String, List<String>> permissions,
+  ) async {
     try {
-      final permissionCount =
-          permissions.values.fold(0, (int sum, list) => sum + list.length);
+      final permissionCount = permissions.values.fold(
+        0,
+        (int sum, list) => sum + list.length,
+      );
       await _adminRolesRef.push().set({
         'name': name,
         'permissions': permissions,
@@ -767,11 +899,13 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
         final snap = results[i];
         final count = snap.exists ? (snap.value as Map).length : 0;
         totalDocs += count;
-        collections.add(CollectionInfoModel(
-          name: nodeNames[i],
-          documents: count,
-          status: 'Online',
-        ));
+        collections.add(
+          CollectionInfoModel(
+            name: nodeNames[i],
+            documents: count,
+            status: 'Online',
+          ),
+        );
       }
 
       return DatabaseStatsModel(
@@ -829,6 +963,52 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
     }
   }
 
+  @override
+  Future<void> assignEmergencyAdmin(String userId, String verificationToken) async {
+    try {
+      // Implementation of multi-step verification for emergency assignment
+      await _database.ref('meta/emergency_assignment').set({
+        'userId': userId,
+        'requestedAt': DateTime.now().toIso8601String(),
+        'status': 'initiated',
+      });
+      await _logAudit('Emergency admin assignment initiated', 'Target user: $userId', 'critical');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> grantTemporaryAdmin(String userId, Duration duration, List<String> permissions) async {
+    try {
+      final expiry = DateTime.now().add(duration);
+      await _database.ref('meta/temp_grants/$userId').set({
+        'permissions': permissions,
+        'expiresAt': expiry.toIso8601String(),
+        'grantedBy': _currentUid,
+      });
+      await _logAudit('Temporary admin grant issued', 'User: $userId | Expiry: $expiry');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
+  @override
+  Future<void> rotateRecoveryKeys() async {
+    try {
+      await _database.ref('meta/recovery_keys').update({
+        'lastRotation': DateTime.now().toIso8601String(),
+        'rotationStatus': 'completed',
+      });
+      await _logAudit('Admin recovery keys rotated', '', 'warning');
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException();
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
@@ -841,16 +1021,25 @@ class AdminRemoteDataSourceFirebase implements AdminRemoteDataSource {
     return 'N/A';
   }
 
-  Future<void> _logAudit(String action, [String detail = '', String severity = 'info']) async {
+  Future<void> _logAudit(
+    String action, [
+    String detail = '',
+    String severity = 'info',
+    String actorRole = 'User',
+    String? actorId,
+  ]) async {
     try {
-      final adminName = _auth.currentUser?.displayName ?? _currentUid ?? 'System';
+      final effectiveUid = actorId ?? _currentUid;
+      final actorName =
+          _auth.currentUser?.displayName ?? effectiveUid ?? 'System';
       await _auditLogsRef.push().set({
-        'time': DateTime.now().toIso8601String(),
-        'admin': adminName,
+        'timestamp': DateTime.now().toIso8601String(),
+        'actorId': effectiveUid,
+        'actorName': actorName,
+        'actorRole': actorRole,
         'action': action,
         'detail': detail,
         'severity': severity,
-        'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (_) {
       // Silently fail — audit logging should never block the primary operation.

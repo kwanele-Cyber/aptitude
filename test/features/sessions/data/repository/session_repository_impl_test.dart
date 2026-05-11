@@ -6,9 +6,13 @@ import 'package:myapp/features/sessions/data/datasources/session_remote_datasour
 import 'package:myapp/features/sessions/data/models/session_model.dart';
 import 'package:myapp/features/sessions/data/repository/session_repository_impl.dart';
 import 'package:myapp/features/sessions/domain/entity/session_entity.dart';
+import 'package:myapp/features/admin/domain/repository/admin_repository.dart';
+import 'package:dartz/dartz.dart';
 
 class MockSessionRemoteDataSource extends Mock
     implements SessionRemoteDataSource {}
+
+class MockAdminRepository extends Mock implements AdminRepository {}
 
 final tSessionModel = SessionModel(
   id: 'session1',
@@ -40,10 +44,25 @@ final tSessionModel = SessionModel(
 void main() {
   late SessionRepositoryImpl repository;
   late MockSessionRemoteDataSource mockRemote;
+  late MockAdminRepository mockAdmin;
 
   setUp(() {
     mockRemote = MockSessionRemoteDataSource();
-    repository = SessionRepositoryImpl(remoteDataSource: mockRemote);
+    mockAdmin = MockAdminRepository();
+    
+    // Stub logAudit to return success by default
+    when(() => mockAdmin.logAudit(
+      any(),
+      detail: any(named: 'detail'),
+      severity: any(named: 'severity'),
+      actorRole: any(named: 'actorRole'),
+      actorId: any(named: 'actorId'),
+    )).thenAnswer((_) async => const Right(null));
+
+    repository = SessionRepositoryImpl(
+      remoteDataSource: mockRemote,
+      adminRepository: mockAdmin,
+    );
   });
 
   group('createSession', () {

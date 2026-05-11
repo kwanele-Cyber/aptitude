@@ -12,6 +12,7 @@ class AdminUserEntity extends Equatable {
   final double rating;
   final int reportsCount;
   final bool twoFactorEnabled;
+  final double trustScore;
 
   String get name => '$firstName $lastName';
   String get initials => '${firstName.isNotEmpty ? firstName[0] : ''}${lastName.isNotEmpty ? lastName[0] : ''}';
@@ -28,10 +29,11 @@ class AdminUserEntity extends Equatable {
     this.rating = 0.0,
     this.reportsCount = 0,
     this.twoFactorEnabled = false,
+    this.trustScore = 100.0,
   });
 
   @override
-  List<Object?> get props => [id, firstName, lastName, email, role, status, joined, sessions, rating, reportsCount, twoFactorEnabled];
+  List<Object?> get props => [id, firstName, lastName, email, role, status, joined, sessions, rating, reportsCount, twoFactorEnabled, trustScore];
 }
 
 class FlaggedContentEntity extends Equatable {
@@ -198,31 +200,45 @@ class BroadcastMessageEntity extends Equatable {
 
 class AuditLogEntryEntity extends Equatable {
   final String id;
-  final String time;
-  final String admin;
+  final DateTime timestamp;
+  final String actorId;
+  final String actorName;
+  final String actorRole;
   final String action;
   final String detail;
   final String severity;
   final String? ip;
   final String? device;
   final String? changes;
-  final DateTime timestamp;
 
-  AuditLogEntryEntity({
+  const AuditLogEntryEntity({
     required this.id,
-    required this.time,
-    required this.admin,
+    required this.timestamp,
+    required this.actorId,
+    required this.actorName,
+    required this.actorRole,
     required this.action,
     required this.detail,
     required this.severity,
     this.ip,
     this.device,
     this.changes,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  });
 
   @override
-  List<Object?> get props => [id, time, admin, action, detail, severity, ip, device, changes, timestamp];
+  List<Object?> get props => [
+        id,
+        timestamp,
+        actorId,
+        actorName,
+        actorRole,
+        action,
+        detail,
+        severity,
+        ip,
+        device,
+        changes,
+      ];
 }
 
 class AdminRoleEntity extends Equatable {
@@ -299,4 +315,75 @@ class CollectionInfoEntity extends Equatable {
 
   @override
   List<Object?> get props => [name, documents, size, status];
+}
+
+class DisputeEntity extends Equatable {
+  final String id;
+  final String agreementId;
+  final String reporterId;
+  final String respondentId;
+  final String reason;
+  final String status;
+  final String timestamp;
+  final String? resolution;
+
+  const DisputeEntity({
+    required this.id,
+    required this.agreementId,
+    required this.reporterId,
+    required this.respondentId,
+    required this.reason,
+    this.status = 'Pending',
+    required this.timestamp,
+    this.resolution,
+  });
+
+  @override
+  List<Object?> get props => [id, agreementId, reporterId, respondentId, reason, status, timestamp, resolution];
+}
+
+class AppealEntity extends Equatable {
+  final String id;
+  final String penaltyId;
+  final String userId;
+  final String reason;
+  final String status;
+  final String timestamp;
+  final String? decision;
+
+  const AppealEntity({
+    required this.id,
+    required this.penaltyId,
+    required this.userId,
+    required this.reason,
+    this.status = 'Pending',
+    required this.timestamp,
+    this.decision,
+  });
+
+  @override
+  List<Object?> get props => [id, penaltyId, userId, reason, status, timestamp, decision];
+}
+
+class SupportRequestEntity extends Equatable {
+  final String id;
+  final String userId;
+  final String subject;
+  final String message;
+  final String status;
+  final String timestamp;
+  final String? adminResponse;
+
+  const SupportRequestEntity({
+    required this.id,
+    required this.userId,
+    required this.subject,
+    required this.message,
+    this.status = 'Open',
+    required this.timestamp,
+    this.adminResponse,
+  });
+
+  @override
+  List<Object?> get props => [id, userId, subject, message, status, timestamp, adminResponse];
 }

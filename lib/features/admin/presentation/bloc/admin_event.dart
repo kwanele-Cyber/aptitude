@@ -76,13 +76,22 @@ class AdminBulkModeration extends AdminEvent {
 }
 
 // Penalties
-class AdminLoadPenalties extends AdminEvent {}
+class AdminLoadPenalties extends AdminEvent {
+  final String? query;
+  AdminLoadPenalties({this.query});
+  @override
+  List<Object?> get props => [query];
+}
 
 class AdminApplyPenalty extends AdminEvent {
   final String userId;
   final String type;
   final String reason;
-  AdminApplyPenalty({required this.userId, required this.type, required this.reason});
+  AdminApplyPenalty({
+    required this.userId,
+    required this.type,
+    required this.reason,
+  });
   @override
   List<Object?> get props => [userId, type, reason];
 }
@@ -106,8 +115,8 @@ class AdminLoadAnalytics extends AdminEvent {
 class AdminLoadConfig extends AdminEvent {}
 
 class AdminSaveConfig extends AdminEvent {
-  final SystemConfigModel config;
-  AdminSaveConfig(this.config);
+  final dynamic config;
+  AdminSaveConfig({required this.config});
   @override
   List<Object?> get props => [config];
 }
@@ -154,20 +163,30 @@ class AdminSendBroadcast extends AdminEvent {
   final String message;
   final String audience;
   final DateTime? scheduledAt;
-  AdminSendBroadcast({required this.title, required this.message, required this.audience, this.scheduledAt});
+  AdminSendBroadcast({
+    required this.title,
+    required this.message,
+    required this.audience,
+    this.scheduledAt,
+  });
   @override
   List<Object?> get props => [title, message, audience, scheduledAt];
 }
 
 // Audit Log
 class AdminLoadAuditLogs extends AdminEvent {
-  final String? admin;
+  final String? actor;
   final String? action;
   final int page;
   final int pageSize;
-  AdminLoadAuditLogs({this.admin, this.action, this.page = 1, this.pageSize = 25});
+  AdminLoadAuditLogs({
+    this.actor,
+    this.action,
+    this.page = 1,
+    this.pageSize = 25,
+  });
   @override
-  List<Object?> get props => [admin, action, page, pageSize];
+  List<Object?> get props => [actor, action, page, pageSize];
 }
 
 // Roles

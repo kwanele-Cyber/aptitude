@@ -22,8 +22,9 @@ class SkillModel extends SkillEntity {
   });
 
   factory SkillModel.fromJson(String id, Map<String, dynamic> json) {
+    final docId = json['id'] as String? ?? json['uid'] as String? ?? id;
     return SkillModel(
-      id: id,
+      id: docId,
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       category: json['category'] as String? ?? '',
